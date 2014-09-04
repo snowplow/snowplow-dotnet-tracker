@@ -15,9 +15,17 @@ namespace Snowplow.Tracker
             nvPairs = new Dictionary<string, string>();
         }
 
+        public void add(string name, double value)
+        {
+            add(name, value.ToString());
+        }
+
         public void add(string name, string value)
         {
-            nvPairs.Add(name, value);
+            if (!String.IsNullOrEmpty(value))
+            {
+                nvPairs.Add(name, value);
+            }
         }
 
         public void addDict(Dictionary<string, string> dict)
@@ -30,16 +38,19 @@ namespace Snowplow.Tracker
 
         public void addJson(Dictionary <string, object> jsonDict, bool encodeBase64, string typeWhenEncoded, string typeWhenNotEncoded)
         {
-            string jsonString = JsonConvert.SerializeObject(jsonDict);
-            if (encodeBase64)
+            if (jsonDict != null && jsonDict.Count > 0)
             {
-                byte[] plainTextBytes = System.Text.Encoding.UTF8.GetBytes(jsonString);
-                string encodedDict = System.Convert.ToBase64String(plainTextBytes);
-                add(typeWhenEncoded, encodedDict);
-            }
-            else
-            {
-                add(typeWhenNotEncoded, jsonString);
+                string jsonString = JsonConvert.SerializeObject(jsonDict);
+                if (encodeBase64)
+                {
+                    byte[] plainTextBytes = System.Text.Encoding.UTF8.GetBytes(jsonString);
+                    string encodedDict = System.Convert.ToBase64String(plainTextBytes);
+                    add(typeWhenEncoded, encodedDict);
+                }
+                else
+                {
+                    add(typeWhenNotEncoded, jsonString);
+                }
             }
         }
 
