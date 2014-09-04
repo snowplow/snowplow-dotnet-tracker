@@ -15,7 +15,7 @@ namespace Snowplow.Tracker
             nvPairs = new Dictionary<string, string>();
         }
 
-        public void add(string name, double value)
+        public void add(string name, double? value)
         {
             add(name, value.ToString());
         }
