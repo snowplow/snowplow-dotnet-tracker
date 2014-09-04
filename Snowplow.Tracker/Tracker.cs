@@ -4,6 +4,7 @@ using System.Collections.Specialized;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Net;
 using System.Web;
 using SelfDescribingJson = System.Collections.Generic.Dictionary<string, object>;
 using Context = System.Collections.Generic.List<System.Collections.Generic.Dictionary<string, object>>;
@@ -81,9 +82,20 @@ namespace Snowplow.Tracker
             return tstamp ?? (Int64)(DateTime.UtcNow.Subtract(new DateTime(1970, 1, 1))).TotalMilliseconds;
         }
 
+        private static string ToQueryString(Dictionary<string, string> payload)
+        {
+            var array = (from key in payload.Keys
+                         select string.Format("{0}={1}", HttpUtility.UrlEncode(key), HttpUtility.UrlEncode(payload[key])))
+                .ToArray();
+            return "?" + string.Join("&", array);
+        }
+
         private void httpGet(Dictionary<string, string> payload)
         {
-
+            string destination = collectorUri + ToQueryString(payload);
+            Console.WriteLine("destination: " + destination); // TODO remove debug code
+            HttpWebRequest request = (HttpWebRequest)WebRequest.Create(destination);
+            HttpWebResponse response = (HttpWebResponse)request.GetResponse();
         }
 
         private void track(Payload pb)
@@ -154,6 +166,7 @@ namespace Snowplow.Tracker
             completePayload(pb, context, tstamp);
             return this;
         }
+
         public Tracker trackScreenView(string name = null, string id = null, Context context = null, Int64? tstamp = null)
         {
             var screenViewProperties = new Dictionary<string, string>();
@@ -167,7 +180,7 @@ namespace Snowplow.Tracker
             }
             var envelope = new Dictionary<string, object>
             {
-                { "schema", "iglu:com.snowplowanalytics.snowplow/unstruct_event/jsonschema/1-0-0" },
+                { "schema", "iglu:com.snowplowanalytics.snowplow/screen_view/jsonschema/1-0-0" },
                 { "data", screenViewProperties }
             };
             Payload pb = new Payload();
