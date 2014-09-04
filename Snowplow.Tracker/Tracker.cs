@@ -13,7 +13,7 @@ namespace Snowplow.Tracker
     public class Tracker
     {
         private string collectorUri;
-        private bool b64 = false; // TODO: make this configurable
+        private bool b64;
         private Dictionary<string, string> standardNvPairs;
 
         public Tracker(string endpoint, string trackerNamespace = null, string appId = null, bool encodeBase64 = true)
@@ -76,17 +76,9 @@ namespace Snowplow.Tracker
             return this;
         }
 
-        // TODO: allow a configurable timestamp
-        private static Int64 getTimestamp(Int64 tstamp)
+        private static Int64 getTimestamp(Int64? tstamp)
         {
-            if (tstamp == null)
-            {
-                return (Int64)(DateTime.UtcNow.Subtract(new DateTime(1970, 1, 1))).TotalMilliseconds;
-            }
-            else
-            {
-                return tstamp;
-            }
+            return tstamp ?? (Int64)(DateTime.UtcNow.Subtract(new DateTime(1970, 1, 1))).TotalMilliseconds;
         }
 
         private void httpGet(Dictionary<string, string> payload)
@@ -99,8 +91,9 @@ namespace Snowplow.Tracker
             httpGet(pb.NvPairs);
         }
 
-        private void completePayload(Payload pb, Context context)
+        private void completePayload(Payload pb, Context context, Int64? tstamp)
         {
+            pb.add("dtm", getTimestamp(tstamp));
             pb.add("uid", Guid.NewGuid().ToString());
             if (context != null && context.Any())
             {
@@ -124,18 +117,18 @@ namespace Snowplow.Tracker
             track(pb);
         }
 
-        public Tracker trackPageView(string pageUrl, string page_title = null, string referrer = null, Context context = null)
+        public Tracker trackPageView(string pageUrl, string page_title = null, string referrer = null, Context context = null, Int64? tstamp = null)
         {
             Payload pb = new Payload();
             pb.add("e", "pv");
             pb.add("url", pageUrl);
             pb.add("page", page_title);
             pb.add("refr", referrer);
-            completePayload(pb, context);
+            completePayload(pb, context, tstamp);
             return this;
         }
 
-        public Tracker trackStructEvent(string category, string action = null, string label = null, string property = null, double? value = null, Context context = null)
+        public Tracker trackStructEvent(string category, string action = null, string label = null, string property = null, double? value = null, Context context = null, Int64? tstamp = null)
         {
             Payload pb = new Payload();
             pb.add("e", "se");
@@ -144,11 +137,11 @@ namespace Snowplow.Tracker
             pb.add("se_la", label);
             pb.add("se_pr", property);
             pb.add("se_va", value);
-            completePayload(pb, context);
+            completePayload(pb, context, tstamp);
             return this;
         }
 
-        public Tracker trackUnstructEvent(SelfDescribingJson eventJson, Context context = null)
+        public Tracker trackUnstructEvent(SelfDescribingJson eventJson, Context context = null, Int64? tstamp = null)
         {
             var envelope = new Dictionary<string, object>
             {
@@ -158,10 +151,10 @@ namespace Snowplow.Tracker
             Payload pb = new Payload();
             pb.add("e", "ue");
             pb.addJson(envelope, b64, "ue_pr", "ue_px");
-            completePayload(pb, context);
+            completePayload(pb, context, tstamp);
             return this;
         }
-        public Tracker trackScreenView(string name = null, string id = null, Context context = null)
+        public Tracker trackScreenView(string name = null, string id = null, Context context = null, Int64? tstamp = null)
         {
             var screenViewProperties = new Dictionary<string, string>();
             if (name != null)
@@ -180,7 +173,7 @@ namespace Snowplow.Tracker
             Payload pb = new Payload();
             pb.add("e", "ue");
             pb.addJson(envelope, b64, "ue_pr", "ue_px");
-            completePayload(pb, context);
+            completePayload(pb, context, tstamp);
             return this;
         }
     }
