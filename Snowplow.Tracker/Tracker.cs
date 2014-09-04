@@ -140,6 +140,46 @@ namespace Snowplow.Tracker
             return this;
         }
 
+        private void trackEcommerceTransactionItem(string orderId, string currency, TransactionItem item, Context context, Int64? tstamp)
+        {
+            Payload pb = new Payload();
+            pb.add("e", "ti");
+            pb.add("ti_id", orderId);
+            pb.add("ti_cu", currency);
+            pb.add("ti_sk", item.sku);
+            pb.add("ti_pr", item.price);
+            pb.add("ti_qu", item.quantity);
+            pb.add("ti_nm", item.name);
+            pb.add("ti_ca", item.category);
+            completePayload(pb, context, tstamp);
+        }
+
+        public Tracker trackEcommerceTransaction(string orderId, double totalValue, string affiliation = null, double? taxValue = null, double? shipping = null, string city = null, string state = null, string country = null, string currency = null, List<TransactionItem> items = null, Context context = null, Int64? tstamp = null)
+        {
+            Payload pb = new Payload();
+            pb.add("e", "tr");
+            pb.add("tr_id", orderId);
+            pb.add("tr_tt", totalValue);
+            pb.add("tr_af", affiliation);
+            pb.add("tr_tx", taxValue);
+            pb.add("tr_sh", shipping);
+            pb.add("tr_ci", city);
+            pb.add("tr_st", state);
+            pb.add("tr_co", country);
+            pb.add("tr_cu", currency);
+            completePayload(pb, context, tstamp);
+
+            if (items != null)
+            {
+                foreach (TransactionItem item in items)
+                {
+                    trackEcommerceTransactionItem(orderId, currency, item, context, tstamp);
+                }
+            }
+
+            return this;
+        }
+
         public Tracker trackStructEvent(string category, string action = null, string label = null, string property = null, double? value = null, Context context = null, Int64? tstamp = null)
         {
             Payload pb = new Payload();
