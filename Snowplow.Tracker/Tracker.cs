@@ -220,7 +220,7 @@ namespace Snowplow.Tracker
             };
             Payload pb = new Payload();
             pb.add("e", "ue");
-            pb.addJson(envelope, b64, "ue_pr", "ue_px");
+            pb.addJson(envelope, b64, "ue_px", "ue_pr");
             completePayload(pb, context, tstamp);
             return this;
         }
@@ -241,10 +241,7 @@ namespace Snowplow.Tracker
                 { "schema", "iglu:com.snowplowanalytics.snowplow/screen_view/jsonschema/1-0-0" },
                 { "data", screenViewProperties }
             };
-            Payload pb = new Payload();
-            pb.add("e", "ue");
-            pb.addJson(envelope, b64, "ue_pr", "ue_px");
-            completePayload(pb, context, tstamp);
+            trackUnstructEvent(envelope, context, tstamp);
             return this;
         }
     }
