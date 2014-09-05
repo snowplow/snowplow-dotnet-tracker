@@ -198,7 +198,7 @@ namespace Snowplow.Tracker
             return this;
         }
 
-        public Tracker trackStructEvent(string category, string action = null, string label = null, string property = null, double? value = null, Context context = null, Int64? tstamp = null)
+        public Tracker trackStructEvent(string category, string action, string label = null, string property = null, double? value = null, Context context = null, Int64? tstamp = null)
         {
             Payload pb = new Payload();
             pb.add("e", "se");
