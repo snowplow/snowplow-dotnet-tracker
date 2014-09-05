@@ -16,7 +16,6 @@
  * License: Apache License Version 2.0
  */
 
-
 using System;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System.Collections.Generic;
