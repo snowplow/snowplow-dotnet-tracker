@@ -147,12 +147,12 @@ namespace Snowplow.Tracker
             track(pb);
         }
 
-        public Tracker trackPageView(string pageUrl, string page_title = null, string referrer = null, Context context = null, Int64? tstamp = null)
+        public Tracker trackPageView(string pageUrl, string pageTitle = null, string referrer = null, Context context = null, Int64? tstamp = null)
         {
             Payload pb = new Payload();
             pb.add("e", "pv");
             pb.add("url", pageUrl);
-            pb.add("page", page_title);
+            pb.add("page", pageTitle);
             pb.add("refr", referrer);
             completePayload(pb, context, tstamp);
             return this;
