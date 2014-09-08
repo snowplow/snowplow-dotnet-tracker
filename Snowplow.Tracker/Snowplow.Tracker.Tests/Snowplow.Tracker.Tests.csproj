@@ -58,6 +58,7 @@
     <Compile Include="IntegrationTest.cs" />
     <Compile Include="PayloadTest.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="SubjectTest.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Snowplow.Tracker.csproj">
