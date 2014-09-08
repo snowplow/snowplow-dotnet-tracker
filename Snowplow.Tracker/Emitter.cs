@@ -31,7 +31,7 @@ namespace Snowplow.Tracker
         private string collectorUri;
         private string method;
         private int bufferSize;
-        private List<Dictionary<string, string>> buffer;
+        volatile private List<Dictionary<string, string>> buffer;
 
         public Emitter(string endpoint, string protocol = "http", int? port = null, string method = "get", int? bufferSize = null)
         {
@@ -71,7 +71,12 @@ namespace Snowplow.Tracker
             }
         }
 
-        public void flush()
+        virtual public void flush(bool sync = false)
+        {
+            sendRequests();
+        }
+
+        protected void sendRequests()
         {
             if (method == "get")
             {

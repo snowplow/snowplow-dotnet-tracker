@@ -41,6 +41,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="AsyncEmitter.cs" />
     <Compile Include="Emitter.cs" />
     <Compile Include="Subject.cs" />
     <Compile Include="TransactionItem.cs" />
