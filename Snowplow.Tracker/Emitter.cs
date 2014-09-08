@@ -75,11 +75,6 @@ namespace Snowplow.Tracker
         {
             if (method == "get")
             {
-                /*foreach (Dictionary<string, string> payload in buffer)
-                {
-                    httpGet(payload);
-                    payload.Add
-                }*/
                 while (buffer.Count > 0)
                 {
                     var payload = buffer[0];
@@ -103,8 +98,11 @@ namespace Snowplow.Tracker
             Console.WriteLine("DESTINATION: " + destination); // TODO remove debug code
             HttpWebRequest request = (HttpWebRequest)WebRequest.Create(destination);
             HttpWebResponse response = (HttpWebResponse)request.GetResponse();
-            Console.WriteLine(response.StatusCode);
-            Console.WriteLine(response.ResponseUri);
+            if (response != null)
+            {
+                Console.WriteLine(response.StatusCode);
+                Console.WriteLine(response.ResponseUri);
+            }
         }
 
     }

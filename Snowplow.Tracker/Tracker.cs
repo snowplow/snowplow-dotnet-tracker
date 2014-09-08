@@ -49,10 +49,21 @@ namespace Snowplow.Tracker
             };
         }
 
-        /*public Tracker(string endpoint, Subject subject = null, string trackerNamespace = null, string appId = null, bool encodeBase64 = true)
+        /*public Tracker(string emitter, Subject subject = null, string trackerNamespace = null, string appId = null, bool encodeBase64 = true)
         {
-            new Tracker(new Emitter(endpoint), subject, trackerNamespace, appId, encodeBase64);
+            this.emitter = new Emitter(emitter);
+            subj = subject ?? new Subject();
+            b64 = encodeBase64;
+            standardNvPairs = new Dictionary<string, string>
+            {
+                { "tv", Version.VERSION },
+                { "tna", trackerNamespace },
+                { "aid", appId }
+            };
         }*/
+
+        public Tracker(string endpoint, Subject subject = null, string trackerNamespace = null, string appId = null, bool encodeBase64 = true)
+            : this(new Emitter(endpoint), subject, trackerNamespace, appId, encodeBase64) { }
 
         public Tracker setPlatform(string value)
         {
