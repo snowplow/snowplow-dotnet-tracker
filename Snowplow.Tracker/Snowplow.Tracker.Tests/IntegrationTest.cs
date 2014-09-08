@@ -151,7 +151,7 @@ namespace Snowplow.Tracker.Tests
             {
                 ShimHttpWebRequest.AllInstances.GetResponse = fake;
 
-                var t = new Tracker("d3rkrsqld9gmqf.cloudfront.net", null, null, false);
+                var t = new Tracker("d3rkrsqld9gmqf.cloudfront.net", null, null, null, false);
                 var eventJson = new Dictionary<string, object>
                 {
                     {"schema", "iglu:com.acme/test/jsonschema/1-0-0"},
@@ -233,7 +233,7 @@ namespace Snowplow.Tracker.Tests
             {
                 ShimHttpWebRequest.AllInstances.GetResponse = fake;
 
-                var t = new Tracker("d3rkrsqld9gmqf.cloudfront.net", "cf", "train simulator");
+                var t = new Tracker("d3rkrsqld9gmqf.cloudfront.net", null, "cf", "train simulator");
                 t.setPlatform("mob");
                 t.setUserId("malcolm");                
                 t.setScreenResolution(100, 200);

@@ -31,20 +31,21 @@ namespace Snowplow.Tracker
 {
     public class Tracker
     {
+        private Subject subj;
         private string collectorUri;
         private bool b64;
         private Dictionary<string, string> standardNvPairs;
 
-        public Tracker(string endpoint, string trackerNamespace = null, string appId = null, bool encodeBase64 = true)
+        public Tracker(string endpoint, Subject subject = null, string trackerNamespace = null, string appId = null, bool encodeBase64 = true)
         {
+            subj = subject ?? new Subject();
             collectorUri = getCollectorUri(endpoint);
             b64 = encodeBase64;
             standardNvPairs = new Dictionary<string, string>
             {
                 { "tv", Version.VERSION },
                 { "tna", trackerNamespace },
-                { "aid", appId },
-                { "p", "pc" }
+                { "aid", appId }
             };
         }
 
@@ -55,43 +56,43 @@ namespace Snowplow.Tracker
 
         public Tracker setPlatform(string value)
         {
-            standardNvPairs["p"] = value;
+            subj.setPlatform(value);
             return this;
         }
 
         public Tracker setUserId(string id)
         {
-            standardNvPairs["uid"] = id;
+            subj.setUserId(id);
             return this;
         }
 
         public Tracker setScreenResolution(int width, int height)
         {
-            standardNvPairs["res"] = width.ToString() + "x" + height.ToString();
+            subj.setScreenResolution(width, height);
             return this;
         }
 
         public Tracker setViewport(int width, int height)
         {
-            standardNvPairs["vp"] = width.ToString() + "x" + height.ToString();
+            subj.setViewport(width, height);
             return this;
         }
 
         public Tracker setColorDepth(int depth)
         {
-            standardNvPairs["cd"] = depth.ToString();
+            subj.setColorDepth(depth);
             return this;
         }
 
         public Tracker setTimezone(string timezone)
         {
-            standardNvPairs["tz"] = timezone;
+            subj.setTimezone(timezone);
             return this;
         }
 
         public Tracker setLang(string lang)
         {
-            standardNvPairs["lang"] = lang;
+            subj.setLang(lang);
             return this;
         }
 
@@ -135,6 +136,7 @@ namespace Snowplow.Tracker
                 pb.addJson(contextEnvelope, b64, "cx", "co");
             }
             pb.addDict(standardNvPairs);
+            pb.addDict(subj.nvPairs);
 
             // TODO: remove debug code
             Console.WriteLine("about to display keys");
@@ -242,6 +244,12 @@ namespace Snowplow.Tracker
                 { "data", screenViewProperties }
             };
             trackUnstructEvent(envelope, context, tstamp);
+            return this;
+        }
+
+        public Tracker setSubject(Subject subject)
+        {
+            subj = subject;
             return this;
         }
     }
