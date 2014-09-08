@@ -32,13 +32,13 @@ namespace Snowplow.Tracker
     public class Tracker
     {
         private Subject subj;
-        private Emitter emitter;
+        private List<Emitter> emitters;
         private bool b64;
         private Dictionary<string, string> standardNvPairs;
 
-        public Tracker(Emitter emitter, Subject subject = null, string trackerNamespace = null, string appId = null, bool encodeBase64 = true)
+        public Tracker(List<Emitter> emitters, Subject subject = null, string trackerNamespace = null, string appId = null, bool encodeBase64 = true)
         {
-            this.emitter = emitter;
+            this.emitters = emitters;
             subj = subject ?? new Subject();
             b64 = encodeBase64;
             standardNvPairs = new Dictionary<string, string>
@@ -64,6 +64,9 @@ namespace Snowplow.Tracker
 
         public Tracker(string endpoint, Subject subject = null, string trackerNamespace = null, string appId = null, bool encodeBase64 = true)
             : this(new Emitter(endpoint), subject, trackerNamespace, appId, encodeBase64) { }
+
+        public Tracker(Emitter endpoint, Subject subject = null, string trackerNamespace = null, string appId = null, bool encodeBase64 = true)
+            : this(new List<Emitter> { endpoint }, subject, trackerNamespace, appId, encodeBase64) { }
 
         public Tracker setPlatform(string value)
         {
@@ -114,7 +117,10 @@ namespace Snowplow.Tracker
 
         private void track(Payload pb)
         {
-            emitter.input(pb.NvPairs);
+            foreach (Emitter emitter in emitters)
+            {
+                emitter.input(pb.NvPairs);
+            }
         }
 
         private void completePayload(Payload pb, Context context, Int64? tstamp)
@@ -245,6 +251,12 @@ namespace Snowplow.Tracker
         public Tracker setSubject(Subject subject)
         {
             subj = subject;
+            return this;
+        }
+
+        public Tracker addEmitter(Emitter emitter)
+        {
+            emitters.Add(emitter);
             return this;
         }
     }
