@@ -53,43 +53,43 @@ namespace Snowplow.Tracker
             return "http://" + endpoint + "/i";
         }
 
-        private Tracker setPlatform(string value)
+        public Tracker setPlatform(string value)
         {
             standardNvPairs["p"] = value;
             return this;
         }
 
-        private Tracker setUserId(string id)
+        public Tracker setUserId(string id)
         {
             standardNvPairs["uid"] = id;
             return this;
         }
 
-        private Tracker setScreenResolution(int width, int height)
+        public Tracker setScreenResolution(int width, int height)
         {
             standardNvPairs["res"] = width.ToString() + "x" + height.ToString();
             return this;
         }
 
-        private Tracker setViewport(int width, int height)
+        public Tracker setViewport(int width, int height)
         {
             standardNvPairs["vp"] = width.ToString() + "x" + height.ToString();
             return this;
         }
 
-        private Tracker setColorDepth(int depth)
+        public Tracker setColorDepth(int depth)
         {
             standardNvPairs["cd"] = depth.ToString();
             return this;
         }
 
-        private Tracker setTimezone(string timezone)
+        public Tracker setTimezone(string timezone)
         {
             standardNvPairs["tz"] = timezone;
             return this;
         }
 
-        private Tracker setLang(string lang)
+        public Tracker setLang(string lang)
         {
             standardNvPairs["lang"] = lang;
             return this;
@@ -124,7 +124,7 @@ namespace Snowplow.Tracker
         private void completePayload(Payload pb, Context context, Int64? tstamp)
         {
             pb.add("dtm", getTimestamp(tstamp));
-            pb.add("uid", Guid.NewGuid().ToString());
+            pb.add("eid", Guid.NewGuid().ToString());
             if (context != null && context.Any())
             {
                 var contextEnvelope = new Dictionary<string, object>

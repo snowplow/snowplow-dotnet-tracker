@@ -20,6 +20,7 @@ using System;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System.Collections.Generic;
 using System.Collections.Specialized;
+using System.Text;
 using System.Web;
 using System.Net;
 using System.Net.Fakes;
@@ -140,6 +141,176 @@ namespace Snowplow.Tracker.Tests
                 checkResult(expectedTransaction, payloads[payloads.Count - 3]);
                 checkResult(expectedHat, payloads[payloads.Count - 2]);
                 checkResult(expectedShirt, payloads[payloads.Count - 1]);
+            }
+        }
+
+        [TestMethod]
+        public void testTrackUnstructEventNonBase64()
+        {
+            using (Microsoft.QualityTools.Testing.Fakes.ShimsContext.Create())
+            {
+                ShimHttpWebRequest.AllInstances.GetResponse = fake;
+
+                var t = new Tracker("d3rkrsqld9gmqf.cloudfront.net", null, null, false);
+                var eventJson = new Dictionary<string, object>
+                {
+                    {"schema", "iglu:com.acme/test/jsonschema/1-0-0"},
+                    {"data", new Dictionary<string, string>
+                    {
+                        { "page", "testpage" },
+                        { "user", "tester" }
+                    }
+                }
+                };
+                t.trackUnstructEvent(eventJson);
+                var expected = new Dictionary<string, string>
+                {
+                    {"e", "ue"}
+                };
+                checkResult(expected, payloads[payloads.Count - 1]);
+                var expectedJsonString = @"{""schema"":""iglu:com.snowplowanalytics.snowplow/unstruct_event/jsonschema/1-0-0"",""data"":{""schema"":""iglu:com.acme/test/jsonschema/1-0-0"",""data"":{""page"":""testpage"",""user"":""tester""}}}";
+                string actualJsonString = payloads[payloads.Count - 1]["ue_pr"];
+                Assert.AreEqual(expectedJsonString, actualJsonString);
+            }
+        }
+
+        [TestMethod]
+        public void testTrackUnstructEventBase64()
+        {
+            using (Microsoft.QualityTools.Testing.Fakes.ShimsContext.Create())
+            {
+                ShimHttpWebRequest.AllInstances.GetResponse = fake;
+
+                var t = new Tracker("d3rkrsqld9gmqf.cloudfront.net");
+                var eventJson = new Dictionary<string, object>
+                {
+                    {"schema", "iglu:com.acme/test/jsonschema/1-0-0"},
+                    {"data", new Dictionary<string, string>
+                    {
+                        { "page", "testpage" },
+                        { "user", "tester" }
+                    }
+                }
+                };
+                t.trackUnstructEvent(eventJson);
+                var expected = new Dictionary<string, string>
+                {
+                    {"e", "ue"}
+                };
+                checkResult(expected, payloads[payloads.Count - 1]);
+                var expectedJsonString = @"{""schema"":""iglu:com.snowplowanalytics.snowplow/unstruct_event/jsonschema/1-0-0"",""data"":{""schema"":""iglu:com.acme/test/jsonschema/1-0-0"",""data"":{""page"":""testpage"",""user"":""tester""}}}";
+                byte[] data = Convert.FromBase64String(payloads[payloads.Count - 1]["ue_px"]);
+                string actualJsonString = Encoding.UTF8.GetString(data);
+                Assert.AreEqual(expectedJsonString, actualJsonString);
+            }
+        }
+
+        [TestMethod]
+        public void testTrackScreenView()
+        {
+            using (Microsoft.QualityTools.Testing.Fakes.ShimsContext.Create())
+            {
+                ShimHttpWebRequest.AllInstances.GetResponse = fake;
+
+                var t = new Tracker("d3rkrsqld9gmqf.cloudfront.net");
+                t.trackScreenView("entry screen", "0001");
+                var expected = new Dictionary<string, string>
+                {
+                    {"e", "ue"}
+                };
+                checkResult(expected, payloads[payloads.Count - 1]);
+                var expectedJsonString = @"{""schema"":""iglu:com.snowplowanalytics.snowplow/unstruct_event/jsonschema/1-0-0"",""data"":{""schema"":""iglu:com.snowplowanalytics.snowplow/screen_view/jsonschema/1-0-0"",""data"":{""name"":""entry screen"",""id"":""0001""}}}";
+                byte[] data = Convert.FromBase64String(payloads[payloads.Count - 1]["ue_px"]);
+                string actualJsonString = Encoding.UTF8.GetString(data);
+                Assert.AreEqual(expectedJsonString, actualJsonString);
+            }
+        }
+
+        [TestMethod]
+        public void testSetterMethods()
+        {
+            using (Microsoft.QualityTools.Testing.Fakes.ShimsContext.Create())
+            {
+                ShimHttpWebRequest.AllInstances.GetResponse = fake;
+
+                var t = new Tracker("d3rkrsqld9gmqf.cloudfront.net", "cf", "train simulator");
+                t.setPlatform("mob");
+                t.setUserId("malcolm");                
+                t.setScreenResolution(100, 200);
+                t.setViewport(50, 60);
+                t.setColorDepth(24);
+                t.setTimezone("Europe London");
+                t.setLang("en");
+                t.trackPageView("http://www.example.com", "title page", "http://www.referrer.com", null, 1000000000000);
+                var expected = new Dictionary<string, string>
+                {
+                    {"e", "pv"},
+                    {"url", "http://www.example.com"},
+                    {"page", "title page"},
+                    {"refr", "http://www.referrer.com"},
+                    {"tv", "cs-0.1.0"},
+                    {"tna", "cf"},
+                    {"aid", "train simulator"},
+                    {"p", "mob"},
+                    {"res", "100x200"},
+                    {"vp", "50x60"},
+                    {"cd", "24"},
+                    {"tz", "Europe London"},
+                    {"lang", "en"},
+                    {"dtm", "1000000000000"}
+                };
+
+                checkResult(expected, payloads[payloads.Count - 1]);
+            }
+        }
+
+        [TestMethod]
+        public void testContext()
+        {
+            using (Microsoft.QualityTools.Testing.Fakes.ShimsContext.Create())
+            {
+                ShimHttpWebRequest.AllInstances.GetResponse = fake;
+
+                var pageContext = new Dictionary<string, object>
+                {
+                    {"schema", "iglu:com.snowplowanalytics.snowplow/page/jsonschema/1-0-0"},
+                    {"data", new Dictionary<string, object>
+                        {
+                            { "type", "test" },
+                            { "public", false }
+                        }
+                    }
+                };
+
+                var userContext = new Dictionary<string, object>
+                {
+                    {"schema", "iglu:com.snowplowanalytics.snowplow/user/jsonschema/1-0-0"},
+                    {"data", new Dictionary<string, object>
+                        {
+                            { "age", 40 },
+                            { "name", "Ned" }
+                        }
+                    }
+                };
+
+                var context = new List<Dictionary<string, object>>
+                {
+                    pageContext,
+                    userContext
+                };
+
+                var t = new Tracker("d3rkrsqld9gmqf.cloudfront.net");
+                t.trackPageView("http://www.example.com", null, null, context);
+                var expected = new Dictionary<string, string>
+                {
+                    {"e", "pv"},
+                    {"url", "http://www.example.com"}
+                };
+                checkResult(expected, payloads[payloads.Count - 1]);
+                var expectedJsonString = @"{""schema"":""iglu:com.snowplowanalytics.snowplow/contexts/1-0-0"",""data"":[{""schema"":""iglu:com.snowplowanalytics.snowplow/page/jsonschema/1-0-0"",""data"":{""type"":""test"",""public"":false}},{""schema"":""iglu:com.snowplowanalytics.snowplow/user/jsonschema/1-0-0"",""data"":{""age"":40,""name"":""Ned""}}]}";
+                byte[] data = Convert.FromBase64String(payloads[payloads.Count - 1]["cx"]);
+                string actualJsonString = Encoding.UTF8.GetString(data);
+                Assert.AreEqual(expectedJsonString, actualJsonString);
             }
         }
     }
