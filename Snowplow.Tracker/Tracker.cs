@@ -32,14 +32,14 @@ namespace Snowplow.Tracker
     public class Tracker
     {
         private Subject subj;
-        private string collectorUri;
+        private Emitter emitter;
         private bool b64;
         private Dictionary<string, string> standardNvPairs;
 
-        public Tracker(string endpoint, Subject subject = null, string trackerNamespace = null, string appId = null, bool encodeBase64 = true)
+        public Tracker(Emitter emitter, Subject subject = null, string trackerNamespace = null, string appId = null, bool encodeBase64 = true)
         {
+            this.emitter = emitter;
             subj = subject ?? new Subject();
-            collectorUri = getCollectorUri(endpoint);
             b64 = encodeBase64;
             standardNvPairs = new Dictionary<string, string>
             {
@@ -49,10 +49,10 @@ namespace Snowplow.Tracker
             };
         }
 
-        private string getCollectorUri(string endpoint)
+        /*public Tracker(string endpoint, Subject subject = null, string trackerNamespace = null, string appId = null, bool encodeBase64 = true)
         {
-            return "http://" + endpoint + "/i";
-        }
+            new Tracker(new Emitter(endpoint), subject, trackerNamespace, appId, encodeBase64);
+        }*/
 
         public Tracker setPlatform(string value)
         {
@@ -101,25 +101,9 @@ namespace Snowplow.Tracker
             return tstamp ?? (Int64)(DateTime.UtcNow.Subtract(new DateTime(1970, 1, 1))).TotalMilliseconds;
         }
 
-        private static string ToQueryString(Dictionary<string, string> payload)
-        {
-            var array = (from key in payload.Keys
-                         select string.Format("{0}={1}", HttpUtility.UrlEncode(key), HttpUtility.UrlEncode(payload[key])))
-                .ToArray();
-            return "?" + string.Join("&", array);
-        }
-
-        private void httpGet(Dictionary<string, string> payload)
-        {
-            string destination = collectorUri + ToQueryString(payload);
-            Console.WriteLine("destination: " + destination); // TODO remove debug code
-            HttpWebRequest request = (HttpWebRequest)WebRequest.Create(destination);
-            HttpWebResponse response = (HttpWebResponse)request.GetResponse();
-        }
-
         private void track(Payload pb)
         {
-            httpGet(pb.NvPairs);
+            emitter.input(pb.NvPairs);
         }
 
         private void completePayload(Payload pb, Context context, Int64? tstamp)

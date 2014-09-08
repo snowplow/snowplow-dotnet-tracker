@@ -26,18 +26,18 @@ using System.Web;
 
 namespace Snowplow.Tracker
 {
-    class Emitter
+    public class Emitter
     {
         private string collectorUri;
         private string method;
         private int bufferSize;
-        private List<Dictionary<string, object>> buffer;
+        private List<Dictionary<string, string>> buffer;
 
         public Emitter(string endpoint, string protocol = "http", int? port = null, string method = "get", int? bufferSize = null)
         {
             collectorUri = getCollectorUri(endpoint, protocol, port, method);
             this.method = method;
-            this.buffer = new List<Dictionary<string, object>>();
+            this.buffer = new List<Dictionary<string, string>>();
             this.bufferSize = bufferSize ?? (method == "get" ? 0 : 10);
         }
 
@@ -62,7 +62,7 @@ namespace Snowplow.Tracker
             }
         }
 
-        public void input(Dictionary<string, object> payload)
+        public void input(Dictionary<string, string> payload)
         {
             buffer.Add(payload);
             if (buffer.Count >= bufferSize)
@@ -73,7 +73,20 @@ namespace Snowplow.Tracker
 
         public void flush()
         {
-
+            if (method == "get")
+            {
+                /*foreach (Dictionary<string, string> payload in buffer)
+                {
+                    httpGet(payload);
+                    payload.Add
+                }*/
+                while (buffer.Count > 0)
+                {
+                    var payload = buffer[0];
+                    buffer.RemoveAt(0);
+                    httpGet(payload);
+                }
+            }
         }
 
         private static string ToQueryString(Dictionary<string, string> payload)
@@ -87,9 +100,11 @@ namespace Snowplow.Tracker
         private void httpGet(Dictionary<string, string> payload)
         {
             string destination = collectorUri + ToQueryString(payload);
-            Console.WriteLine("destination: " + destination); // TODO remove debug code
+            Console.WriteLine("DESTINATION: " + destination); // TODO remove debug code
             HttpWebRequest request = (HttpWebRequest)WebRequest.Create(destination);
             HttpWebResponse response = (HttpWebResponse)request.GetResponse();
+            Console.WriteLine(response.StatusCode);
+            Console.WriteLine(response.ResponseUri);
         }
 
     }
