@@ -23,6 +23,8 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Net;
 using System.Web;
+using System.IO;
+using System.Web.Script.Serialization;
 
 namespace Snowplow.Tracker
 {
@@ -82,7 +84,26 @@ namespace Snowplow.Tracker
 
         protected void sendRequests()
         {
-            if (method == "get")
+            if (method == "post")
+            {
+                var tempBuffer = buffer;
+                var data = new Dictionary<string, object>
+                {
+                    { "schema", "iglu:com.snowplowanalytics.snowplow/payload_data/jsonschema/1-0-0" },
+                    { "data", tempBuffer }
+                };
+                buffer = new List<Dictionary<string, string>>();
+                string statusCode = httpPost(data);
+                if (statusCode == "OK")
+                {
+                    onSuccess(tempBuffer.Count);
+                }
+                else
+                {
+                    onFailure(0, tempBuffer);
+                }
+            }
+            else
             {
                 int successCount = 0;
                 var unsentRequests = new List<Dictionary<string, string>>();
@@ -90,7 +111,7 @@ namespace Snowplow.Tracker
                 {
                     var payload = buffer[0];
                     buffer.RemoveAt(0);
-                    string statusCode = httpGet(payload).StatusCode.ToString();
+                    string statusCode = httpGet(payload);
                     if (statusCode == "OK")
                     {
                         successCount += 1;
@@ -125,7 +146,36 @@ namespace Snowplow.Tracker
             return "?" + string.Join("&", array);
         }
 
-        private HttpWebResponse httpGet(Dictionary<string, string> payload)
+        // See http://stackoverflow.com/questions/9145667/how-to-post-json-to-the-server
+        private string httpPost(Dictionary<string, object> payload)
+        {
+            string destination = collectorUri;
+            HttpWebRequest request = (HttpWebRequest)WebRequest.Create(destination);
+            request.Method = "POST";
+            request.ContentType = "application/json; charset=utf-8";
+            using (var streamWriter = new StreamWriter(request.GetRequestStream()))
+            {
+                string json = new JavaScriptSerializer(null).Serialize(payload);
+                streamWriter.Write(json);
+                streamWriter.Flush();
+                streamWriter.Close();
+                try
+                {
+                    var httpResponse = (HttpWebResponse)request.GetResponse();
+                    return httpResponse.StatusCode.ToString();
+                }
+                catch (WebException we)
+                {
+                    var resp = we.Response as HttpWebResponse;
+                    if (resp == null)
+                        throw;
+                    return resp.StatusCode.ToString();
+                }
+
+            }
+        }
+
+        private string httpGet(Dictionary<string, string> payload)
         {
             string destination = collectorUri + ToQueryString(payload);
             Console.WriteLine("DESTINATION: " + destination); // TODO remove debug code
@@ -133,13 +183,16 @@ namespace Snowplow.Tracker
             try
             {
                 HttpWebResponse response = (HttpWebResponse)request.GetResponse();
-                return response;
+                return response.StatusCode.ToString();
             }
             catch (WebException we)
             {
-                Console.WriteLine(we.Response.Headers);
                 var resp = we.Response as HttpWebResponse;
-                return resp;
+                if (resp == null)
+                {
+                    throw;
+                }
+                return resp.StatusCode.ToString();
             }
             
         }
