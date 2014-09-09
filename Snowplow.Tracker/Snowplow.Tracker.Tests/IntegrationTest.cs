@@ -37,7 +37,9 @@ namespace Snowplow.Tracker.Tests
         private static FakesDelegates.Func<HttpWebRequest, WebResponse> fake = (request) => {
             var pairs = HttpUtility.ParseQueryString(request.RequestUri.Query);
             payloads.Add(pairs);
-            return null;
+            var responseShim = new ShimHttpWebResponse();
+            responseShim.StatusCodeGet = () => HttpStatusCode.OK;
+            return responseShim;
         };
 
         private static void checkResult(Dictionary<string, string> expected, NameValueCollection actual)

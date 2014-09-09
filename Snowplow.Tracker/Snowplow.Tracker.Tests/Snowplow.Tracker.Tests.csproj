@@ -61,13 +61,13 @@
     <Compile Include="SubjectTest.cs" />
   </ItemGroup>
   <ItemGroup>
+    <Fakes Include="Fakes\System.fakes" />
+  </ItemGroup>
+  <ItemGroup>
     <ProjectReference Include="..\Snowplow.Tracker.csproj">
       <Project>{e0aed73b-6461-4a3f-9530-1a986d2c0fe9}</Project>
       <Name>Snowplow.Tracker</Name>
     </ProjectReference>
-  </ItemGroup>
-  <ItemGroup>
-    <Fakes Include="Fakes\System.fakes" />
   </ItemGroup>
   <Choose>
     <When Condition="'$(VisualStudioVersion)' == '10.0' And '$(IsCodedUITest)' == 'True'">
