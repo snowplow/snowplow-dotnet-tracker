@@ -32,13 +32,17 @@ namespace Snowplow.Tracker
         private string method;
         private int bufferSize;
         volatile private List<Dictionary<string, string>> buffer;
+        private Action<int> onSuccess;
+        private Action<int, List<Dictionary<string, string>>> onFailure = null;
 
-        public Emitter(string endpoint, string protocol = "http", int? port = null, string method = "get", int? bufferSize = null)
+        public Emitter(string endpoint, string protocol = "http", int? port = null, string method = "get", int? bufferSize = null, Action<int> onSuccess = null, Action<int, List<Dictionary<string, string>>> onFailure = null)
         {
             collectorUri = getCollectorUri(endpoint, protocol, port, method);
             this.method = method;
             this.buffer = new List<Dictionary<string, string>>();
             this.bufferSize = bufferSize ?? (method == "get" ? 0 : 10);
+            this.onSuccess = onSuccess;
+            this.onFailure = onFailure;
         }
 
         private static string getCollectorUri(string endpoint, string protocol, int? port, string method)
@@ -80,11 +84,35 @@ namespace Snowplow.Tracker
         {
             if (method == "get")
             {
+                int successCount = 0;
+                var unsentRequests = new List<Dictionary<string, string>>();
                 while (buffer.Count > 0)
                 {
                     var payload = buffer[0];
                     buffer.RemoveAt(0);
-                    httpGet(payload);
+                    string statusCode = httpGet(payload).StatusCode.ToString();
+                    if (statusCode == "OK")
+                    {
+                        successCount += 1;
+                    }
+                    else
+                    {
+                        unsentRequests.Add(payload);
+                    }
+                }
+                if (unsentRequests.Count == 0)
+                {
+                    if (onSuccess != null)
+                    {
+                        onSuccess(successCount);
+                    }
+                }
+                else
+                {
+                    if (onFailure != null)
+                    {
+                        onFailure(successCount, unsentRequests);
+                    }
                 }
             }
         }
@@ -97,7 +125,7 @@ namespace Snowplow.Tracker
             return "?" + string.Join("&", array);
         }
 
-        private void httpGet(Dictionary<string, string> payload)
+        private HttpWebResponse httpGet(Dictionary<string, string> payload)
         {
             string destination = collectorUri + ToQueryString(payload);
             Console.WriteLine("DESTINATION: " + destination); // TODO remove debug code
@@ -108,6 +136,7 @@ namespace Snowplow.Tracker
                 Console.WriteLine(response.StatusCode);
                 Console.WriteLine(response.ResponseUri);
             }
+            return response;
         }
 
     }
