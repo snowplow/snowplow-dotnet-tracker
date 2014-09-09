@@ -130,13 +130,18 @@ namespace Snowplow.Tracker
             string destination = collectorUri + ToQueryString(payload);
             Console.WriteLine("DESTINATION: " + destination); // TODO remove debug code
             HttpWebRequest request = (HttpWebRequest)WebRequest.Create(destination);
-            HttpWebResponse response = (HttpWebResponse)request.GetResponse();
-            if (response != null)
+            try
             {
-                Console.WriteLine(response.StatusCode);
-                Console.WriteLine(response.ResponseUri);
+                HttpWebResponse response = (HttpWebResponse)request.GetResponse();
+                return response;
             }
-            return response;
+            catch (WebException we)
+            {
+                Console.WriteLine(we.Response.Headers);
+                var resp = we.Response as HttpWebResponse;
+                return resp;
+            }
+            
         }
 
     }
