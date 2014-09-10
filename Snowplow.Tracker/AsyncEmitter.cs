@@ -16,39 +16,32 @@
  * License: Apache License Version 2.0
  */
 
-
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using System.Threading;
 
 namespace Snowplow.Tracker
 {
     public class AsyncEmitter : Emitter
     {
-        private List<Thread> threads;
+        public List<Task> tasks;
 
-        public AsyncEmitter(string endpoint, string protocol = "http", int? port = null, string method = "get", int? bufferSize = null):
-            base(endpoint, protocol, port, method, bufferSize) { threads = new List<Thread>(); }
+        public AsyncEmitter(string endpoint, HttpProtocol protocol = HttpProtocol.HTTP, int? port = null, HttpMethod method = HttpMethod.GET, int? bufferSize = null, Action<int> onSuccess = null, Action<int, List<Dictionary<string, string>>> onFailure = null) :
+            base(endpoint, protocol, port, method, bufferSize, onSuccess, onFailure) { tasks = new List<Task>(); }
 
         public override void flush(bool sync = false)
         {
-            Thread flushingThread = new Thread(new ThreadStart(this.sendRequests));
-            flushingThread.Start();
-            threads = threads.Where(t => t.IsAlive).ToList();
-            threads.Add(flushingThread);
-            Thread.Yield();
-
+            Task flushingTask = Task.Factory.StartNew(sendRequests);
+            tasks.Add(flushingTask);
+            tasks = tasks.Where(t => !t.IsCompleted).ToList();
             if (sync)
             {
-                foreach (Thread thread in threads)
-                {
-                    thread.Join(TimeSpan.FromSeconds(1));
-                    thread.Abort();
-                }
+                Task.WaitAll(tasks.ToArray(), 10000);
             }
+
         }
+
     }
 }
