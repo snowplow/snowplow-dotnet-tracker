@@ -160,7 +160,7 @@ namespace Snowplow.Tracker
             HttpWebRequest request = (HttpWebRequest)WebRequest.Create(destination);
             request.Method = "POST";
             request.ContentType = "application/json; charset=utf-8";
-            request.UserAgent = "csharp";
+            request.UserAgent = "System.Net.HttpWebRequest";
             using (var streamWriter = new StreamWriter(request.GetRequestStream()))
             {
                 string json = new JavaScriptSerializer(null).Serialize(payload);
