@@ -46,6 +46,7 @@
     <Compile Include="Emitter.cs" />
     <Compile Include="HttpMethod.cs" />
     <Compile Include="HttpProtocol.cs" />
+    <Compile Include="IEmitter.cs" />
     <Compile Include="Subject.cs" />
     <Compile Include="TransactionItem.cs" />
     <Compile Include="Payload.cs" />

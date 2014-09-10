@@ -32,11 +32,11 @@ namespace Snowplow.Tracker
     public class Tracker
     {
         private Subject subj;
-        private List<Emitter> emitters;
+        private List<IEmitter> emitters;
         private bool b64;
         private Dictionary<string, string> standardNvPairs;
 
-        public Tracker(List<Emitter> emitters, Subject subject = null, string trackerNamespace = null, string appId = null, bool encodeBase64 = true)
+        public Tracker(List<IEmitter> emitters, Subject subject = null, string trackerNamespace = null, string appId = null, bool encodeBase64 = true)
         {
             this.emitters = emitters;
             subj = subject ?? new Subject();
@@ -65,8 +65,8 @@ namespace Snowplow.Tracker
         public Tracker(string endpoint, Subject subject = null, string trackerNamespace = null, string appId = null, bool encodeBase64 = true)
             : this(new Emitter(endpoint), subject, trackerNamespace, appId, encodeBase64) { }
 
-        public Tracker(Emitter endpoint, Subject subject = null, string trackerNamespace = null, string appId = null, bool encodeBase64 = true)
-            : this(new List<Emitter> { endpoint }, subject, trackerNamespace, appId, encodeBase64) { }
+        public Tracker(IEmitter endpoint, Subject subject = null, string trackerNamespace = null, string appId = null, bool encodeBase64 = true)
+            : this(new List<IEmitter> { endpoint }, subject, trackerNamespace, appId, encodeBase64) { }
 
         public Tracker setPlatform(string value)
         {
@@ -117,7 +117,7 @@ namespace Snowplow.Tracker
 
         private void track(Payload pb)
         {
-            foreach (Emitter emitter in emitters)
+            foreach (IEmitter emitter in emitters)
             {
                 emitter.input(pb.NvPairs);
             }
@@ -250,7 +250,7 @@ namespace Snowplow.Tracker
 
         public Tracker flush(bool sync = false)
         {
-            foreach (Emitter emitter in emitters)
+            foreach (IEmitter emitter in emitters)
             {
                 emitter.flush(sync);
             }

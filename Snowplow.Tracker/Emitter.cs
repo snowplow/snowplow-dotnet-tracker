@@ -28,7 +28,7 @@ using System.Web.Script.Serialization;
 
 namespace Snowplow.Tracker
 {
-    public class Emitter
+    public class Emitter : IEmitter
     {
         private string collectorUri;
         private HttpMethod method;
