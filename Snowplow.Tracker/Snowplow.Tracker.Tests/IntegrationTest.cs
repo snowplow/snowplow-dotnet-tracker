@@ -332,7 +332,7 @@ namespace Snowplow.Tracker.Tests
                 ShimHttpWebRequest.AllInstances.GetResponse = fake;
 
                 int successes = -1;
-                var e = new Emitter("d3rkrsqld9gmqf.cloudfront.net", "http", null, HttpMethod.GET, 2, (successCount) =>
+                var e = new Emitter("d3rkrsqld9gmqf.cloudfront.net", HttpProtocol.HTTP, null, HttpMethod.GET, 2, (successCount) =>
                 {
                     successes = successCount;
                 });
@@ -352,7 +352,7 @@ namespace Snowplow.Tracker.Tests
 
                 int? successes = null;
                 List<Dictionary<string, string>> failureList = null;
-                var e = new Emitter("d3rkrsqld9gmqf.cloudfront.net", "http", null, HttpMethod.GET, 2, null, (successCount, failures) =>
+                var e = new Emitter("d3rkrsqld9gmqf.cloudfront.net", HttpProtocol.HTTP, null, HttpMethod.POST, 2, null, (successCount, failures) =>
                 {
                     successes = successCount;
                     failureList = failures;

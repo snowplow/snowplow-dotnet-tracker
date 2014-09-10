@@ -37,7 +37,7 @@ namespace Snowplow.Tracker
         private Action<int> onSuccess;
         private Action<int, List<Dictionary<string, string>>> onFailure = null;
 
-        public Emitter(string endpoint, string protocol = "http", int? port = null, HttpMethod method = HttpMethod.GET, int? bufferSize = null, Action<int> onSuccess = null, Action<int, List<Dictionary<string, string>>> onFailure = null)
+        public Emitter(string endpoint, HttpProtocol protocol = HttpProtocol.HTTP, int? port = null, HttpMethod method = HttpMethod.GET, int? bufferSize = null, Action<int> onSuccess = null, Action<int, List<Dictionary<string, string>>> onFailure = null)
         {
             collectorUri = getCollectorUri(endpoint, protocol, port, method);
             this.method = method;
@@ -47,9 +47,10 @@ namespace Snowplow.Tracker
             this.onFailure = onFailure;
         }
 
-        private static string getCollectorUri(string endpoint, string protocol, int? port, HttpMethod method)
+        private static string getCollectorUri(string endpoint, HttpProtocol protocol, int? port, HttpMethod method)
         {
             string path;
+            string requestProtocol = (protocol == HttpProtocol.HTTP) ? "http" : "https";
             if (method == HttpMethod.GET)
             {
                 path = "/i";
@@ -60,11 +61,11 @@ namespace Snowplow.Tracker
             }
             if (port == null)
             {
-                return protocol + "://" + endpoint + path;
+                return requestProtocol + "://" + endpoint + path;
             }
             else
             {
-                return protocol + "://" + port.ToString() + path;
+                return requestProtocol + "://" + endpoint + port.ToString() + path;
             }
         }
 
