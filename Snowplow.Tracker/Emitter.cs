@@ -96,11 +96,17 @@ namespace Snowplow.Tracker
                 string statusCode = httpPost(data);
                 if (statusCode == "OK")
                 {
-                    onSuccess(tempBuffer.Count);
+                    if (onSuccess != null)
+                    {
+                        onSuccess(tempBuffer.Count);
+                    }
                 }
                 else
                 {
-                    onFailure(0, tempBuffer);
+                    if (onFailure != null)
+                    {
+                        onFailure(0, tempBuffer);
+                    }
                 }
             }
             else
