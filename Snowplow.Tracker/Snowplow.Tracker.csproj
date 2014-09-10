@@ -44,6 +44,7 @@
   <ItemGroup>
     <Compile Include="AsyncEmitter.cs" />
     <Compile Include="Emitter.cs" />
+    <Compile Include="HttpMethod.cs" />
     <Compile Include="Subject.cs" />
     <Compile Include="TransactionItem.cs" />
     <Compile Include="Payload.cs" />

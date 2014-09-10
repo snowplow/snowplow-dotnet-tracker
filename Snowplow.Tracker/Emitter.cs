@@ -31,26 +31,26 @@ namespace Snowplow.Tracker
     public class Emitter
     {
         private string collectorUri;
-        private string method;
+        private HttpMethod method;
         private int bufferSize;
         volatile private List<Dictionary<string, string>> buffer;
         private Action<int> onSuccess;
         private Action<int, List<Dictionary<string, string>>> onFailure = null;
 
-        public Emitter(string endpoint, string protocol = "http", int? port = null, string method = "get", int? bufferSize = null, Action<int> onSuccess = null, Action<int, List<Dictionary<string, string>>> onFailure = null)
+        public Emitter(string endpoint, string protocol = "http", int? port = null, HttpMethod method = HttpMethod.GET, int? bufferSize = null, Action<int> onSuccess = null, Action<int, List<Dictionary<string, string>>> onFailure = null)
         {
             collectorUri = getCollectorUri(endpoint, protocol, port, method);
             this.method = method;
             this.buffer = new List<Dictionary<string, string>>();
-            this.bufferSize = bufferSize ?? (method == "get" ? 0 : 10);
+            this.bufferSize = bufferSize ?? (method == HttpMethod.GET ? 0 : 10);
             this.onSuccess = onSuccess;
             this.onFailure = onFailure;
         }
 
-        private static string getCollectorUri(string endpoint, string protocol, int? port, string method)
+        private static string getCollectorUri(string endpoint, string protocol, int? port, HttpMethod method)
         {
             string path;
-            if (method == "get")
+            if (method == HttpMethod.GET)
             {
                 path = "/i";
             }
@@ -84,7 +84,7 @@ namespace Snowplow.Tracker
 
         protected void sendRequests()
         {
-            if (method == "post")
+            if (method == HttpMethod.POST)
             {
                 var tempBuffer = buffer;
                 var data = new Dictionary<string, object>
