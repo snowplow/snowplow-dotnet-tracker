@@ -248,6 +248,15 @@ namespace Snowplow.Tracker
             return this;
         }
 
+        public Tracker flush(bool sync = false)
+        {
+            foreach (Emitter emitter in emitters)
+            {
+                emitter.flush(sync);
+            }
+            return this;
+        }
+
         public Tracker setSubject(Subject subject)
         {
             subj = subject;
