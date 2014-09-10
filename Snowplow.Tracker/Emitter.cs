@@ -123,6 +123,7 @@ namespace Snowplow.Tracker
                 }
                 if (unsentRequests.Count == 0)
                 {
+
                     if (onSuccess != null)
                     {
                         onSuccess(successCount);
@@ -153,25 +154,25 @@ namespace Snowplow.Tracker
             HttpWebRequest request = (HttpWebRequest)WebRequest.Create(destination);
             request.Method = "POST";
             request.ContentType = "application/json; charset=utf-8";
+            request.UserAgent = "csharp";
             using (var streamWriter = new StreamWriter(request.GetRequestStream()))
             {
                 string json = new JavaScriptSerializer(null).Serialize(payload);
                 streamWriter.Write(json);
                 streamWriter.Flush();
                 streamWriter.Close();
-                try
-                {
-                    var httpResponse = (HttpWebResponse)request.GetResponse();
-                    return httpResponse.StatusCode.ToString();
-                }
-                catch (WebException we)
-                {
-                    var resp = we.Response as HttpWebResponse;
-                    if (resp == null)
-                        throw;
-                    return resp.StatusCode.ToString();
-                }
-
+            }
+            try
+            {
+                var httpResponse = (HttpWebResponse)request.GetResponse();
+                return httpResponse.StatusCode.ToString();
+            }
+            catch (WebException we)
+            {
+                var resp = we.Response as HttpWebResponse;
+                if (resp == null)
+                    throw;
+                return resp.StatusCode.ToString();
             }
         }
 
