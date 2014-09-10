@@ -41,6 +41,14 @@ namespace Snowplow.Tracker.Tests
             responseShim.StatusCodeGet = () => HttpStatusCode.OK;
             return responseShim;
         };
+        private static FakesDelegates.Func<HttpWebRequest, WebResponse> badFake = (request) =>
+        {
+            var pairs = HttpUtility.ParseQueryString(request.RequestUri.Query);
+            payloads.Add(pairs);
+            var responseShim = new ShimHttpWebResponse();
+            responseShim.StatusCodeGet = () => HttpStatusCode.NotFound;
+            return responseShim;
+        };
 
         private static void checkResult(Dictionary<string, string> expected, NameValueCollection actual)
         {
@@ -313,6 +321,48 @@ namespace Snowplow.Tracker.Tests
                 byte[] data = Convert.FromBase64String(payloads[payloads.Count - 1]["cx"]);
                 string actualJsonString = Encoding.UTF8.GetString(data);
                 Assert.AreEqual(expectedJsonString, actualJsonString);
+            }
+        }
+
+        [TestMethod]
+        public void testOnSuccess()
+        {
+            using (Microsoft.QualityTools.Testing.Fakes.ShimsContext.Create())
+            {
+                ShimHttpWebRequest.AllInstances.GetResponse = fake;
+
+                int successes = -1;
+                var e = new Emitter("d3rkrsqld9gmqf.cloudfront.net", "http", null, HttpMethod.GET, 2, (successCount) =>
+                {
+                    successes = successCount;
+                });
+                var t = new Tracker(e);
+                t.trackPageView("first");
+                t.trackPageView("second");
+                Assert.AreEqual(2, successes);
+            }
+        }
+
+        [TestMethod]
+        public void testOnFailure()
+        {
+            using (Microsoft.QualityTools.Testing.Fakes.ShimsContext.Create())
+            {
+                ShimHttpWebRequest.AllInstances.GetResponse = badFake;
+
+                int? successes = null;
+                List<Dictionary<string, string>> failureList = null;
+                var e = new Emitter("d3rkrsqld9gmqf.cloudfront.net", "http", null, HttpMethod.GET, 2, null, (successCount, failures) =>
+                {
+                    successes = successCount;
+                    failureList = failures;
+                });
+                var t = new Tracker(e);
+                t.trackPageView("first");
+                t.trackPageView("second");
+                Assert.AreEqual(0, successes);
+                Assert.AreEqual("first", failureList[0]["url"]);
+                Assert.AreEqual("second", failureList[1]["url"]);
             }
         }
     }
