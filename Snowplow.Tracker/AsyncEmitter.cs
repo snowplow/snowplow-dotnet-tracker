@@ -38,6 +38,7 @@ namespace Snowplow.Tracker
             tasks = tasks.Where(t => !t.IsCompleted).ToList();
             if (sync)
             {
+                logger.Info("Starting synchronous flush");
                 Task.WaitAll(tasks.ToArray(), 10000);
             }
 

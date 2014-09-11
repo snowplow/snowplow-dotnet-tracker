@@ -25,11 +25,16 @@ using System.Net;
 using System.Web;
 using System.IO;
 using System.Web.Script.Serialization;
+using NLog;
+using NLog.Targets;
+using NLog.Config;
 
 namespace Snowplow.Tracker
 {
     public class Emitter : IEmitter
     {
+
+        protected static Logger logger = LogManager.GetLogger("SnowplowTracker");
         private string collectorUri;
         private HttpMethod method;
         private int bufferSize;
@@ -45,6 +50,7 @@ namespace Snowplow.Tracker
             this.bufferSize = bufferSize ?? (method == HttpMethod.GET ? 0 : 10);
             this.onSuccess = onSuccess;
             this.onFailure = onFailure;
+            logger.Info(String.Format("{0} initialized with endpoint {1}", this.GetType(), collectorUri));
         }
 
         private static string getCollectorUri(string endpoint, HttpProtocol protocol, int? port, HttpMethod method)
@@ -85,6 +91,7 @@ namespace Snowplow.Tracker
 
         protected void sendRequests()
         {
+            logger.Info(String.Format("Attempting to send {0} event{1}", buffer.Count, buffer.Count == 1 ? "" : "s"));
             if (method == HttpMethod.POST)
             {
                 var tempBuffer = buffer;
@@ -97,6 +104,7 @@ namespace Snowplow.Tracker
                 string statusCode = httpPost(data);
                 if (statusCode == "OK")
                 {
+                    logger.Info(String.Format("POST request to {0} finished with code {1}", collectorUri, statusCode));
                     if (onSuccess != null)
                     {
                         onSuccess(tempBuffer.Count);
@@ -104,6 +112,7 @@ namespace Snowplow.Tracker
                 }
                 else
                 {
+                    logger.Warn(String.Format("POST request to {0} finished with code {1}", collectorUri, statusCode));
                     if (onFailure != null)
                     {
                         onFailure(0, tempBuffer);
@@ -121,10 +130,12 @@ namespace Snowplow.Tracker
                     string statusCode = httpGet(payload);
                     if (statusCode == "OK")
                     {
+                        logger.Info(String.Format("POST request to {0} finished with code {1}", collectorUri, statusCode));
                         successCount += 1;
                     }
                     else
                     {
+                        logger.Warn(String.Format("POST request to {0} finished with code {1}", collectorUri, statusCode));
                         unsentRequests.Add(payload);
                     }
                 }
@@ -157,6 +168,8 @@ namespace Snowplow.Tracker
         // See http://stackoverflow.com/questions/9145667/how-to-post-json-to-the-server
         private string httpPost(Dictionary<string, object> payload)
         {
+            logger.Info(String.Format("Sending POST request to {0}", collectorUri));
+            logger.Debug(() => String.Format("Payload: {0}", new JavaScriptSerializer(null).Serialize(payload)));
             string destination = collectorUri;
             HttpWebRequest request = (HttpWebRequest)WebRequest.Create(destination);
             request.Method = "POST";
@@ -185,8 +198,9 @@ namespace Snowplow.Tracker
 
         private string httpGet(Dictionary<string, string> payload)
         {
+            logger.Info(String.Format("Sending GET request to {0}", collectorUri));
+            logger.Debug(() => String.Format("Payload: {0}", new JavaScriptSerializer(null).Serialize(payload)));
             string destination = collectorUri + ToQueryString(payload);
-            Console.WriteLine("DESTINATION: " + destination); // TODO remove debug code
             HttpWebRequest request = (HttpWebRequest)WebRequest.Create(destination);
             try
             {
