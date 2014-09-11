@@ -33,14 +33,18 @@ namespace Snowplow.Tracker
 {
     public class Emitter : IEmitter
     {
-
-        protected static Logger logger = LogManager.GetLogger("SnowplowTracker");
         private string collectorUri;
         private HttpMethod method;
         private int bufferSize;
         volatile private List<Dictionary<string, string>> buffer;
         private Action<int> onSuccess;
         private Action<int, List<Dictionary<string, string>>> onFailure = null;
+
+        protected static Logger logger = LogManager.GetLogger("Snowplow.Tracker");
+        private static ColoredConsoleTarget logTarget = new ColoredConsoleTarget();
+        private static LoggingRule loggingRule = new LoggingRule("*", LogLevel.Info, logTarget);
+        private static bool loggingConfigured = false;
+        private static List<LogLevel> logLevels = new List<LogLevel> { LogLevel.Trace, LogLevel.Debug, LogLevel.Info, LogLevel.Warn, LogLevel.Error, LogLevel.Fatal };
 
         public Emitter(string endpoint, HttpProtocol protocol = HttpProtocol.HTTP, int? port = null, HttpMethod method = HttpMethod.GET, int? bufferSize = null, Action<int> onSuccess = null, Action<int, List<Dictionary<string, string>>> onFailure = null)
         {
@@ -50,7 +54,35 @@ namespace Snowplow.Tracker
             this.bufferSize = bufferSize ?? (method == HttpMethod.GET ? 0 : 10);
             this.onSuccess = onSuccess;
             this.onFailure = onFailure;
+            if (!loggingConfigured)
+            {
+                logTarget.Layout = "${level}: ${logger}: ${message} ${exception:format=tostring}";
+                LogManager.Configuration.LoggingRules.Add(loggingRule);
+                loggingConfigured = true;
+                setLogLevel(LogLevel.Info);
+            }
             logger.Info(String.Format("{0} initialized with endpoint {1}", this.GetType(), collectorUri));
+        }
+
+        public static void setLogLevel(LogLevel newLevel)
+        {
+            var current = false;
+            foreach (LogLevel possibleLevel in logLevels)
+            {
+                if (possibleLevel == newLevel)
+                {
+                    current = true;
+                }
+                if (current)
+                {
+                    loggingRule.EnableLoggingForLevel(possibleLevel);
+                }
+                else
+                {
+                    loggingRule.DisableLoggingForLevel(possibleLevel);
+                }
+            }
+            LogManager.ReconfigExistingLoggers();
         }
 
         private static string getCollectorUri(string endpoint, HttpProtocol protocol, int? port, HttpMethod method)
