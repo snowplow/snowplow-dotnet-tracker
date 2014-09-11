@@ -50,13 +50,13 @@ namespace Snowplow.Tracker
 
         public Subject setScreenResolution(int width, int height)
         {
-            nvPairs["res"] = width.ToString() + "x" + height.ToString();
+            nvPairs["res"] = String.Format("{0}x{1}", width.ToString(), height.ToString());
             return this;
         }
 
         public Subject setViewport(int width, int height)
         {
-            nvPairs["vp"] = width.ToString() + "x" + height.ToString();
+            nvPairs["vp"] = String.Format("{0}x{1}", width.ToString(), height.ToString());
             return this;
         }
 

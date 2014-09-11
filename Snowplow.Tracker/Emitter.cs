@@ -99,11 +99,11 @@ namespace Snowplow.Tracker
             }
             if (port == null)
             {
-                return requestProtocol + "://" + endpoint + path;
+                return String.Format("{0}://{1}{2}", requestProtocol, endpoint, path);
             }
             else
             {
-                return requestProtocol + "://" + endpoint + port.ToString() + path;
+                return String.Format("{0}://{1}{2}{3}", requestProtocol, endpoint, port.ToString(), path);
             }
         }
 
@@ -194,7 +194,7 @@ namespace Snowplow.Tracker
             var array = (from key in payload.Keys
                          select string.Format("{0}={1}", HttpUtility.UrlEncode(key), HttpUtility.UrlEncode(payload[key])))
                 .ToArray();
-            return "?" + string.Join("&", array);
+            return String.Format("?{0}", String.Join("&", array));
         }
 
         // See http://stackoverflow.com/questions/9145667/how-to-post-json-to-the-server
