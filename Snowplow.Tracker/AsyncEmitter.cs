@@ -31,9 +31,9 @@ namespace Snowplow.Tracker
         public AsyncEmitter(string endpoint, HttpProtocol protocol = HttpProtocol.HTTP, int? port = null, HttpMethod method = HttpMethod.GET, int? bufferSize = null, Action<int> onSuccess = null, Action<int, List<Dictionary<string, string>>> onFailure = null) :
             base(endpoint, protocol, port, method, bufferSize, onSuccess, onFailure) { tasks = new List<Task>(); }
 
-        public override void flush(bool sync = false)
+        public override void Flush(bool sync = false)
         {
-            Task flushingTask = Task.Factory.StartNew(sendRequests);
+            Task flushingTask = Task.Factory.StartNew(SendRequests);
             tasks.Add(flushingTask);
             tasks = tasks.Where(t => !t.IsCompleted).ToList();
             if (sync)

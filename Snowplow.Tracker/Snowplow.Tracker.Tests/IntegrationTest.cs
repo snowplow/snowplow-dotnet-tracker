@@ -66,7 +66,7 @@ namespace Snowplow.Tracker.Tests
                 ShimHttpWebRequest.AllInstances.GetResponse = fake;
 
                 var t = new Tracker("d3rkrsqld9gmqf.cloudfront.net");
-                t.trackPageView("http://www.example.com", "title page", "http://www.referrer.com");
+                t.TrackPageView("http://www.example.com", "title page", "http://www.referrer.com");
                 var expected = new Dictionary<string, string>
                 {
                     {"e", "pv"},
@@ -87,7 +87,7 @@ namespace Snowplow.Tracker.Tests
                 ShimHttpWebRequest.AllInstances.GetResponse = fake;
 
                 var t = new Tracker("d3rkrsqld9gmqf.cloudfront.net");
-                t.trackStructEvent("myCategory", "myAction", "myLabel", "myProperty", 17);
+                t.TrackStructEvent("myCategory", "myAction", "myLabel", "myProperty", 17);
                 var expected = new Dictionary<string, string>
                 {
                     {"e", "se"},
@@ -113,7 +113,7 @@ namespace Snowplow.Tracker.Tests
                 var hat = new TransactionItem("pbz0026", 20, 1);
                 var shirt = new TransactionItem("pbz0038", 15, 1, "shirt", "clothing");
                 var items = new List<TransactionItem> { hat, shirt };
-                t.trackEcommerceTransaction("6a8078be", 35, "affiliation", 3, 0, "Phoenix", "Arizona", "US", "USD", items);
+                t.TrackEcommerceTransaction("6a8078be", 35, "affiliation", 3, 0, "Phoenix", "Arizona", "US", "USD", items);
                 var expectedTransaction = new Dictionary<string, string>
                 {
                     {"e", "tr"},
@@ -172,7 +172,7 @@ namespace Snowplow.Tracker.Tests
                     }
                 }
                 };
-                t.trackUnstructEvent(eventJson);
+                t.TrackUnstructEvent(eventJson);
                 var expected = new Dictionary<string, string>
                 {
                     {"e", "ue"}
@@ -202,7 +202,7 @@ namespace Snowplow.Tracker.Tests
                     }
                 }
                 };
-                t.trackUnstructEvent(eventJson);
+                t.TrackUnstructEvent(eventJson);
                 var expected = new Dictionary<string, string>
                 {
                     {"e", "ue"}
@@ -223,7 +223,7 @@ namespace Snowplow.Tracker.Tests
                 ShimHttpWebRequest.AllInstances.GetResponse = fake;
 
                 var t = new Tracker("d3rkrsqld9gmqf.cloudfront.net");
-                t.trackScreenView("entry screen", "0001");
+                t.TrackScreenView("entry screen", "0001");
                 var expected = new Dictionary<string, string>
                 {
                     {"e", "ue"}
@@ -244,14 +244,14 @@ namespace Snowplow.Tracker.Tests
                 ShimHttpWebRequest.AllInstances.GetResponse = fake;
 
                 var t = new Tracker("d3rkrsqld9gmqf.cloudfront.net", null, "cf", "train simulator");
-                t.setPlatform("mob");
-                t.setUserId("malcolm");                
-                t.setScreenResolution(100, 200);
-                t.setViewport(50, 60);
-                t.setColorDepth(24);
-                t.setTimezone("Europe London");
-                t.setLang("en");
-                t.trackPageView("http://www.example.com", "title page", "http://www.referrer.com", null, 1000000000000);
+                t.SetPlatform("mob");
+                t.SetUserId("malcolm");                
+                t.SetScreenResolution(100, 200);
+                t.SetViewport(50, 60);
+                t.SetColorDepth(24);
+                t.SetTimezone("Europe London");
+                t.SetLang("en");
+                t.TrackPageView("http://www.example.com", "title page", "http://www.referrer.com", null, 1000000000000);
                 var expected = new Dictionary<string, string>
                 {
                     {"e", "pv"},
@@ -310,7 +310,7 @@ namespace Snowplow.Tracker.Tests
                 };
 
                 var t = new Tracker("d3rkrsqld9gmqf.cloudfront.net");
-                t.trackPageView("http://www.example.com", null, null, context);
+                t.TrackPageView("http://www.example.com", null, null, context);
                 var expected = new Dictionary<string, string>
                 {
                     {"e", "pv"},
@@ -337,8 +337,8 @@ namespace Snowplow.Tracker.Tests
                     successes = successCount;
                 });
                 var t = new Tracker(e);
-                t.trackPageView("first");
-                t.trackPageView("second");
+                t.TrackPageView("first");
+                t.TrackPageView("second");
                 Assert.AreEqual(2, successes);
             }
         }
@@ -358,8 +358,8 @@ namespace Snowplow.Tracker.Tests
                     failureList = failures;
                 });
                 var t = new Tracker(e);
-                t.trackPageView("first");
-                t.trackPageView("second");
+                t.TrackPageView("first");
+                t.TrackPageView("second");
                 Assert.AreEqual(0, successes);
                 Assert.AreEqual("first", failureList[0]["url"]);
                 Assert.AreEqual("second", failureList[1]["url"]);
@@ -374,7 +374,7 @@ namespace Snowplow.Tracker.Tests
                 ShimHttpWebRequest.AllInstances.GetResponse = fake;
 
                 var t = new Tracker(new AsyncEmitter("d3rkrsqld9gmqf.cloudfront.net"));
-                t.trackPageView("http://www.example.com", "title page", "http://www.referrer.com");
+                t.TrackPageView("http://www.example.com", "title page", "http://www.referrer.com");
                 var expected = new Dictionary<string, string>
                 {
                     {"e", "pv"},
@@ -382,7 +382,7 @@ namespace Snowplow.Tracker.Tests
                     {"page", "title page"},
                     {"refr", "http://www.referrer.com"}
                 };
-                t.flush(true);
+                t.Flush(true);
                 checkResult(expected, payloads[payloads.Count - 1]);
             }
         }
@@ -399,9 +399,9 @@ namespace Snowplow.Tracker.Tests
                     successes = successCount;
                 });
                 var t = new Tracker(e);
-                t.trackPageView("first");
-                t.trackPageView("second");
-                t.flush(true);
+                t.TrackPageView("first");
+                t.TrackPageView("second");
+                t.Flush(true);
                 Assert.AreEqual(2, successes);
             }
         }
@@ -421,9 +421,9 @@ namespace Snowplow.Tracker.Tests
                     failureList = failures;
                 });
                 var t = new Tracker(e);
-                t.trackPageView("first");
-                t.trackPageView("second");
-                t.flush(true);
+                t.TrackPageView("first");
+                t.TrackPageView("second");
+                t.Flush(true);
                 Assert.AreEqual(0, successes);
                 Assert.AreEqual("first", failureList[0]["url"]);
                 Assert.AreEqual("second", failureList[1]["url"]);

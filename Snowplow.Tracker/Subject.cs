@@ -36,43 +36,43 @@ namespace Snowplow.Tracker
             };
         }
 
-        public Subject setPlatform(string value)
+        public Subject SetPlatform(string value)
         {
             nvPairs["p"] = value;
             return this;
         }
 
-        public Subject setUserId(string id)
+        public Subject SetUserId(string id)
         {
             nvPairs["uid"] = id;
             return this;
         }
 
-        public Subject setScreenResolution(int width, int height)
+        public Subject SetScreenResolution(int width, int height)
         {
             nvPairs["res"] = String.Format("{0}x{1}", width.ToString(), height.ToString());
             return this;
         }
 
-        public Subject setViewport(int width, int height)
+        public Subject SetViewport(int width, int height)
         {
             nvPairs["vp"] = String.Format("{0}x{1}", width.ToString(), height.ToString());
             return this;
         }
 
-        public Subject setColorDepth(int depth)
+        public Subject SetColorDepth(int depth)
         {
             nvPairs["cd"] = depth.ToString();
             return this;
         }
 
-        public Subject setTimezone(string timezone)
+        public Subject SetTimezone(string timezone)
         {
             nvPairs["tz"] = timezone;
             return this;
         }
 
-        public Subject setLang(string lang)
+        public Subject SetLang(string lang)
         {
             nvPairs["lang"] = lang;
             return this;

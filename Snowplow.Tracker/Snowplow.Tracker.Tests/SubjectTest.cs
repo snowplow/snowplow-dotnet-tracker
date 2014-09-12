@@ -36,13 +36,13 @@ namespace Snowplow.Tracker.Tests
         public void testSubjectSetterMethods()
         {
             var subject = new Subject();
-            subject.setPlatform("mob");
-            subject.setUserId("malcolm");
-            subject.setScreenResolution(100, 200);
-            subject.setViewport(50, 60);
-            subject.setColorDepth(24);
-            subject.setTimezone("Europe London");
-            subject.setLang("en");
+            subject.SetPlatform("mob");
+            subject.SetUserId("malcolm");
+            subject.SetScreenResolution(100, 200);
+            subject.SetViewport(50, 60);
+            subject.SetColorDepth(24);
+            subject.SetTimezone("Europe London");
+            subject.SetLang("en");
             var expected = new Dictionary<string, string>
             {
                 {"p", "mob"},
@@ -65,17 +65,17 @@ namespace Snowplow.Tracker.Tests
             var subjectOne = new Subject();
             var subjectTwo = new Subject();
             var tracker = new Tracker(new Emitter("localhost"), subjectOne);
-            tracker.setPlatform("mob");
-            tracker.setUserId("malcolm");
-            tracker.setScreenResolution(100, 200);
-            tracker.setViewport(50, 60);
-            tracker.setColorDepth(24);
-            tracker.setTimezone("Europe London");
-            tracker.setLang("en");
-            tracker.setSubject(subjectTwo);
-            tracker.setUserId("6561");
-            tracker.setLang("fr");
-            tracker.setScreenResolution(150, 250);
+            tracker.SetPlatform("mob");
+            tracker.SetUserId("malcolm");
+            tracker.SetScreenResolution(100, 200);
+            tracker.SetViewport(50, 60);
+            tracker.SetColorDepth(24);
+            tracker.SetTimezone("Europe London");
+            tracker.SetLang("en");
+            tracker.SetSubject(subjectTwo);
+            tracker.SetUserId("6561");
+            tracker.SetLang("fr");
+            tracker.SetScreenResolution(150, 250);
             var expectedOne = new Dictionary<string, string>
             {
                 {"p", "mob"},

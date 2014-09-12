@@ -68,65 +68,65 @@ namespace Snowplow.Tracker
         public Tracker(IEmitter endpoint, Subject subject = null, string trackerNamespace = null, string appId = null, bool encodeBase64 = true)
             : this(new List<IEmitter> { endpoint }, subject, trackerNamespace, appId, encodeBase64) { }
 
-        public Tracker setPlatform(string value)
+        public Tracker SetPlatform(string value)
         {
-            subj.setPlatform(value);
+            subj.SetPlatform(value);
             return this;
         }
 
-        public Tracker setUserId(string id)
+        public Tracker SetUserId(string id)
         {
-            subj.setUserId(id);
+            subj.SetUserId(id);
             return this;
         }
 
-        public Tracker setScreenResolution(int width, int height)
+        public Tracker SetScreenResolution(int width, int height)
         {
-            subj.setScreenResolution(width, height);
+            subj.SetScreenResolution(width, height);
             return this;
         }
 
-        public Tracker setViewport(int width, int height)
+        public Tracker SetViewport(int width, int height)
         {
-            subj.setViewport(width, height);
+            subj.SetViewport(width, height);
             return this;
         }
 
-        public Tracker setColorDepth(int depth)
+        public Tracker SetColorDepth(int depth)
         {
-            subj.setColorDepth(depth);
+            subj.SetColorDepth(depth);
             return this;
         }
 
-        public Tracker setTimezone(string timezone)
+        public Tracker SetTimezone(string timezone)
         {
-            subj.setTimezone(timezone);
+            subj.SetTimezone(timezone);
             return this;
         }
 
-        public Tracker setLang(string lang)
+        public Tracker SetLang(string lang)
         {
-            subj.setLang(lang);
+            subj.SetLang(lang);
             return this;
         }
 
-        private static Int64 getTimestamp(Int64? tstamp)
+        private static Int64 GetTimestamp(Int64? tstamp)
         {
             return tstamp ?? (Int64)(DateTime.UtcNow.Subtract(new DateTime(1970, 1, 1))).TotalMilliseconds;
         }
 
-        private void track(Payload pb)
+        private void Track(Payload pb)
         {
             foreach (IEmitter emitter in emitters)
             {
-                emitter.input(pb.NvPairs);
+                emitter.Input(pb.NvPairs);
             }
         }
 
-        private void completePayload(Payload pb, Context context, Int64? tstamp)
+        private void CompletePayload(Payload pb, Context context, Int64? tstamp)
         {
-            pb.add("dtm", getTimestamp(tstamp));
-            pb.add("eid", Guid.NewGuid().ToString());
+            pb.Add("dtm", GetTimestamp(tstamp));
+            pb.Add("eid", Guid.NewGuid().ToString());
             if (context != null && context.Any())
             {
                 var contextEnvelope = new Dictionary<string, object>
@@ -134,10 +134,10 @@ namespace Snowplow.Tracker
                     { "schema", "iglu:com.snowplowanalytics.snowplow/contexts/1-0-0" },
                     { "data", context }
                 };
-                pb.addJson(contextEnvelope, b64, "cx", "co");
+                pb.AddJson(contextEnvelope, b64, "cx", "co");
             }
-            pb.addDict(standardNvPairs);
-            pb.addDict(subj.nvPairs);
+            pb.AddDict(standardNvPairs);
+            pb.AddDict(subj.nvPairs);
 
             // TODO: remove debug code
             Console.WriteLine("about to display keys");
@@ -147,74 +147,74 @@ namespace Snowplow.Tracker
             }
             Console.WriteLine("finished displaying keys");
 
-            track(pb);
+            Track(pb);
         }
 
-        public Tracker trackPageView(string pageUrl, string pageTitle = null, string referrer = null, Context context = null, Int64? tstamp = null)
+        public Tracker TrackPageView(string pageUrl, string pageTitle = null, string referrer = null, Context context = null, Int64? tstamp = null)
         {
             Payload pb = new Payload();
-            pb.add("e", "pv");
-            pb.add("url", pageUrl);
-            pb.add("page", pageTitle);
-            pb.add("refr", referrer);
-            completePayload(pb, context, tstamp);
+            pb.Add("e", "pv");
+            pb.Add("url", pageUrl);
+            pb.Add("page", pageTitle);
+            pb.Add("refr", referrer);
+            CompletePayload(pb, context, tstamp);
             return this;
         }
 
-        private void trackEcommerceTransactionItem(string orderId, string currency, TransactionItem item, Context context, Int64? tstamp)
+        private void TrackEcommerceTransactionItem(string orderId, string currency, TransactionItem item, Context context, Int64? tstamp)
         {
             Payload pb = new Payload();
-            pb.add("e", "ti");
-            pb.add("ti_id", orderId);
-            pb.add("ti_cu", currency);
-            pb.add("ti_sk", item.sku);
-            pb.add("ti_pr", item.price);
-            pb.add("ti_qu", item.quantity);
-            pb.add("ti_nm", item.name);
-            pb.add("ti_ca", item.category);
-            completePayload(pb, context, tstamp);
+            pb.Add("e", "ti");
+            pb.Add("ti_id", orderId);
+            pb.Add("ti_cu", currency);
+            pb.Add("ti_sk", item.sku);
+            pb.Add("ti_pr", item.price);
+            pb.Add("ti_qu", item.quantity);
+            pb.Add("ti_nm", item.name);
+            pb.Add("ti_ca", item.category);
+            CompletePayload(pb, context, tstamp);
         }
 
-        public Tracker trackEcommerceTransaction(string orderId, double totalValue, string affiliation = null, double? taxValue = null, double? shipping = null, string city = null, string state = null, string country = null, string currency = null, List<TransactionItem> items = null, Context context = null, Int64? tstamp = null)
+        public Tracker TrackEcommerceTransaction(string orderId, double totalValue, string affiliation = null, double? taxValue = null, double? shipping = null, string city = null, string state = null, string country = null, string currency = null, List<TransactionItem> items = null, Context context = null, Int64? tstamp = null)
         {
             Payload pb = new Payload();
-            pb.add("e", "tr");
-            pb.add("tr_id", orderId);
-            pb.add("tr_tt", totalValue);
-            pb.add("tr_af", affiliation);
-            pb.add("tr_tx", taxValue);
-            pb.add("tr_sh", shipping);
-            pb.add("tr_ci", city);
-            pb.add("tr_st", state);
-            pb.add("tr_co", country);
-            pb.add("tr_cu", currency);
-            completePayload(pb, context, tstamp);
+            pb.Add("e", "tr");
+            pb.Add("tr_id", orderId);
+            pb.Add("tr_tt", totalValue);
+            pb.Add("tr_af", affiliation);
+            pb.Add("tr_tx", taxValue);
+            pb.Add("tr_sh", shipping);
+            pb.Add("tr_ci", city);
+            pb.Add("tr_st", state);
+            pb.Add("tr_co", country);
+            pb.Add("tr_cu", currency);
+            CompletePayload(pb, context, tstamp);
 
             if (items != null)
             {
                 foreach (TransactionItem item in items)
                 {
-                    trackEcommerceTransactionItem(orderId, currency, item, context, tstamp);
+                    TrackEcommerceTransactionItem(orderId, currency, item, context, tstamp);
                 }
             }
 
             return this;
         }
 
-        public Tracker trackStructEvent(string category, string action, string label = null, string property = null, double? value = null, Context context = null, Int64? tstamp = null)
+        public Tracker TrackStructEvent(string category, string action, string label = null, string property = null, double? value = null, Context context = null, Int64? tstamp = null)
         {
             Payload pb = new Payload();
-            pb.add("e", "se");
-            pb.add("se_ca", category);
-            pb.add("se_ac", action);
-            pb.add("se_la", label);
-            pb.add("se_pr", property);
-            pb.add("se_va", value);
-            completePayload(pb, context, tstamp);
+            pb.Add("e", "se");
+            pb.Add("se_ca", category);
+            pb.Add("se_ac", action);
+            pb.Add("se_la", label);
+            pb.Add("se_pr", property);
+            pb.Add("se_va", value);
+            CompletePayload(pb, context, tstamp);
             return this;
         }
 
-        public Tracker trackUnstructEvent(SelfDescribingJson eventJson, Context context = null, Int64? tstamp = null)
+        public Tracker TrackUnstructEvent(SelfDescribingJson eventJson, Context context = null, Int64? tstamp = null)
         {
             var envelope = new Dictionary<string, object>
             {
@@ -222,13 +222,13 @@ namespace Snowplow.Tracker
                 { "data", eventJson }
             };
             Payload pb = new Payload();
-            pb.add("e", "ue");
-            pb.addJson(envelope, b64, "ue_px", "ue_pr");
-            completePayload(pb, context, tstamp);
+            pb.Add("e", "ue");
+            pb.AddJson(envelope, b64, "ue_px", "ue_pr");
+            CompletePayload(pb, context, tstamp);
             return this;
         }
 
-        public Tracker trackScreenView(string name = null, string id = null, Context context = null, Int64? tstamp = null)
+        public Tracker TrackScreenView(string name = null, string id = null, Context context = null, Int64? tstamp = null)
         {
             var screenViewProperties = new Dictionary<string, string>();
             if (name != null)
@@ -244,26 +244,26 @@ namespace Snowplow.Tracker
                 { "schema", "iglu:com.snowplowanalytics.snowplow/screen_view/jsonschema/1-0-0" },
                 { "data", screenViewProperties }
             };
-            trackUnstructEvent(envelope, context, tstamp);
+            TrackUnstructEvent(envelope, context, tstamp);
             return this;
         }
 
-        public Tracker flush(bool sync = false)
+        public Tracker Flush(bool sync = false)
         {
             foreach (IEmitter emitter in emitters)
             {
-                emitter.flush(sync);
+                emitter.Flush(sync);
             }
             return this;
         }
 
-        public Tracker setSubject(Subject subject)
+        public Tracker SetSubject(Subject subject)
         {
             subj = subject;
             return this;
         }
 
-        public Tracker addEmitter(Emitter emitter)
+        public Tracker AddEmitter(Emitter emitter)
         {
             emitters.Add(emitter);
             return this;

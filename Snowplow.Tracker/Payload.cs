@@ -33,12 +33,12 @@ namespace Snowplow.Tracker
             nvPairs = new Dictionary<string, string>();
         }
 
-        public void add(string name, double? value)
+        public void Add(string name, double? value)
         {
-            add(name, value.ToString());
+            Add(name, value.ToString());
         }
 
-        public void add(string name, string value)
+        public void Add(string name, string value)
         {
             if (!String.IsNullOrEmpty(value))
             {
@@ -46,15 +46,15 @@ namespace Snowplow.Tracker
             }
         }
 
-        public void addDict(Dictionary<string, string> dict)
+        public void AddDict(Dictionary<string, string> dict)
         {
             foreach (KeyValuePair<string, string> nvPair in dict)
             {
-                add(nvPair.Key, nvPair.Value);
+                Add(nvPair.Key, nvPair.Value);
             }
         }
 
-        public void addJson(Dictionary <string, object> jsonDict, bool encodeBase64, string typeWhenEncoded, string typeWhenNotEncoded)
+        public void AddJson(Dictionary <string, object> jsonDict, bool encodeBase64, string typeWhenEncoded, string typeWhenNotEncoded)
         {
             if (jsonDict != null && jsonDict.Count > 0)
             {
@@ -63,11 +63,11 @@ namespace Snowplow.Tracker
                 {
                     byte[] plainTextBytes = System.Text.Encoding.UTF8.GetBytes(jsonString);
                     string encodedDict = System.Convert.ToBase64String(plainTextBytes);
-                    add(typeWhenEncoded, encodedDict);
+                    Add(typeWhenEncoded, encodedDict);
                 }
                 else
                 {
-                    add(typeWhenNotEncoded, jsonString);
+                    Add(typeWhenNotEncoded, jsonString);
                 }
             }
         }

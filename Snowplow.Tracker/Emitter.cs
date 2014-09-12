@@ -48,7 +48,7 @@ namespace Snowplow.Tracker
 
         public Emitter(string endpoint, HttpProtocol protocol = HttpProtocol.HTTP, int? port = null, HttpMethod method = HttpMethod.GET, int? bufferSize = null, Action<int> onSuccess = null, Action<int, List<Dictionary<string, string>>> onFailure = null)
         {
-            collectorUri = getCollectorUri(endpoint, protocol, port, method);
+            collectorUri = GetCollectorUri(endpoint, protocol, port, method);
             this.method = method;
             this.buffer = new List<Dictionary<string, string>>();
             this.bufferSize = bufferSize ?? (method == HttpMethod.GET ? 0 : 10);
@@ -59,12 +59,12 @@ namespace Snowplow.Tracker
                 logTarget.Layout = "${level}: ${logger}: ${message} ${exception:format=tostring}";
                 LogManager.Configuration.LoggingRules.Add(loggingRule);
                 loggingConfigured = true;
-                setLogLevel(LogLevel.Info);
+                SetLogLevel(LogLevel.Info);
             }
             logger.Info(String.Format("{0} initialized with endpoint {1}", this.GetType(), collectorUri));
         }
 
-        public static void setLogLevel(LogLevel newLevel)
+        public static void SetLogLevel(LogLevel newLevel)
         {
             var current = false;
             foreach (LogLevel possibleLevel in logLevels)
@@ -85,7 +85,7 @@ namespace Snowplow.Tracker
             LogManager.ReconfigExistingLoggers();
         }
 
-        private static string getCollectorUri(string endpoint, HttpProtocol protocol, int? port, HttpMethod method)
+        private static string GetCollectorUri(string endpoint, HttpProtocol protocol, int? port, HttpMethod method)
         {
             string path;
             string requestProtocol = (protocol == HttpProtocol.HTTP) ? "http" : "https";
@@ -107,21 +107,21 @@ namespace Snowplow.Tracker
             }
         }
 
-        public void input(Dictionary<string, string> payload)
+        public void Input(Dictionary<string, string> payload)
         {
             buffer.Add(payload);
             if (buffer.Count >= bufferSize)
             {
-                flush();
+                Flush();
             }
         }
 
-        virtual public void flush(bool sync = false)
+        virtual public void Flush(bool sync = false)
         {
-            sendRequests();
+            SendRequests();
         }
 
-        protected void sendRequests()
+        protected void SendRequests()
         {
             logger.Info(String.Format("Attempting to send {0} event{1}", buffer.Count, buffer.Count == 1 ? "" : "s"));
             if (method == HttpMethod.POST)
@@ -133,7 +133,7 @@ namespace Snowplow.Tracker
                     { "data", tempBuffer }
                 };
                 buffer = new List<Dictionary<string, string>>();
-                string statusCode = httpPost(data);
+                string statusCode = HttpPost(data);
                 if (statusCode == "OK")
                 {
                     logger.Info(String.Format("POST request to {0} finished with code {1}", collectorUri, statusCode));
@@ -159,7 +159,7 @@ namespace Snowplow.Tracker
                 {
                     var payload = buffer[0];
                     buffer.RemoveAt(0);
-                    string statusCode = httpGet(payload);
+                    string statusCode = HttpGet(payload);
                     if (statusCode == "OK")
                     {
                         logger.Info(String.Format("POST request to {0} finished with code {1}", collectorUri, statusCode));
@@ -198,7 +198,7 @@ namespace Snowplow.Tracker
         }
 
         // See http://stackoverflow.com/questions/9145667/how-to-post-json-to-the-server
-        private string httpPost(Dictionary<string, object> payload)
+        private string HttpPost(Dictionary<string, object> payload)
         {
             logger.Info(String.Format("Sending POST request to {0}", collectorUri));
             logger.Debug(() => String.Format("Payload: {0}", new JavaScriptSerializer(null).Serialize(payload)));
@@ -228,7 +228,7 @@ namespace Snowplow.Tracker
             }
         }
 
-        private string httpGet(Dictionary<string, string> payload)
+        private string HttpGet(Dictionary<string, string> payload)
         {
             logger.Info(String.Format("Sending GET request to {0}", collectorUri));
             logger.Debug(() => String.Format("Payload: {0}", new JavaScriptSerializer(null).Serialize(payload)));

@@ -29,7 +29,7 @@ namespace Snowplow.Tracker.Tests
         public void testAddString()
         {
             var payload = new Payload();
-            payload.add("name", "value");
+            payload.Add("name", "value");
             var pairs = payload.NvPairs;
             Assert.AreEqual(pairs["name"], "value");
         }
@@ -38,7 +38,7 @@ namespace Snowplow.Tracker.Tests
         public void testAddNumber()
         {
             var payload = new Payload();
-            payload.add("price", 99.9);
+            payload.Add("price", 99.9);
             var pairs = payload.NvPairs;
             Assert.AreEqual(pairs["price"],"99.9");
         }
@@ -47,7 +47,7 @@ namespace Snowplow.Tracker.Tests
         public void testAddEmptyString()
         {
             var payload = new Payload();
-            payload.add("empty", "");
+            payload.Add("empty", "");
             var pairs = payload.NvPairs;
             Assert.IsFalse(pairs.ContainsKey("name"));
         }
@@ -57,7 +57,7 @@ namespace Snowplow.Tracker.Tests
         {
             var payload = new Payload();
             string nullString = null;
-            payload.add("null", nullString);
+            payload.Add("null", nullString);
             var pairs = payload.NvPairs;
             Assert.IsFalse(pairs.ContainsKey("null"));
         }
@@ -72,7 +72,7 @@ namespace Snowplow.Tracker.Tests
                 { "two", "deux" },
                 { "three", "trois" }
             };
-            payload.addDict(dict);
+            payload.AddDict(dict);
             var pairs = payload.NvPairs;
             foreach (KeyValuePair<string, string> nvPair in dict)
             {
@@ -98,7 +98,7 @@ namespace Snowplow.Tracker.Tests
                 }
                 }
             };
-            payload.addJson(json, false, "ue_px", "ue_pr");
+            payload.AddJson(json, false, "ue_px", "ue_pr");
             var pairs = payload.NvPairs;
             var expected = @"{""schema"":""iglu:com.snowplowanalytics.snowplow/unstruct_event/jsonschema/1-0-0"",""data"":{""schema"":""iglu:com.acme/test/jsonschema/1-0-0"",""data"":{""user_type"":""test""}}}";
             Assert.AreEqual(pairs["ue_pr"], expected);
