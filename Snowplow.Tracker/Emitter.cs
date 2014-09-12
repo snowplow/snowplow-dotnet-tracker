@@ -45,6 +45,7 @@ namespace Snowplow.Tracker
         private static LoggingRule loggingRule = new LoggingRule("*", LogLevel.Info, logTarget);
         private static bool loggingConfigured = false;
         private static List<LogLevel> logLevels = new List<LogLevel> { LogLevel.Trace, LogLevel.Debug, LogLevel.Info, LogLevel.Warn, LogLevel.Error, LogLevel.Fatal };
+        private static String noResponseMessage = "Unable to contact server";
 
         public Emitter(string endpoint, HttpProtocol protocol = HttpProtocol.HTTP, int? port = null, HttpMethod method = HttpMethod.GET, int? bufferSize = null, Action<int> onSuccess = null, Action<int, List<Dictionary<string, string>>> onFailure = null)
         {
@@ -136,7 +137,7 @@ namespace Snowplow.Tracker
                 string statusCode = HttpPost(data);
                 if (statusCode == "OK")
                 {
-                    logger.Info(String.Format("POST request to {0} finished with code {1}", collectorUri, statusCode));
+                    logger.Info(String.Format("POST request to {0} finished with status '{1}'", collectorUri, statusCode));
                     if (onSuccess != null)
                     {
                         onSuccess(tempBuffer.Count);
@@ -144,7 +145,7 @@ namespace Snowplow.Tracker
                 }
                 else
                 {
-                    logger.Warn(String.Format("POST request to {0} finished with code {1}", collectorUri, statusCode));
+                    logger.Warn(String.Format("POST request to {0} finished with status: '{1}'", collectorUri, statusCode));
                     if (onFailure != null)
                     {
                         onFailure(0, tempBuffer);
@@ -162,12 +163,12 @@ namespace Snowplow.Tracker
                     string statusCode = HttpGet(payload);
                     if (statusCode == "OK")
                     {
-                        logger.Info(String.Format("POST request to {0} finished with code {1}", collectorUri, statusCode));
+                        logger.Info(String.Format("GET request to {0} finished with status: '{1}'", collectorUri, statusCode));
                         successCount += 1;
                     }
                     else
                     {
-                        logger.Warn(String.Format("POST request to {0} finished with code {1}", collectorUri, statusCode));
+                        logger.Warn(String.Format("GET request to {0} finished with status: '{1}'", collectorUri, statusCode));
                         unsentRequests.Add(payload);
                     }
                 }
@@ -207,13 +208,22 @@ namespace Snowplow.Tracker
             request.Method = "POST";
             request.ContentType = "application/json; charset=utf-8";
             request.UserAgent = "System.Net.HttpWebRequest";
-            using (var streamWriter = new StreamWriter(request.GetRequestStream()))
+
+            try
             {
-                string json = new JavaScriptSerializer(null).Serialize(payload);
-                streamWriter.Write(json);
-                streamWriter.Flush();
-                streamWriter.Close();
+                using (var streamWriter = new StreamWriter(request.GetRequestStream()))
+                {
+                    string json = new JavaScriptSerializer(null).Serialize(payload);
+                    streamWriter.Write(json);
+                    streamWriter.Flush();
+                    streamWriter.Close();
+                }
             }
+            catch (WebException we)
+            {
+                return noResponseMessage;
+            }
+
             try
             {
                 var httpResponse = (HttpWebResponse)request.GetResponse();
@@ -224,7 +234,7 @@ namespace Snowplow.Tracker
                 var resp = we.Response as HttpWebResponse;
                 if (resp == null)
                 {
-                    return "NoResponse";
+                    return noResponseMessage;
                 }
                 return resp.StatusCode.ToString();
             }
@@ -246,7 +256,7 @@ namespace Snowplow.Tracker
                 var resp = we.Response as HttpWebResponse;
                 if (resp == null)
                 {
-                    return "NoResponse";
+                    return noResponseMessage;
                 }
                 return resp.StatusCode.ToString();
             }
