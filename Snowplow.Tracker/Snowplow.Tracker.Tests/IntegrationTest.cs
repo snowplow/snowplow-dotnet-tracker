@@ -25,8 +25,6 @@ using System.Web;
 using System.Net;
 using System.Net.Fakes;
 using Microsoft.QualityTools.Testing.Fakes;
-//using System.Fakes;
-//using FakesClass;
 
 namespace Snowplow.Tracker.Tests
 {
@@ -415,7 +413,7 @@ namespace Snowplow.Tracker.Tests
 
                 int? successes = null;
                 List<Dictionary<string, string>> failureList = null;
-                var e = new AsyncEmitter("d3rkrsqld9gmqf.cloudfront.net", HttpProtocol.HTTP, null, HttpMethod.POST, 2, null, (successCount, failures) =>
+                var e = new AsyncEmitter("d3rkrsqld9gmqf.cloudfront.net", HttpProtocol.HTTP, null, HttpMethod.POST, 10, null, (successCount, failures) =>
                 {
                     successes = successCount;
                     failureList = failures;
