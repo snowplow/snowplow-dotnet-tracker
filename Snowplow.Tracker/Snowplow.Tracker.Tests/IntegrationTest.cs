@@ -352,7 +352,7 @@ namespace Snowplow.Tracker.Tests
 
                 int? successes = null;
                 List<Dictionary<string, string>> failureList = null;
-                var e = new Emitter("d3rkrsqld9gmqf.cloudfront.net", HttpProtocol.HTTP, null, HttpMethod.POST, 2, null, (successCount, failures) =>
+                var e = new Emitter("d3rkrsqld9gmqf.cloudfront.net", HttpProtocol.HTTP, null, HttpMethod.GET, 2, null, (successCount, failures) =>
                 {
                     successes = successCount;
                     failureList = failures;
@@ -365,5 +365,70 @@ namespace Snowplow.Tracker.Tests
                 Assert.AreEqual("second", failureList[1]["url"]);
             }
         }
+
+        [TestMethod]
+        public void testAsyncTrackPageView()
+        {
+            using (Microsoft.QualityTools.Testing.Fakes.ShimsContext.Create())
+            {
+                ShimHttpWebRequest.AllInstances.GetResponse = fake;
+
+                var t = new Tracker(new AsyncEmitter("d3rkrsqld9gmqf.cloudfront.net"));
+                t.trackPageView("http://www.example.com", "title page", "http://www.referrer.com");
+                var expected = new Dictionary<string, string>
+                {
+                    {"e", "pv"},
+                    {"url", "http://www.example.com"},
+                    {"page", "title page"},
+                    {"refr", "http://www.referrer.com"}
+                };
+                t.flush(true);
+                checkResult(expected, payloads[payloads.Count - 1]);
+            }
+        }
+
+        [TestMethod]
+        public void testAsyncPostOnSuccess()
+        {
+            using (Microsoft.QualityTools.Testing.Fakes.ShimsContext.Create())
+            {
+                ShimHttpWebRequest.AllInstances.GetResponse = fake;
+                int successes = -1;
+                var e = new AsyncEmitter("d3rkrsqld9gmqf.cloudfront.net", HttpProtocol.HTTP, null, HttpMethod.POST, 10, (successCount) =>
+                {
+                    successes = successCount;
+                });
+                var t = new Tracker(e);
+                t.trackPageView("first");
+                t.trackPageView("second");
+                t.flush(true);
+                Assert.AreEqual(2, successes);
+            }
+        }
+
+        [TestMethod]
+        public void testAsyncPostOnFailure()
+        {
+            using (Microsoft.QualityTools.Testing.Fakes.ShimsContext.Create())
+            {
+                ShimHttpWebRequest.AllInstances.GetResponse = badFake;
+
+                int? successes = null;
+                List<Dictionary<string, string>> failureList = null;
+                var e = new AsyncEmitter("d3rkrsqld9gmqf.cloudfront.net", HttpProtocol.HTTP, null, HttpMethod.POST, 2, null, (successCount, failures) =>
+                {
+                    successes = successCount;
+                    failureList = failures;
+                });
+                var t = new Tracker(e);
+                t.trackPageView("first");
+                t.trackPageView("second");
+                t.flush(true);
+                Assert.AreEqual(0, successes);
+                Assert.AreEqual("first", failureList[0]["url"]);
+                Assert.AreEqual("second", failureList[1]["url"]);
+            }
+        }
+
     }
 }
