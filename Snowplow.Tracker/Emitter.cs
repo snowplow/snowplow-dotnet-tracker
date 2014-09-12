@@ -223,7 +223,9 @@ namespace Snowplow.Tracker
             {
                 var resp = we.Response as HttpWebResponse;
                 if (resp == null)
-                    throw;
+                {
+                    return "NoResponse";
+                }
                 return resp.StatusCode.ToString();
             }
         }
@@ -244,7 +246,7 @@ namespace Snowplow.Tracker
                 var resp = we.Response as HttpWebResponse;
                 if (resp == null)
                 {
-                    throw;
+                    return "NoResponse";
                 }
                 return resp.StatusCode.ToString();
             }
