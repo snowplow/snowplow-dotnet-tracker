@@ -44,7 +44,6 @@ namespace Snowplow.Tracker
         private static ColoredConsoleTarget logTarget = new ColoredConsoleTarget();
         private static LoggingRule loggingRule = new LoggingRule("*", LogLevel.Info, logTarget);
         private static bool loggingConfigured = false;
-        private static List<LogLevel> logLevels = new List<LogLevel> { LogLevel.Trace, LogLevel.Debug, LogLevel.Info, LogLevel.Warn, LogLevel.Error, LogLevel.Fatal };
         private static String noResponseMessage = "Unable to contact server";
 
         public Emitter(string endpoint, HttpProtocol protocol = HttpProtocol.HTTP, int? port = null, HttpMethod method = HttpMethod.GET, int? bufferSize = null, Action<int> onSuccess = null, Action<int, List<Dictionary<string, string>>> onFailure = null)
@@ -60,27 +59,22 @@ namespace Snowplow.Tracker
                 logTarget.Layout = "${level}: ${logger}: ${message} ${exception:format=tostring}";
                 LogManager.Configuration.LoggingRules.Add(loggingRule);
                 loggingConfigured = true;
-                SetLogLevel(LogLevel.Info);
+                SetLogLevel(Logging.Info);
             }
             logger.Info(String.Format("{0} initialized with endpoint {1}", this.GetType(), collectorUri));
         }
 
-        public static void SetLogLevel(LogLevel newLevel)
+        public static void SetLogLevel(Logging newLevel)
         {
-            var current = false;
-            foreach (LogLevel possibleLevel in logLevels)
+            foreach (int level in Enumerable.Range(0,6))
             {
-                if (possibleLevel == newLevel)
+                if (level < (int)newLevel)
                 {
-                    current = true;
-                }
-                if (current)
-                {
-                    loggingRule.EnableLoggingForLevel(possibleLevel);
+                    loggingRule.DisableLoggingForLevel(LogLevel.FromOrdinal(level));
                 }
                 else
                 {
-                    loggingRule.DisableLoggingForLevel(possibleLevel);
+                    loggingRule.EnableLoggingForLevel(LogLevel.FromOrdinal(level));
                 }
             }
             LogManager.ReconfigExistingLoggers();
