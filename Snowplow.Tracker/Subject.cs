@@ -36,9 +36,9 @@ namespace Snowplow.Tracker
             };
         }
 
-        public Subject SetPlatform(string value)
+        public Subject SetPlatform(Platform value)
         {
-            nvPairs["p"] = value;
+            nvPairs["p"] = value.ToString().ToLower();
             return this;
         }
 

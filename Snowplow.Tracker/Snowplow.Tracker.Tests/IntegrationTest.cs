@@ -242,7 +242,7 @@ namespace Snowplow.Tracker.Tests
                 ShimHttpWebRequest.AllInstances.GetResponse = fake;
 
                 var t = new Tracker("d3rkrsqld9gmqf.cloudfront.net", null, "cf", "train simulator");
-                t.SetPlatform("mob");
+                t.SetPlatform(Platform.Mob);
                 t.SetUserId("malcolm");                
                 t.SetScreenResolution(100, 200);
                 t.SetViewport(50, 60);

@@ -68,7 +68,7 @@ namespace Snowplow.Tracker
         public Tracker(IEmitter endpoint, Subject subject = null, string trackerNamespace = null, string appId = null, bool encodeBase64 = true)
             : this(new List<IEmitter> { endpoint }, subject, trackerNamespace, appId, encodeBase64) { }
 
-        public Tracker SetPlatform(string value)
+        public Tracker SetPlatform(Platform value)
         {
             subj.SetPlatform(value);
             return this;

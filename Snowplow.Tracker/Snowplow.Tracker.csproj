@@ -55,6 +55,7 @@
     <Compile Include="HttpProtocol.cs" />
     <Compile Include="IEmitter.cs" />
     <Compile Include="MsmqEmitter.cs" />
+    <Compile Include="Platform.cs" />
     <Compile Include="RedisEmitter.cs" />
     <Compile Include="Subject.cs" />
     <Compile Include="TransactionItem.cs" />

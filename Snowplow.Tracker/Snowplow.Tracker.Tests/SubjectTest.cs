@@ -36,7 +36,7 @@ namespace Snowplow.Tracker.Tests
         public void testSubjectSetterMethods()
         {
             var subject = new Subject();
-            subject.SetPlatform("mob");
+            subject.SetPlatform(Platform.Mob);
             subject.SetUserId("malcolm");
             subject.SetScreenResolution(100, 200);
             subject.SetViewport(50, 60);
@@ -65,7 +65,7 @@ namespace Snowplow.Tracker.Tests
             var subjectOne = new Subject();
             var subjectTwo = new Subject();
             var tracker = new Tracker(new Emitter("localhost"), subjectOne);
-            tracker.SetPlatform("mob");
+            tracker.SetPlatform(Platform.Mob);
             tracker.SetUserId("malcolm");
             tracker.SetScreenResolution(100, 200);
             tracker.SetViewport(50, 60);
