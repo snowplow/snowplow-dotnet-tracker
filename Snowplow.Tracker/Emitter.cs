@@ -40,7 +40,7 @@ namespace Snowplow.Tracker
         private Action<int> onSuccess;
         private Action<int, List<Dictionary<string, string>>> onFailure = null;
         private bool offlineModeEnabled = true;
-        private MsmqEmitter backupEmitter = new MsmqEmitter();
+        private MsmqEmitter backupEmitter;
 
         protected static Logger logger = LogManager.GetLogger("Snowplow.Tracker");
         private static ColoredConsoleTarget logTarget = new ColoredConsoleTarget();
@@ -64,6 +64,10 @@ namespace Snowplow.Tracker
                 SetLogLevel(Logging.Info);
             }
             logger.Info(String.Format("{0} initialized with endpoint {1}", this.GetType(), collectorUri));
+            if (offlineModeEnabled)
+            {
+                backupEmitter = new MsmqEmitter(String.Format(".\\private$\\{0}", collectorUri));
+            }
         }
 
         public static void SetLogLevel(Logging newLevel)
