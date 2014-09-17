@@ -39,6 +39,8 @@ namespace Snowplow.Tracker
         volatile private List<Dictionary<string, string>> buffer;
         private Action<int> onSuccess;
         private Action<int, List<Dictionary<string, string>>> onFailure = null;
+        private bool offlineModeEnabled = true;
+        private MsmqEmitter backupEmitter = new MsmqEmitter();
 
         protected static Logger logger = LogManager.GetLogger("Snowplow.Tracker");
         private static ColoredConsoleTarget logTarget = new ColoredConsoleTarget();
@@ -128,7 +130,7 @@ namespace Snowplow.Tracker
                     { "data", tempBuffer }
                 };
                 buffer = new List<Dictionary<string, string>>();
-                string statusCode = HttpPost(data);
+                string statusCode = HttpPost(data, collectorUri);
                 if (statusCode == "OK")
                 {
                     logger.Info(String.Format("POST request to {0} finished with status '{1}'", collectorUri, statusCode));
@@ -154,7 +156,7 @@ namespace Snowplow.Tracker
                 {
                     var payload = buffer[0];
                     buffer.RemoveAt(0);
-                    string statusCode = HttpGet(payload);
+                    string statusCode = HttpGet(payload, collectorUri);
                     if (statusCode == "OK")
                     {
                         logger.Info(String.Format("GET request to {0} finished with status: '{1}'", collectorUri, statusCode));
@@ -193,7 +195,7 @@ namespace Snowplow.Tracker
         }
 
         // See http://stackoverflow.com/questions/9145667/how-to-post-json-to-the-server
-        private string HttpPost(Dictionary<string, object> payload)
+        private string HttpPost(Dictionary<string, object> payload, string collectorUri)
         {
             logger.Info(String.Format("Sending POST request to {0}", collectorUri));
             logger.Debug(() => String.Format("Payload: {0}", new JavaScriptSerializer(null).Serialize(payload)));
@@ -214,6 +216,7 @@ namespace Snowplow.Tracker
             }
             catch (WebException we)
             {
+                OfflineHandle(payload);
                 return noResponseMessage;
             }
 
@@ -227,13 +230,14 @@ namespace Snowplow.Tracker
                 var resp = we.Response as HttpWebResponse;
                 if (resp == null)
                 {
+                    OfflineHandle(payload);
                     return noResponseMessage;
                 }
                 return resp.StatusCode.ToString();
             }
         }
 
-        private string HttpGet(Dictionary<string, string> payload)
+        private string HttpGet(Dictionary<string, string> payload, string collectorUri)
         {
             logger.Info(String.Format("Sending GET request to {0}", collectorUri));
             logger.Debug(() => String.Format("Payload: {0}", new JavaScriptSerializer(null).Serialize(payload)));
@@ -249,11 +253,29 @@ namespace Snowplow.Tracker
                 var resp = we.Response as HttpWebResponse;
                 if (resp == null)
                 {
+                    OfflineHandle(payload);
                     return noResponseMessage;
                 }
                 return resp.StatusCode.ToString();
             }
             
+        }
+
+        private void OfflineHandle(Dictionary<string, string> evt)
+        {
+            if (offlineModeEnabled)
+            {
+                logger.Info("Could not connect to server, queueing event for later");
+                backupEmitter.Input(evt);
+            }
+        }
+
+        private void OfflineHandle(Dictionary<string, object> payload)
+        {
+            foreach (Dictionary<string, string> evt in (List<Dictionary<string, string>>)payload["data"])
+            {
+                OfflineHandle(evt);
+            }
         }
 
     }
