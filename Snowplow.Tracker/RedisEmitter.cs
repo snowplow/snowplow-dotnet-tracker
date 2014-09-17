@@ -26,10 +26,11 @@ using System.Web.Script.Serialization;
 
 namespace Snowplow.Tracker
 {
-    public class RedisEmitter : IEmitter
+    public class RedisEmitter : IEmitter, IDisposable
     {
         private RedisClient rdb;
         private String key;
+        private bool disposed = false;
 
         public RedisEmitter(RedisClient rdb = null, string key = "snowplow")
         {
@@ -45,6 +46,24 @@ namespace Snowplow.Tracker
         public void Flush(bool sync = false)
         {
 
+        }
+
+        public void Dispose()
+        {
+            Dispose(true);
+            GC.SuppressFinalize(this);
+        }
+
+        protected virtual void Dispose(bool disposing)
+        {
+            if (!disposed)
+            {
+                if (disposing)
+                {
+                    rdb.Dispose();
+                }
+                disposed = true;
+            }
         }
 
     }

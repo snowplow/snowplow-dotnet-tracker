@@ -27,12 +27,14 @@ using System.Web.Script.Serialization;
 namespace Snowplow.Tracker
 {
 
-    public class MsmqEmitter : IEmitter
+    public class MsmqEmitter : IEmitter, IDisposable
     {
         private MessageQueue queue;
+        private bool disposed = false;
 
         public MsmqEmitter(string path = @".\private$\SnowplowTracker")
         {
+            MessageQueue.EnableConnectionCache = true;
             this.queue = MessageQueue.Exists(path) ? new MessageQueue(path) : MessageQueue.Create(path);
         }
 
@@ -44,6 +46,24 @@ namespace Snowplow.Tracker
         public void Flush(bool sync = false)
         {
 
+        }
+
+        public void Dispose()
+        {
+            Dispose(true);
+            GC.SuppressFinalize(this);
+        }
+
+        protected virtual void Dispose(bool disposing)
+        {
+            if (!disposed)
+            {
+                if (disposing)
+                {
+                    queue.Dispose();
+                }
+                disposed = true;
+            }
         }
     }
 }
