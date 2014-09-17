@@ -210,7 +210,6 @@ namespace Snowplow.Tracker
                     string json = new JavaScriptSerializer(null).Serialize(payload);
                     streamWriter.Write(json);
                     streamWriter.Flush();
-                    streamWriter.Close();
                 }
             }
             catch (WebException we)
