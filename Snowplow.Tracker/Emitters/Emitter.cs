@@ -31,7 +31,7 @@ using NLog.Config;
 
 namespace Snowplow.Tracker
 {
-    public class Emitter : IEmitter
+    public class Emitter : IEmitter, IDisposable
     {
         private string collectorUri;
         private HttpMethod method;
@@ -41,6 +41,7 @@ namespace Snowplow.Tracker
         private Action<int, List<Dictionary<string, string>>> onFailure = null;
         private bool offlineModeEnabled = true;
         private MsmqEmitter backupEmitter;
+        private bool disposed = false;
 
         protected static Logger logger = LogManager.GetLogger("Snowplow.Tracker");
         private static ColoredConsoleTarget logTarget = new ColoredConsoleTarget();
@@ -302,5 +303,22 @@ namespace Snowplow.Tracker
             }
         }
 
+        public void Dispose()
+        {
+            Dispose(true);
+            GC.SuppressFinalize(this);
+        }
+
+        protected virtual void Dispose(bool disposing)
+        {
+            if (!disposed)
+            {
+                if (disposing)
+                {
+                    backupEmitter.Dispose();
+                }
+                disposed = true;
+            }
+        }
     }
 }
