@@ -22,6 +22,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Net;
+using System.Net.NetworkInformation;
 using System.Web;
 using System.IO;
 using System.Web.Script.Serialization;
@@ -68,6 +69,7 @@ namespace Snowplow.Tracker
             if (offlineModeEnabled)
             {
                 backupEmitter = new MsmqEmitter(String.Format(".\\private$\\{0}", collectorUri));
+                NetworkChange.NetworkAvailabilityChanged += new NetworkAvailabilityChangedEventHandler(NetworkAvailabilityChange);
             }
         }
 
@@ -300,6 +302,15 @@ namespace Snowplow.Tracker
                     System.Messaging.Message evt = messageEnumerator.RemoveCurrent();
                     Input(jss.Deserialize<Dictionary<string, string>>(evt.Body.ToString()));
                 }
+            }
+        }
+
+        private void NetworkAvailabilityChange (object sender, NetworkAvailabilityEventArgs e)
+        {
+            if (e.IsAvailable)
+            {
+                logger.Info("Network availability change detected, attempting to send stored requests");
+                ResendRequests();
             }
         }
 
