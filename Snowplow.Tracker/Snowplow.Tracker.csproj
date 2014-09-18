@@ -49,15 +49,15 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="AsyncEmitter.cs" />
-    <Compile Include="Emitter.cs" />
+    <Compile Include="Emitters\AsyncEmitter.cs" />
+    <Compile Include="Emitters\Emitter.cs" />
     <Compile Include="HttpMethod.cs" />
     <Compile Include="HttpProtocol.cs" />
-    <Compile Include="IEmitter.cs" />
+    <Compile Include="Emitters\IEmitter.cs" />
     <Compile Include="Logging.cs" />
-    <Compile Include="MsmqEmitter.cs" />
+    <Compile Include="Emitters\MsmqEmitter.cs" />
     <Compile Include="Platform.cs" />
-    <Compile Include="RedisEmitter.cs" />
+    <Compile Include="Emitters\RedisEmitter.cs" />
     <Compile Include="Subject.cs" />
     <Compile Include="TransactionItem.cs" />
     <Compile Include="Payload.cs" />
