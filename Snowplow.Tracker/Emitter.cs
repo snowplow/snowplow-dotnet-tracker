@@ -142,6 +142,7 @@ namespace Snowplow.Tracker
                     {
                         onSuccess(tempBuffer.Count);
                     }
+                    ResendRequests();
                 }
                 else
                 {
@@ -165,6 +166,7 @@ namespace Snowplow.Tracker
                     {
                         logger.Info(String.Format("GET request to {0} finished with status: '{1}'", collectorUri, statusCode));
                         successCount += 1;
+                        ResendRequests();
                     }
                     else
                     {
@@ -244,7 +246,7 @@ namespace Snowplow.Tracker
         private string HttpGet(Dictionary<string, string> payload, string collectorUri)
         {
             logger.Info(String.Format("Sending GET request to {0}", collectorUri));
-            logger.Debug(() => String.Format("Payload: {0}", new JavaScriptSerializer(null).Serialize(payload)));
+            logger.Debug(() => String.Format("Payload: {0}", new JavaScriptSerializer().Serialize(payload)));
             string destination = collectorUri + ToQueryString(payload);
             HttpWebRequest request = (HttpWebRequest)WebRequest.Create(destination);
             try
@@ -265,7 +267,7 @@ namespace Snowplow.Tracker
             
         }
 
-        private void OfflineHandle(Dictionary<string, string> evt)
+        public void OfflineHandle(Dictionary<string, string> evt)
         {
             if (offlineModeEnabled)
             {
@@ -274,11 +276,25 @@ namespace Snowplow.Tracker
             }
         }
 
-        private void OfflineHandle(Dictionary<string, object> payload)
+        public void OfflineHandle(Dictionary<string, object> payload)
         {
             foreach (Dictionary<string, string> evt in (List<Dictionary<string, string>>)payload["data"])
             {
                 OfflineHandle(evt);
+            }
+        }
+
+        private void ResendRequests()
+        {
+            if (offlineModeEnabled)
+            {
+                var messageEnumerator = backupEmitter.GetMessageEnumerator();
+                var jss = new JavaScriptSerializer();
+                while (messageEnumerator.MoveNext())
+                {
+                    System.Messaging.Message evt = messageEnumerator.RemoveCurrent();
+                    Input(jss.Deserialize<Dictionary<string, string>>(evt.Body.ToString()));
+                }
             }
         }
 

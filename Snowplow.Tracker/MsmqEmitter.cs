@@ -29,7 +29,7 @@ namespace Snowplow.Tracker
 
     public class MsmqEmitter : IEmitter, IDisposable
     {
-        private MessageQueue queue;
+        MessageQueue queue;
         private bool disposed = false;
 
         public MsmqEmitter(string path = @".\private$\SnowplowTracker")
@@ -46,6 +46,11 @@ namespace Snowplow.Tracker
         public void Flush(bool sync = false)
         {
 
+        }
+
+        public MessageEnumerator GetMessageEnumerator()
+        {
+            return queue.GetMessageEnumerator2();
         }
 
         public void Dispose()
