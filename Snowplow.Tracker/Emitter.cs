@@ -228,18 +228,20 @@ namespace Snowplow.Tracker
 
             try
             {
-                var httpResponse = (HttpWebResponse)request.GetResponse();
-                return httpResponse.StatusCode.ToString();
+                HttpWebResponse response = (HttpWebResponse)request.GetResponse();
+                response.Close();
+                return response.StatusCode.ToString();
             }
             catch (WebException we)
             {
-                var resp = we.Response as HttpWebResponse;
-                if (resp == null)
+                var response = we.Response as HttpWebResponse;
+                if (response == null)
                 {
                     OfflineHandle(payload);
                     return noResponseMessage;
                 }
-                return resp.StatusCode.ToString();
+                response.Close();
+                return response.StatusCode.ToString();
             }
         }
 
@@ -252,17 +254,19 @@ namespace Snowplow.Tracker
             try
             {
                 HttpWebResponse response = (HttpWebResponse)request.GetResponse();
+                response.Close();
                 return response.StatusCode.ToString();
             }
             catch (WebException we)
             {
-                var resp = we.Response as HttpWebResponse;
-                if (resp == null)
+                var response = (HttpWebResponse)we.Response;
+                if (response == null)
                 {
                     OfflineHandle(payload);
                     return noResponseMessage;
                 }
-                return resp.StatusCode.ToString();
+                response.Close();
+                return response.StatusCode.ToString();
             }
             
         }
