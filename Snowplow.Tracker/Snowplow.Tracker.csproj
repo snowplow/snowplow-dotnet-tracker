@@ -56,10 +56,10 @@
     <Compile Include="Emitters\IEmitter.cs" />
     <Compile Include="Logging.cs" />
     <Compile Include="Emitters\MsmqEmitter.cs" />
-    <Compile Include="Platform.cs" />
+    <Compile Include="Events\Platform.cs" />
     <Compile Include="Emitters\RedisEmitter.cs" />
     <Compile Include="Subject.cs" />
-    <Compile Include="TransactionItem.cs" />
+    <Compile Include="Events\TransactionItem.cs" />
     <Compile Include="Payload.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Tracker.cs" />
