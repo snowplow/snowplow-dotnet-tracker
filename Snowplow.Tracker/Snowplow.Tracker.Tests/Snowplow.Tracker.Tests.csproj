@@ -40,6 +40,7 @@
     <Reference Include="System.4.0.0.0.Fakes">
       <HintPath>FakesAssemblies\System.4.0.0.0.Fakes.dll</HintPath>
     </Reference>
+    <Reference Include="System.Messaging" />
     <Reference Include="System.Web" />
   </ItemGroup>
   <Choose>
@@ -56,6 +57,7 @@
   </Choose>
   <ItemGroup>
     <Compile Include="IntegrationTest.cs" />
+    <Compile Include="MsmqTest.cs" />
     <Compile Include="PayloadTest.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="SubjectTest.cs" />
