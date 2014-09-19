@@ -56,5 +56,26 @@ namespace Snowplow.Tracker.Tests
             Assert.AreEqual(messages.Count, 2);
         }
 
+        [TestMethod]
+        public void testMsmqEmitterReadFromExistingQueue()
+        {
+            var path = @".\private$\TestQueue";
+            var msmqEmitter1 = new MsmqEmitter(path);
+            msmqEmitter1.Queue.Purge();
+            msmqEmitter1.Input(new Dictionary<string, string> { { "name", "value" } });
+            msmqEmitter1.Input(new Dictionary<string, string> { { "e", "pv" } });
+            var msmqEmitter2 = new MsmqEmitter(path);
+            var messageEnumerator = msmqEmitter2.Queue.GetMessageEnumerator2();
+            var messages = new List<Message>();
+            while (messageEnumerator.MoveNext())
+            {
+                Message evt = messageEnumerator.Current;
+                messages.Add(evt);
+            }
+            Assert.AreEqual(messages[0].Body, @"{""name"":""value""}");
+            Assert.AreEqual(messages[1].Body, @"{""e"":""pv""}");
+            Assert.AreEqual(messages.Count, 2);
+        }
+
     }
 }

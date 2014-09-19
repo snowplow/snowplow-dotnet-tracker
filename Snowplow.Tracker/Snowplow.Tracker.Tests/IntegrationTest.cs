@@ -22,6 +22,7 @@ using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.Text;
 using System.Web;
+using System.Messaging;
 using System.Net;
 using System.Net.Fakes;
 using Microsoft.QualityTools.Testing.Fakes;
@@ -42,10 +43,8 @@ namespace Snowplow.Tracker.Tests
         private static FakesDelegates.Func<HttpWebRequest, WebResponse> badFake = (request) =>
         {
             var pairs = HttpUtility.ParseQueryString(request.RequestUri.Query);
-            payloads.Add(pairs);
             var responseShim = new ShimHttpWebResponse();
-            responseShim.StatusCodeGet = () => HttpStatusCode.NotFound;
-            return responseShim;
+            throw new WebException();
         };
 
         private static void checkResult(Dictionary<string, string> expected, NameValueCollection actual)
@@ -425,6 +424,46 @@ namespace Snowplow.Tracker.Tests
                 Assert.AreEqual(0, successes);
                 Assert.AreEqual("first", failureList[0]["url"]);
                 Assert.AreEqual("second", failureList[1]["url"]);
+            }
+        }
+
+        [TestMethod]
+        public void testOfflineTracking()
+        {
+            var defaultPath = @".\private$\Snowplow.Tracker";
+            if (MessageQueue.Exists(defaultPath))
+            {
+                MessageQueue.Delete(defaultPath);
+            }
+
+            var emitter1 = new Emitter("d3rkrsqld9gmqf.cloudfront.net");
+
+            var t = new Tracker(new List<IEmitter> { emitter1 });
+            using (Microsoft.QualityTools.Testing.Fakes.ShimsContext.Create())
+            {
+                ShimHttpWebRequest.AllInstances.GetResponse = badFake;
+
+                t.TrackStructEvent("msmqCategory1", "msmqAction1");
+
+                ShimHttpWebRequest.AllInstances.GetResponse = fake;
+                t.TrackStructEvent("msmqCategory2", "msmqAction2");
+
+                var expected1 = new Dictionary<string, string>
+                {
+                    {"e", "se"},
+                    {"se_ca", "msmqCategory1"},
+                    {"se_ac", "msmqAction1"}
+                };
+
+                var expected2 = new Dictionary<string, string>
+                {
+                    {"e", "se"},
+                    {"se_ca", "msmqCategory2"},
+                    {"se_ac", "msmqAction2"}
+                };
+
+                checkResult(expected2, payloads[payloads.Count - 2]);
+                checkResult(expected1, payloads[payloads.Count - 1]);
             }
         }
 
