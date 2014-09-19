@@ -29,18 +29,19 @@ namespace Snowplow.Tracker
 
     public class MsmqEmitter : IEmitter, IDisposable
     {
-        MessageQueue queue;
         private bool disposed = false;
+
+        public MessageQueue Queue {get; set;}
 
         public MsmqEmitter(string path = @".\private$\SnowplowTracker")
         {
             MessageQueue.EnableConnectionCache = true;
-            this.queue = MessageQueue.Exists(path) ? new MessageQueue(path) : MessageQueue.Create(path);
+            this.Queue = MessageQueue.Exists(path) ? new MessageQueue(path) : MessageQueue.Create(path);
         }
 
         public void Input(Dictionary<string, string> payload)
         {
-            this.queue.Send(new JavaScriptSerializer(null).Serialize(payload));
+            Queue.Send(new JavaScriptSerializer(null).Serialize(payload));
         }
 
         public void Flush(bool sync = false)
@@ -50,7 +51,7 @@ namespace Snowplow.Tracker
 
         public MessageEnumerator GetMessageEnumerator()
         {
-            return queue.GetMessageEnumerator2();
+            return Queue.GetMessageEnumerator2();
         }
 
         public void Dispose()
@@ -65,7 +66,7 @@ namespace Snowplow.Tracker
             {
                 if (disposing)
                 {
-                    queue.Dispose();
+                    Queue.Dispose();
                 }
                 disposed = true;
             }

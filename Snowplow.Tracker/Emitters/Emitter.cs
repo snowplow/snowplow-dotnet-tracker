@@ -296,7 +296,7 @@ namespace Snowplow.Tracker
         {
             if (offlineModeEnabled)
             {
-                var messageEnumerator = backupEmitter.GetMessageEnumerator();
+                var messageEnumerator = backupEmitter.Queue.GetMessageEnumerator2();
                 var jss = new JavaScriptSerializer();
                 while (messageEnumerator.MoveNext())
                 {
