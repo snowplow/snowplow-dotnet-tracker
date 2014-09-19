@@ -37,6 +37,7 @@ namespace Snowplow.Tracker
         {
             MessageQueue.EnableConnectionCache = true;
             this.Queue = MessageQueue.Exists(path) ? new MessageQueue(path) : MessageQueue.Create(path);
+            this.Queue.Formatter = new XmlMessageFormatter(new String[] { "System.String,mscorlib" });
         }
 
         public void Input(Dictionary<string, string> payload)
