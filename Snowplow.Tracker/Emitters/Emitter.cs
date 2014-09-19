@@ -26,6 +26,7 @@ using System.Net.NetworkInformation;
 using System.Web;
 using System.IO;
 using System.Web.Script.Serialization;
+using System.Windows;
 using NLog;
 using NLog.Targets;
 using NLog.Config;
@@ -69,7 +70,7 @@ namespace Snowplow.Tracker
             if (offlineModeEnabled)
             {
                 backupEmitter = new MsmqEmitter(String.Format(".\\private$\\{0}", collectorUri));
-                NetworkChange.NetworkAvailabilityChanged += new NetworkAvailabilityChangedEventHandler(NetworkAvailabilityChange);
+                WeakEventManager<NetworkChange, NetworkAvailabilityEventArgs>.AddHandler(null, "NetworkAvailabilityChanged", NetworkAvailabilityChange);
             }
         }
 
