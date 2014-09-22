@@ -30,6 +30,7 @@ namespace Snowplow.Tracker
     public class MsmqEmitter : IEmitter, IDisposable
     {
         private bool disposed = false;
+        private static JavaScriptSerializer jss = new JavaScriptSerializer();
 
         public MessageQueue Queue {get; set;}
 
@@ -42,7 +43,9 @@ namespace Snowplow.Tracker
 
         public void Input(Dictionary<string, string> payload)
         {
-            Queue.Send(new JavaScriptSerializer(null).Serialize(payload));
+            var message = new Message(jss.Serialize(payload));
+            message.Recoverable = true;
+            Queue.Send(message);
         }
 
         public void Flush(bool sync = false)
