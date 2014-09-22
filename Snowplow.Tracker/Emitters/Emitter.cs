@@ -136,16 +136,23 @@ namespace Snowplow.Tracker
 
         protected void SendRequests()
         {
-            logger.Info(String.Format("Attempting to send {0} event{1}", buffer.Count, buffer.Count == 1 ? "" : "s"));
+            // Move all requests from buffer into a tempBuffer for thread safety
+            var tempBuffer = new List<Dictionary<string, string>>();
+            while (buffer.Count > 0)
+            {
+                tempBuffer.Add(buffer[0]);
+                buffer.RemoveAt(0);
+            }
+
+            logger.Info(String.Format("Attempting to send {0} event{1}", tempBuffer.Count, tempBuffer.Count == 1 ? "" : "s"));
             if (method == HttpMethod.POST)
             {
-                var tempBuffer = buffer;
                 var data = new Dictionary<string, object>
                 {
                     { "schema", "iglu:com.snowplowanalytics.snowplow/payload_data/jsonschema/1-0-0" },
                     { "data", tempBuffer }
                 };
-                buffer = new List<Dictionary<string, string>>();
+
                 string statusCode = HttpPost(data, collectorUri);
                 if (statusCode == "OK")
                 {
@@ -169,10 +176,10 @@ namespace Snowplow.Tracker
             {
                 int successCount = 0;
                 var unsentRequests = new List<Dictionary<string, string>>();
-                while (buffer.Count > 0)
+                while (tempBuffer.Count > 0)
                 {
-                    var payload = buffer[0];
-                    buffer.RemoveAt(0);
+                    var payload = tempBuffer[0];
+                    tempBuffer.RemoveAt(0);
                     string statusCode = HttpGet(payload, collectorUri);
                     if (statusCode == "OK")
                     {
