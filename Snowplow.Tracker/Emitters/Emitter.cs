@@ -63,7 +63,7 @@ namespace Snowplow.Tracker
             collectorUri = GetCollectorUri(endpoint, protocol, port, method);
             this.method = method;
             this.buffer = new List<Dictionary<string, string>>();
-            this.bufferSize = bufferSize ?? (method == HttpMethod.GET ? 1 : 10);
+            this.bufferSize = Math.Max(1, bufferSize ?? (method == HttpMethod.GET ? 1 : 10));
             this.onSuccess = onSuccess;
             this.onFailure = onFailure;
             this.offlineModeEnabled = offlineModeEnabled;
