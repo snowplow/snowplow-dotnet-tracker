@@ -41,7 +41,7 @@ namespace Snowplow.Tracker
         volatile private List<Dictionary<string, string>> buffer;
         private Action<int> onSuccess;
         private Action<int, List<Dictionary<string, string>>> onFailure = null;
-        private bool offlineModeEnabled = true;
+        private bool offlineModeEnabled;
         private MsmqEmitter backupEmitter;
         private bool disposed = false;
 
@@ -51,7 +51,13 @@ namespace Snowplow.Tracker
         private static bool loggingConfigured = false;
         private static String noResponseMessage = "Unable to contact server";
 
-        public Emitter(string endpoint, HttpProtocol protocol = HttpProtocol.HTTP, int? port = null, HttpMethod method = HttpMethod.GET, int? bufferSize = null, Action<int> onSuccess = null, Action<int, List<Dictionary<string, string>>> onFailure = null)
+        public bool OfflineModeEnabled
+        {
+            get { return offlineModeEnabled; }
+            set { offlineModeEnabled = value;  }
+        }
+
+        public Emitter(string endpoint, HttpProtocol protocol = HttpProtocol.HTTP, int? port = null, HttpMethod method = HttpMethod.GET, int? bufferSize = null, Action<int> onSuccess = null, Action<int, List<Dictionary<string, string>>> onFailure = null, bool offlineModeEnabled = true)
         {
             collectorUri = GetCollectorUri(endpoint, protocol, port, method);
             this.method = method;
@@ -59,6 +65,7 @@ namespace Snowplow.Tracker
             this.bufferSize = bufferSize ?? (method == HttpMethod.GET ? 0 : 10);
             this.onSuccess = onSuccess;
             this.onFailure = onFailure;
+            this.offlineModeEnabled = offlineModeEnabled;
             if (!loggingConfigured)
             {
                 logTarget.Layout = "${level}: ${logger}: ${message} ${exception:format=tostring}";
