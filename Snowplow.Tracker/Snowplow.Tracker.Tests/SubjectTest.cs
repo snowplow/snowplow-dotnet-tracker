@@ -64,7 +64,7 @@ namespace Snowplow.Tracker.Tests
         {
             var subjectOne = new Subject();
             var subjectTwo = new Subject();
-            var tracker = new Tracker(new Emitter("localhost"), subjectOne);
+            var tracker = new Tracker(new Emitter("d3rkrsqld9gmqf.cloudfront.net"), subjectOne);
             tracker.SetPlatform(Platform.Mob);
             tracker.SetUserId("malcolm");
             tracker.SetScreenResolution(100, 200);

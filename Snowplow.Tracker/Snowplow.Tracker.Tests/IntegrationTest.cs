@@ -56,6 +56,29 @@ namespace Snowplow.Tracker.Tests
             }
         }
 
+        [TestInitialize]
+        public void DeleteQueues()
+        {
+            var queueNames = new List<string> {
+                "d3rkrsqld9gmqf.cloudfront.net"
+            };
+            foreach (var queue in queueNames)
+            {
+                var paths = new List<string>
+                {
+                    String.Format(@".\private$\http://{0}/i", queue),
+                    String.Format(@".\private$\http://{0}/com.snowplowanalytics.snowplow/tp2", queue)
+                };
+                foreach (var path in paths)
+                {
+                    if (MessageQueue.Exists(path))
+                    {
+                        MessageQueue.Delete(path);
+                    }
+                }
+            }
+        }
+
         [TestMethod]
         public void testTrackPageView()
         {
