@@ -303,12 +303,25 @@ namespace Snowplow.Tracker
         {
             if (offlineModeEnabled)
             {
+                var allSent = false;
                 var messageEnumerator = backupEmitter.Queue.GetMessageEnumerator2();
                 var jss = new JavaScriptSerializer();
-                while (messageEnumerator.MoveNext())
+
+                // Stop removing messages when there are none left to remove
+                // or the buffer is full (as the buffer will then be flushed,
+                // causing another call to ResendRequests)
+                while (!allSent && (buffer.Count < bufferSize))
                 {
-                    System.Messaging.Message evt = messageEnumerator.RemoveCurrent();
-                    Input(jss.Deserialize<Dictionary<string, string>>(evt.Body.ToString()));
+                    allSent = true;
+
+                    // The call to RemoveCurrent halts the MessageEnumerator2,
+                    // so this loop only removes a single message
+                    while (messageEnumerator.MoveNext())
+                    {
+                        allSent = false;
+                        System.Messaging.Message evt = messageEnumerator.RemoveCurrent();
+                        Input(jss.Deserialize<Dictionary<string, string>>(evt.Body.ToString()));
+                    }
                 }
             }
         }
