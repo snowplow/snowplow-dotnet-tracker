@@ -334,6 +334,7 @@ namespace Snowplow.Tracker
             {
                 if (disposing)
                 {
+                    WeakEventManager<NetworkChange, NetworkAvailabilityEventArgs>.RemoveHandler(null, "NetworkAvailabilityChanged", NetworkAvailabilityChange);
                     backupEmitter.Dispose();
                 }
                 disposed = true;
