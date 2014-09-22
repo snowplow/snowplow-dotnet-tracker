@@ -62,7 +62,7 @@ namespace Snowplow.Tracker
             collectorUri = GetCollectorUri(endpoint, protocol, port, method);
             this.method = method;
             this.buffer = new List<Dictionary<string, string>>();
-            this.bufferSize = bufferSize ?? (method == HttpMethod.GET ? 0 : 10);
+            this.bufferSize = bufferSize ?? (method == HttpMethod.GET ? 1 : 10);
             this.onSuccess = onSuccess;
             this.onFailure = onFailure;
             this.offlineModeEnabled = offlineModeEnabled;
@@ -306,7 +306,6 @@ namespace Snowplow.Tracker
                 var allSent = false;
                 var messageEnumerator = backupEmitter.Queue.GetMessageEnumerator2();
                 var jss = new JavaScriptSerializer();
-
                 // Stop removing messages when there are none left to remove
                 // or the buffer is full (as the buffer will then be flushed,
                 // causing another call to ResendRequests)
