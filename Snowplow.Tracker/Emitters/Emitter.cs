@@ -45,6 +45,7 @@ namespace Snowplow.Tracker
         private MsmqEmitter backupEmitter;
         private bool disposed = false;
 
+        private static JavaScriptSerializer jss = new JavaScriptSerializer();
         protected static Logger logger = LogManager.GetLogger("Snowplow.Tracker");
         private static ColoredConsoleTarget logTarget = new ColoredConsoleTarget();
         private static LoggingRule loggingRule = new LoggingRule("*", LogLevel.Info, logTarget);
@@ -215,7 +216,7 @@ namespace Snowplow.Tracker
         private string HttpPost(Dictionary<string, object> payload, string collectorUri)
         {
             logger.Info(String.Format("Sending POST request to {0}", collectorUri));
-            logger.Debug(() => String.Format("Payload: {0}", new JavaScriptSerializer(null).Serialize(payload)));
+            logger.Debug(() => String.Format("Payload: {0}", jss.Serialize(payload)));
             string destination = collectorUri;
             HttpWebRequest request = (HttpWebRequest)WebRequest.Create(destination);
             request.Method = "POST";
@@ -226,7 +227,7 @@ namespace Snowplow.Tracker
             {
                 using (var streamWriter = new StreamWriter(request.GetRequestStream()))
                 {
-                    string json = new JavaScriptSerializer(null).Serialize(payload);
+                    string json = jss.Serialize(payload);
                     streamWriter.Write(json);
                     streamWriter.Flush();
                 }
@@ -259,7 +260,7 @@ namespace Snowplow.Tracker
         private string HttpGet(Dictionary<string, string> payload, string collectorUri)
         {
             logger.Info(String.Format("Sending GET request to {0}", collectorUri));
-            logger.Debug(() => String.Format("Payload: {0}", new JavaScriptSerializer().Serialize(payload)));
+            logger.Debug(() => String.Format("Payload: {0}", jss.Serialize(payload)));
             string destination = collectorUri + ToQueryString(payload);
             HttpWebRequest request = (HttpWebRequest)WebRequest.Create(destination);
             try
@@ -305,7 +306,6 @@ namespace Snowplow.Tracker
             {
                 var allSent = false;
                 var messageEnumerator = backupEmitter.Queue.GetMessageEnumerator2();
-                var jss = new JavaScriptSerializer();
                 // Stop removing messages when there are none left to remove
                 // or the buffer is full (as the buffer will then be flushed,
                 // causing another call to ResendRequests)

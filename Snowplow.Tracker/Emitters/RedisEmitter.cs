@@ -32,6 +32,8 @@ namespace Snowplow.Tracker
         private String key;
         private bool disposed = false;
 
+        private static JavaScriptSerializer jss = new JavaScriptSerializer();
+
         public RedisEmitter(RedisClient rdb = null, string key = "snowplow")
         {
             this.rdb = rdb ?? new RedisClient();
@@ -40,7 +42,7 @@ namespace Snowplow.Tracker
 
         public void Input(Dictionary<string, string> payload)
         {
-            rdb.RPush(key, new JavaScriptSerializer(null).Serialize(payload));
+            rdb.RPush(key, jss.Serialize(payload));
         }
 
         public void Flush(bool sync = false)
