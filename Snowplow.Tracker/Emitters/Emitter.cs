@@ -44,6 +44,7 @@ namespace Snowplow.Tracker
         private Action<int, List<Dictionary<string, string>>> onFailure = null;
         private bool offlineModeEnabled;
         private MsmqEmitter backupEmitter;
+        private Timer flushTimer;
         private bool disposed = false;
 
         private static JavaScriptSerializer jss = new JavaScriptSerializer();
@@ -351,10 +352,17 @@ namespace Snowplow.Tracker
 
         public void SetFlushTimer(int timeout = 10000)
         {
-            var tmr = new Timer();
-            tmr.Interval = timeout;
-            tmr.Elapsed += (source, elapsedEventArgs) => { Flush(); };
-            tmr.Enabled = true;
+            if (flushTimer == null)
+            {
+                flushTimer = new Timer();
+                flushTimer.Elapsed += (source, elapsedEventArgs) =>
+                {
+                    logger.Info("flushTimer elapsed, flushing buffer");
+                    Flush();
+                };
+            }
+            flushTimer.Enabled = true;
+            flushTimer.Interval = timeout;
         }
 
         public void Dispose()
