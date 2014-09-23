@@ -136,6 +136,12 @@ namespace Snowplow.Tracker
 
         protected void SendRequests()
         {
+            if (buffer.Count == 0)
+            {
+                logger.Info("Buffer empty, returning");
+                return;
+            }
+
             // Move all requests from buffer into a tempBuffer for thread safety
             var tempBuffer = new List<Dictionary<string, string>>();
             while (buffer.Count > 0)
