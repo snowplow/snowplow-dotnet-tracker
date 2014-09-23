@@ -53,11 +53,6 @@ namespace Snowplow.Tracker
 
         }
 
-        public MessageEnumerator GetMessageEnumerator()
-        {
-            return Queue.GetMessageEnumerator2();
-        }
-
         public void Dispose()
         {
             Dispose(true);
