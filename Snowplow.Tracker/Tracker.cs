@@ -36,6 +36,14 @@ namespace Snowplow.Tracker
         private bool encodeBase64;
         private Dictionary<string, string> standardNvPairs;
 
+        /// <summary>
+        /// Snowplow Tracker class
+        /// </summary>
+        /// <param name="emitters">List of emitters to which events will be sent</param>
+        /// <param name="subject">Subject to be tracked</param>
+        /// <param name="trackerNamespace">Identifier for the tracker instance</param>
+        /// <param name="appId">Application ID</param>
+        /// <param name="encodeBase64">Whether custom event JSONs and custom context JSONs should be base 64 encoded</param>
         public Tracker(List<IEmitter> emitters, Subject subject = null, string trackerNamespace = null, string appId = null, bool encodeBase64 = true)
         {
             this.emitters = emitters;
@@ -49,7 +57,14 @@ namespace Snowplow.Tracker
             };
         }
 
-        // Overload method initializing a tracker with a single IEmitter rather than a list
+        /// <summary>
+        /// Overload method to create a Tracker from a single emitter rather than a list
+        /// </summary>
+        /// <param name="emitters">List of emitters to which events will be sent</param>
+        /// <param name="subject">Subject to be tracked</param>
+        /// <param name="trackerNamespace">Identifier for the tracker instance</param>
+        /// <param name="appId">Application ID</param>
+        /// <param name="encodeBase64">Whether custom event JSONs and custom context JSONs should be base 64 encoded</param>
         public Tracker(IEmitter endpoint, Subject subject = null, string trackerNamespace = null, string appId = null, bool encodeBase64 = true)
             : this(new List<IEmitter> { endpoint }, subject, trackerNamespace, appId, encodeBase64) { }
 
@@ -108,6 +123,13 @@ namespace Snowplow.Tracker
             }
         }
 
+        /// <summary>
+        /// Called by all tracking events to add the standard name-value pairs, the
+        /// subject name-value pairs, the timestamp, and any context to the Payload
+        /// </summary>
+        /// <param name="pb">Payload to complete</param>
+        /// <param name="context">Custom context</param>
+        /// <param name="tstamp">User-provided timestamp</param>
         private void CompletePayload(Payload pb, Context context, Int64? tstamp)
         {
             pb.Add("dtm", GetTimestamp(tstamp));
@@ -225,6 +247,11 @@ namespace Snowplow.Tracker
             return this;
         }
 
+        /// <summary>
+        /// Manually flush all emitters to which the tracker sends events
+        /// </summary>
+        /// <param name="sync">Whether the flush should be synchronous</param>
+        /// <returns>this</returns>
         public Tracker Flush(bool sync = false)
         {
             foreach (IEmitter emitter in emitters)
@@ -234,12 +261,22 @@ namespace Snowplow.Tracker
             return this;
         }
 
+        /// <summary>
+        /// Set the subject of the events fired by the tracker
+        /// </summary>
+        /// <param name="subject">Subject to track</param>
+        /// <returns>this</returns>
         public Tracker SetSubject(Subject subject)
         {
             this.subject = subject;
             return this;
         }
 
+        /// <summary>
+        /// Add a new emitter to which events will be sent
+        /// </summary>
+        /// <param name="emitter">The new emitter</param>
+        /// <returns>this</returns>
         public Tracker AddEmitter(Emitter emitter)
         {
             emitters.Add(emitter);

@@ -32,6 +32,14 @@ namespace Snowplow.Tracker
         public string name;
         public string category;
 
+        /// <summary>
+        /// A struct representing a single item in an ecommerce transaction
+        /// </summary>
+        /// <param name="sku">SKU (stock keeping unit) for the item</param>
+        /// <param name="price">Price of the item</param>
+        /// <param name="quantity">Quantity of the item purchased</param>
+        /// <param name="name">Name of the item</param>
+        /// <param name="category">Category of the item</param>
         public TransactionItem(string sku, double price, int quantity, string name = null, string category = null)
         {
             this.sku = sku;

@@ -60,6 +60,20 @@ namespace Snowplow.Tracker
             set { offlineModeEnabled = value;  }
         }
 
+        /// <summary>
+        /// Basic emitter to send synchronous HTTP requests
+        /// </summary>
+        /// <param name="endpoint">Collector domain</param>
+        /// <param name="protocol">HttpProtocol.HTTP or HttpProtocol.HTTPS</param>
+        /// <param name="port">Port to connect to</param>
+        /// <param name="method">HttpMethod.GET or HttpMethod.POST</param>
+        /// <param name="bufferSize">Maximum number of events queued before the buffer is flushed automatically.
+        /// Defaults to 10 for POST requests and 1 for GET requests.</param>
+        /// <param name="onSuccess">Callback executed when every request in a flush has status code 200.
+        /// Gets passed the number of events flushed.</param>
+        /// <param name="onFailure">Callback executed when not every request in a flush has status code 200.
+        /// Gets passed the number of events sent successfully and a list of unsuccessful events.</param>
+        /// <param name="offlineModeEnabled">Whether to store unsent requests using MSMQ</param>
         public Emitter(string endpoint, HttpProtocol protocol = HttpProtocol.HTTP, int? port = null, HttpMethod method = HttpMethod.GET, int? bufferSize = null, Action<int> onSuccess = null, Action<int, List<Dictionary<string, string>>> onFailure = null, bool offlineModeEnabled = true)
         {
             collectorUri = GetCollectorUri(endpoint, protocol, port, method);
@@ -122,6 +136,10 @@ namespace Snowplow.Tracker
             }
         }
 
+        /// <summary>
+        /// Add an event to the buffer and flush if the buffer is full
+        /// </summary>
+        /// <param name="payload">The event to add</param>
         public void Input(Dictionary<string, string> payload)
         {
             buffer.Add(payload);
@@ -131,11 +149,18 @@ namespace Snowplow.Tracker
             }
         }
 
+        /// <summary>
+        /// Send all events in the buffer
+        /// </summary>
+        /// <param name="sync">Only relevant in the case of the AsyncEmitter</param>
         virtual public void Flush(bool sync = false)
         {
             SendRequests();
         }
 
+        /// <summary>
+        /// Send all requests in the buffer
+        /// </summary>
         protected void SendRequests()
         {
             if (buffer.Count == 0)
@@ -219,6 +244,11 @@ namespace Snowplow.Tracker
             }
         }
 
+        /// <summary>
+        /// Converts an event from a dictionary to a querystring
+        /// </summary>
+        /// <param name="payload">The event to convert</param>
+        /// <returns>Querystring of the form "?e=pv&tna=cf&..."</returns>
         private static string ToQueryString(Dictionary<string, string> payload)
         {
             var array = (from key in payload.Keys
@@ -227,7 +257,13 @@ namespace Snowplow.Tracker
             return String.Format("?{0}", String.Join("&", array));
         }
 
-        // See http://stackoverflow.com/questions/9145667/how-to-post-json-to-the-server
+        /// <summary>
+        /// Make a POST request to a collector
+        /// See http://stackoverflow.com/questions/9145667/how-to-post-json-to-the-server
+        /// </summary>
+        /// <param name="payload">The body of the request</param>
+        /// <param name="collectorUri">The collector URI</param>
+        /// <returns>String representing the status of the request, e.g. "OK" or "Forbidden"</returns>
         private string HttpPost(Dictionary<string, object> payload, string collectorUri)
         {
             logger.Info(String.Format("Sending POST request to {0}", collectorUri));
@@ -273,6 +309,13 @@ namespace Snowplow.Tracker
             }
         }
 
+        /// <summary>
+        /// Make a GET request to a collector
+        /// See http://stackoverflow.com/questions/9145667/how-to-post-json-to-the-server
+        /// </summary>
+        /// <param name="payload">The event to be sent</param>
+        /// <param name="collectorUri">The collector URI</param>
+        /// <returns>String representing the status of the request, e.g. "OK" or "Forbidden"</returns>
         private string HttpGet(Dictionary<string, string> payload, string collectorUri)
         {
             logger.Info(String.Format("Sending GET request to {0}", collectorUri));
@@ -300,6 +343,10 @@ namespace Snowplow.Tracker
             
         }
 
+        /// <summary>
+        /// If offline mode is enabled, store unsent requests using MSMQ
+        /// </summary>
+        /// <param name="evt">The event to store</param>
         public void OfflineHandle(Dictionary<string, string> evt)
         {
             if (offlineModeEnabled)
@@ -309,6 +356,10 @@ namespace Snowplow.Tracker
             }
         }
 
+        /// <summary>
+        /// Call offlineHandle on all events in a failed POST request
+        /// </summary>
+        /// <param name="payload">The body of the POST request</param>
         public void OfflineHandle(Dictionary<string, object> payload)
         {
             foreach (Dictionary<string, string> evt in (List<Dictionary<string, string>>)payload["data"])
@@ -317,6 +368,9 @@ namespace Snowplow.Tracker
             }
         }
 
+        /// <summary>
+        /// Attempt to resend events stored in a Message Queue
+        /// </summary>
         private void ResendRequests()
         {
             if (offlineModeEnabled)
@@ -343,6 +397,11 @@ namespace Snowplow.Tracker
             }
         }
 
+        /// <summary>
+        /// Resend requests if the network becomes available
+        /// </summary>
+        /// <param name="sender">Unused parameter</param>
+        /// <param name="e">Unused parameter</param>
         private void NetworkAvailabilityChange (object sender, NetworkAvailabilityEventArgs e)
         {
             if (e.IsAvailable)
@@ -352,6 +411,10 @@ namespace Snowplow.Tracker
             }
         }
 
+        /// <summary>
+        /// Periodically flush the buffer at a chosen interval
+        /// </summary>
+        /// <param name="timeout">The interval in milliseconds</param>
         public void SetFlushTimer(int timeout = 10000)
         {
             if (flushTimer == null)
@@ -367,6 +430,9 @@ namespace Snowplow.Tracker
             flushTimer.Interval = timeout;
         }
 
+        /// <summary>
+        /// Stop periodically flushing the buffer
+        /// </summary>
         public void DisableFlushTimer()
         {
             if (flushTimer != null)

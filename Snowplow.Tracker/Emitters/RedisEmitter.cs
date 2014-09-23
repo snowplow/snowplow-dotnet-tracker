@@ -34,12 +34,21 @@ namespace Snowplow.Tracker
 
         private static JavaScriptSerializer jss = new JavaScriptSerializer();
 
+        /// <summary>
+        /// Create an emitter to send events to a Redis database
+        /// </summary>
+        /// <param name="rdb">Database to send events to</param>
+        /// <param name="key">Key under which to store events</param>
         public RedisEmitter(RedisClient rdb = null, string key = "snowplow")
         {
             this.rdb = rdb ?? new RedisClient();
             this.key = key;
         }
 
+        /// <summary>
+        /// Store an event in Redis in string JSON form
+        /// </summary>
+        /// <param name="payload">Event to store</param>
         public void Input(Dictionary<string, string> payload)
         {
             rdb.RPush(key, jss.Serialize(payload));

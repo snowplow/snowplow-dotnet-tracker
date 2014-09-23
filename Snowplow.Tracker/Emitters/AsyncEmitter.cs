@@ -29,9 +29,27 @@ namespace Snowplow.Tracker
     {
         private List<Task> tasks;
 
+        /// <summary>
+        /// Asynchronous emitter to send non-blocking HTTP requests
+        /// </summary>
+        /// <param name="endpoint">Collector domain</param>
+        /// <param name="protocol">HttpProtocol.HTTP or HttpProtocol.HTTPS</param>
+        /// <param name="port">Port to connect to</param>
+        /// <param name="method">HttpMethod.GET or HttpMethod.POST</param>
+        /// <param name="bufferSize">Maximum number of events queued before the buffer is flushed automatically.
+        /// Defaults to 10 for POST requests and 1 for GET requests.</param>
+        /// <param name="onSuccess">Callback executed when every request in a flush has status code 200.
+        /// Gets passed the number of events flushed.</param>
+        /// <param name="onFailure">Callback executed when not every request in a flush has status code 200.
+        /// Gets passed the number of events sent successfully and a list of unsuccessful events.</param>
+        /// <param name="offlineModeEnabled">Whether to store unsent requests using MSMQ</param>
         public AsyncEmitter(string endpoint, HttpProtocol protocol = HttpProtocol.HTTP, int? port = null, HttpMethod method = HttpMethod.GET, int? bufferSize = null, Action<int> onSuccess = null, Action<int, List<Dictionary<string, string>>> onFailure = null, bool offlineModeEnabled = true) :
             base(endpoint, protocol, port, method, bufferSize, onSuccess, onFailure, offlineModeEnabled) { tasks = new List<Task>(); }
 
+        /// <summary>
+        /// Create a new Task to send all requests in the buffer
+        /// </summary>
+        /// <param name="sync">If set to true, flush synchronously</param>
         public override void Flush(bool sync = false)
         {
             Task flushingTask = Task.Factory.StartNew(SendRequests);

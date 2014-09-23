@@ -34,6 +34,10 @@ namespace Snowplow.Tracker
 
         public MessageQueue Queue {get; set;}
 
+        /// <summary>
+        /// Create an emitter which sends events to an MSMQ queue
+        /// </summary>
+        /// <param name="path">Path to the queue</param>
         public MsmqEmitter(string path = @".\private$\SnowplowTracker")
         {
             MessageQueue.EnableConnectionCache = true;
@@ -41,6 +45,10 @@ namespace Snowplow.Tracker
             this.Queue.Formatter = new XmlMessageFormatter(new String[] { "System.String,mscorlib" });
         }
 
+        /// <summary>
+        /// Send a single event to the queue
+        /// </summary>
+        /// <param name="payload">The event to send</param>
         public void Input(Dictionary<string, string> payload)
         {
             var message = new Message(jss.Serialize(payload));
