@@ -31,16 +31,16 @@ namespace Snowplow.Tracker
 {
     public class Tracker
     {
-        private Subject subj;
+        private Subject subject;
         private List<IEmitter> emitters;
-        private bool b64;
+        private bool encodeBase64;
         private Dictionary<string, string> standardNvPairs;
 
         public Tracker(List<IEmitter> emitters, Subject subject = null, string trackerNamespace = null, string appId = null, bool encodeBase64 = true)
         {
             this.emitters = emitters;
-            subj = subject ?? new Subject();
-            b64 = encodeBase64;
+            this.subject = subject ?? new Subject();
+            this.encodeBase64 = encodeBase64;
             standardNvPairs = new Dictionary<string, string>
             {
                 { "tv", Version.VERSION },
@@ -49,48 +49,49 @@ namespace Snowplow.Tracker
             };
         }
 
+        // Overload method initializing a tracker with a single IEmitter rather than a list
         public Tracker(IEmitter endpoint, Subject subject = null, string trackerNamespace = null, string appId = null, bool encodeBase64 = true)
             : this(new List<IEmitter> { endpoint }, subject, trackerNamespace, appId, encodeBase64) { }
 
         public Tracker SetPlatform(Platform value)
         {
-            subj.SetPlatform(value);
+            subject.SetPlatform(value);
             return this;
         }
 
         public Tracker SetUserId(string id)
         {
-            subj.SetUserId(id);
+            subject.SetUserId(id);
             return this;
         }
 
         public Tracker SetScreenResolution(int width, int height)
         {
-            subj.SetScreenResolution(width, height);
+            subject.SetScreenResolution(width, height);
             return this;
         }
 
         public Tracker SetViewport(int width, int height)
         {
-            subj.SetViewport(width, height);
+            subject.SetViewport(width, height);
             return this;
         }
 
         public Tracker SetColorDepth(int depth)
         {
-            subj.SetColorDepth(depth);
+            subject.SetColorDepth(depth);
             return this;
         }
 
         public Tracker SetTimezone(string timezone)
         {
-            subj.SetTimezone(timezone);
+            subject.SetTimezone(timezone);
             return this;
         }
 
         public Tracker SetLang(string lang)
         {
-            subj.SetLang(lang);
+            subject.SetLang(lang);
             return this;
         }
 
@@ -118,18 +119,10 @@ namespace Snowplow.Tracker
                     { "schema", "iglu:com.snowplowanalytics.snowplow/contexts/1-0-0" },
                     { "data", context }
                 };
-                pb.AddJson(contextEnvelope, b64, "cx", "co");
+                pb.AddJson(contextEnvelope, encodeBase64, "cx", "co");
             }
             pb.AddDict(standardNvPairs);
-            pb.AddDict(subj.nvPairs);
-
-            // TODO: remove debug code
-            Console.WriteLine("about to display keys");
-            foreach (string key in pb.NvPairs.Keys)
-            {
-                Console.WriteLine(key + ": " + pb.NvPairs[key]);
-            }
-            Console.WriteLine("finished displaying keys");
+            pb.AddDict(subject.nvPairs);
 
             Track(pb);
         }
@@ -207,7 +200,7 @@ namespace Snowplow.Tracker
             };
             Payload pb = new Payload();
             pb.Add("e", "ue");
-            pb.AddJson(envelope, b64, "ue_px", "ue_pr");
+            pb.AddJson(envelope, encodeBase64, "ue_px", "ue_pr");
             CompletePayload(pb, context, tstamp);
             return this;
         }
@@ -243,7 +236,7 @@ namespace Snowplow.Tracker
 
         public Tracker SetSubject(Subject subject)
         {
-            subj = subject;
+            this.subject = subject;
             return this;
         }
 
