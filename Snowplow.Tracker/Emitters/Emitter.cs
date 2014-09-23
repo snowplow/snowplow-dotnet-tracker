@@ -234,6 +234,7 @@ namespace Snowplow.Tracker
             logger.Debug(() => String.Format("Payload: {0}", jss.Serialize(payload)));
             string destination = collectorUri;
             HttpWebRequest request = (HttpWebRequest)WebRequest.Create(destination);
+            request.Timeout = 10000;
             request.Method = "POST";
             request.ContentType = "application/json; charset=utf-8";
             request.UserAgent = "System.Net.HttpWebRequest";
@@ -278,6 +279,7 @@ namespace Snowplow.Tracker
             logger.Debug(() => String.Format("Payload: {0}", jss.Serialize(payload)));
             string destination = collectorUri + ToQueryString(payload);
             HttpWebRequest request = (HttpWebRequest)WebRequest.Create(destination);
+            request.Timeout = 10000;
             try
             {
                 HttpWebResponse response = (HttpWebResponse)request.GetResponse();
