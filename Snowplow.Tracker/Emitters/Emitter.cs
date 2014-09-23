@@ -21,6 +21,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Timers;
 using System.Net;
 using System.Net.NetworkInformation;
 using System.Web;
@@ -346,6 +347,14 @@ namespace Snowplow.Tracker
                 logger.Info("Network availability change detected, attempting to send stored requests");
                 ResendRequests();
             }
+        }
+
+        public void SetFlushTimer(int timeout = 10000)
+        {
+            var tmr = new Timer();
+            tmr.Interval = timeout;
+            tmr.Elapsed += (source, elapsedEventArgs) => { Flush(); };
+            tmr.Enabled = true;
         }
 
         public void Dispose()
