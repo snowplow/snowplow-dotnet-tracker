@@ -136,14 +136,12 @@ namespace Snowplow.Tracker
 
         protected void SendRequests()
         {
-            // Move requests from buffer into a tempBuffer for thread safety
+            // Move all requests from buffer into a tempBuffer for thread safety
             var tempBuffer = new List<Dictionary<string, string>>();
-            int requestsToSend = 0;
-            while (buffer.Count > 0 && requestsToSend < bufferSize)
+            while (buffer.Count > 0)
             {
                 tempBuffer.Add(buffer[0]);
                 buffer.RemoveAt(0);
-                requestsToSend++;
             }
 
             logger.Info(String.Format("Attempting to send {0} event{1}", tempBuffer.Count, tempBuffer.Count == 1 ? "" : "s"));
