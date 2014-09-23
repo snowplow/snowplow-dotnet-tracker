@@ -319,6 +319,7 @@ namespace Snowplow.Tracker
             {
                 var allSent = false;
                 var messageEnumerator = backupEmitter.Queue.GetMessageEnumerator2();
+
                 // Stop removing messages when there are none left to remove
                 // or the buffer is full (as the buffer will then be flushed,
                 // causing another call to ResendRequests)
