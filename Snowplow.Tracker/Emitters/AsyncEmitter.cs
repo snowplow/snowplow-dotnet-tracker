@@ -50,11 +50,19 @@ namespace Snowplow.Tracker
         /// Create a new Task to send all requests in the buffer
         /// </summary>
         /// <param name="sync">If set to true, flush synchronously</param>
-        public override void Flush(bool sync = false)
+        /// <param name="forced">If set to true, flush no matter how many events are in the buffer</param>
+        protected override void Flush(bool sync, bool forced)
         {
-            Task flushingTask = Task.Factory.StartNew(SendRequests);
+            Task flushingTask = Task.Factory.StartNew(() =>
+            {
+                if (forced || this.buffer.Count >= this.bufferSize)
+                {
+                    SendRequests();
+                }
+            });
             tasks.Add(flushingTask);
             tasks = tasks.Where(t => !t.IsCompleted).ToList();
+
             if (sync)
             {
                 logger.Info("Starting synchronous flush");

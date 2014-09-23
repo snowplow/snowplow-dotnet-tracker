@@ -38,8 +38,8 @@ namespace Snowplow.Tracker
     {
         private string collectorUri;
         private HttpMethod method;
-        private int bufferSize;
-        volatile private List<Dictionary<string, string>> buffer;
+        protected int bufferSize;
+        volatile protected List<Dictionary<string, string>> buffer;
         private Action<int> onSuccess;
         private Action<int, List<Dictionary<string, string>>> onFailure = null;
         private bool offlineModeEnabled;
@@ -145,7 +145,7 @@ namespace Snowplow.Tracker
             buffer.Add(payload);
             if (buffer.Count >= bufferSize)
             {
-                Flush();
+                Flush(false, false);
             }
         }
 
@@ -153,7 +153,18 @@ namespace Snowplow.Tracker
         /// Send all events in the buffer
         /// </summary>
         /// <param name="sync">Only relevant in the case of the AsyncEmitter</param>
-        virtual public void Flush(bool sync = false)
+        public void Flush(bool sync = false)
+        {
+            Flush(sync, true);
+        }
+
+        /// <summary>
+        /// Send all events in the buffer
+        /// Exists to prevent AsyncEmitter from flushing the buffer when it isn't full
+        /// </summary>
+        /// <param name="sync">Only relevant in the case of the AsyncEmitter</param>
+        /// <param name="forced">Only relevant in the case of the AsyncEmitter</param>
+        virtual protected void Flush(bool sync, bool forced)
         {
             SendRequests();
         }
