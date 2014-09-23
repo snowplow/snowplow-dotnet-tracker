@@ -116,7 +116,7 @@ namespace Snowplow.Tracker
             }
             else
             {
-                return String.Format("{0}://{1}{2}{3}", requestProtocol, endpoint, port.ToString(), path);
+                return String.Format("{0}://{1}:{2}{3}", requestProtocol, endpoint, port.ToString(), path);
             }
         }
 
