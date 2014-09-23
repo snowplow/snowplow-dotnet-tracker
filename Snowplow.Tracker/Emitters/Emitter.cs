@@ -365,6 +365,14 @@ namespace Snowplow.Tracker
             flushTimer.Interval = timeout;
         }
 
+        public void DisableFlushTimer()
+        {
+            if (flushTimer != null)
+            {
+                flushTimer.Enabled = false;
+            }
+        }
+
         public void Dispose()
         {
             Dispose(true);
@@ -379,6 +387,10 @@ namespace Snowplow.Tracker
                 {
                     WeakEventManager<NetworkChange, NetworkAvailabilityEventArgs>.RemoveHandler(null, "NetworkAvailabilityChanged", NetworkAvailabilityChange);
                     backupEmitter.Dispose();
+                    if (flushTimer != null)
+                    {
+                        flushTimer.Dispose();
+                    }
                 }
                 disposed = true;
             }
