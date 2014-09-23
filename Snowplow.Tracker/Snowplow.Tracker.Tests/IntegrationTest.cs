@@ -86,7 +86,7 @@ namespace Snowplow.Tracker.Tests
             {
                 ShimHttpWebRequest.AllInstances.GetResponse = fake;
 
-                var t = new Tracker("d3rkrsqld9gmqf.cloudfront.net");
+                var t = new Tracker(new Emitter("d3rkrsqld9gmqf.cloudfront.net"));
                 t.TrackPageView("http://www.example.com", "title page", "http://www.referrer.com");
                 var expected = new Dictionary<string, string>
                 {
@@ -107,7 +107,7 @@ namespace Snowplow.Tracker.Tests
             {
                 ShimHttpWebRequest.AllInstances.GetResponse = fake;
 
-                var t = new Tracker("d3rkrsqld9gmqf.cloudfront.net");
+                var t = new Tracker(new Emitter("d3rkrsqld9gmqf.cloudfront.net"));
                 t.TrackStructEvent("myCategory", "myAction", "myLabel", "myProperty", 17);
                 var expected = new Dictionary<string, string>
                 {
@@ -130,7 +130,7 @@ namespace Snowplow.Tracker.Tests
             {
                 ShimHttpWebRequest.AllInstances.GetResponse = fake;
 
-                var t = new Tracker("d3rkrsqld9gmqf.cloudfront.net");
+                var t = new Tracker(new Emitter("d3rkrsqld9gmqf.cloudfront.net"));
                 var hat = new TransactionItem("pbz0026", 20, 1);
                 var shirt = new TransactionItem("pbz0038", 15, 1, "shirt", "clothing");
                 var items = new List<TransactionItem> { hat, shirt };
@@ -182,7 +182,7 @@ namespace Snowplow.Tracker.Tests
             {
                 ShimHttpWebRequest.AllInstances.GetResponse = fake;
 
-                var t = new Tracker("d3rkrsqld9gmqf.cloudfront.net", null, null, null, false);
+                var t = new Tracker(new Emitter("d3rkrsqld9gmqf.cloudfront.net"), null, null, null, false);
                 var eventJson = new Dictionary<string, object>
                 {
                     {"schema", "iglu:com.acme/test/jsonschema/1-0-0"},
@@ -212,7 +212,7 @@ namespace Snowplow.Tracker.Tests
             {
                 ShimHttpWebRequest.AllInstances.GetResponse = fake;
 
-                var t = new Tracker("d3rkrsqld9gmqf.cloudfront.net");
+                var t = new Tracker(new Emitter("d3rkrsqld9gmqf.cloudfront.net"));
                 var eventJson = new Dictionary<string, object>
                 {
                     {"schema", "iglu:com.acme/test/jsonschema/1-0-0"},
@@ -243,7 +243,7 @@ namespace Snowplow.Tracker.Tests
             {
                 ShimHttpWebRequest.AllInstances.GetResponse = fake;
 
-                var t = new Tracker("d3rkrsqld9gmqf.cloudfront.net");
+                var t = new Tracker(new Emitter("d3rkrsqld9gmqf.cloudfront.net"));
                 t.TrackScreenView("entry screen", "0001");
                 var expected = new Dictionary<string, string>
                 {
@@ -264,7 +264,7 @@ namespace Snowplow.Tracker.Tests
             {
                 ShimHttpWebRequest.AllInstances.GetResponse = fake;
 
-                var t = new Tracker("d3rkrsqld9gmqf.cloudfront.net", null, "cf", "train simulator");
+                var t = new Tracker(new Emitter("d3rkrsqld9gmqf.cloudfront.net"), null, "cf", "train simulator");
                 t.SetPlatform(Platform.Mob);
                 t.SetUserId("malcolm");                
                 t.SetScreenResolution(100, 200);
@@ -330,7 +330,7 @@ namespace Snowplow.Tracker.Tests
                     userContext
                 };
 
-                var t = new Tracker("d3rkrsqld9gmqf.cloudfront.net");
+                var t = new Tracker(new Emitter("d3rkrsqld9gmqf.cloudfront.net"));
                 t.TrackPageView("http://www.example.com", null, null, context);
                 var expected = new Dictionary<string, string>
                 {
