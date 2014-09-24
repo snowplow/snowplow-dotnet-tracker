@@ -55,10 +55,10 @@
     <Compile Include="HttpMethod.cs" />
     <Compile Include="HttpProtocol.cs" />
     <Compile Include="Emitters\IEmitter.cs" />
-    <Compile Include="Logging.cs" />
     <Compile Include="Emitters\MsmqEmitter.cs" />
     <Compile Include="Events\Platform.cs" />
     <Compile Include="Emitters\RedisEmitter.cs" />
+    <Compile Include="Log.cs" />
     <Compile Include="Subject.cs" />
     <Compile Include="Events\TransactionItem.cs" />
     <Compile Include="Payload.cs" />

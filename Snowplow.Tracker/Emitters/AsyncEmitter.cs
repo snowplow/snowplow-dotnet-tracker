@@ -65,7 +65,7 @@ namespace Snowplow.Tracker
 
             if (sync)
             {
-                logger.Info("Starting synchronous flush");
+                Log.Logger.Info("Starting synchronous flush");
                 Task.WaitAll(tasks.ToArray(), 10000);
             }
             else

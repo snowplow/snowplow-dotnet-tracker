@@ -28,9 +28,6 @@ using System.Web;
 using System.IO;
 using System.Web.Script.Serialization;
 using System.Windows;
-using NLog;
-using NLog.Targets;
-using NLog.Config;
 
 namespace Snowplow.Tracker
 {
@@ -46,12 +43,7 @@ namespace Snowplow.Tracker
         private MsmqEmitter backupEmitter;
         private Timer flushTimer;
         private bool disposed = false;
-
         private static JavaScriptSerializer jss = new JavaScriptSerializer();
-        public static Logger logger = LogManager.GetLogger("Snowplow.Tracker");
-        private static ColoredConsoleTarget logTarget = new ColoredConsoleTarget();
-        private static LoggingRule loggingRule = new LoggingRule("*", LogLevel.Info, logTarget);
-        private static bool loggingConfigured = false;
         private static String noResponseMessage = "Unable to contact server";
 
         public bool OfflineModeEnabled
@@ -83,35 +75,12 @@ namespace Snowplow.Tracker
             this.onSuccess = onSuccess;
             this.onFailure = onFailure;
             this.offlineModeEnabled = offlineModeEnabled;
-            if (!loggingConfigured)
-            {
-                logTarget.Layout = "${longdate} ${level} ${logger}: ${message} ${exception:format=tostring}";
-                LogManager.Configuration.LoggingRules.Add(loggingRule);
-                loggingConfigured = true;
-                SetLogLevel(Logging.Info);
-            }
-            logger.Info(String.Format("{0} initialized with endpoint {1}", this.GetType(), collectorUri));
+            Log.Logger.Info(String.Format("{0} initialized with endpoint {1}", this.GetType(), collectorUri));
             if (offlineModeEnabled)
             {
                 backupEmitter = new MsmqEmitter(String.Format(".\\private$\\{0}", collectorUri));
                 WeakEventManager<NetworkChange, NetworkAvailabilityEventArgs>.AddHandler(null, "NetworkAvailabilityChanged", NetworkAvailabilityChange);
             }
-        }
-
-        public static void SetLogLevel(Logging newLevel)
-        {
-            foreach (int level in Enumerable.Range(0,6))
-            {
-                if (level < (int)newLevel)
-                {
-                    loggingRule.DisableLoggingForLevel(LogLevel.FromOrdinal(level));
-                }
-                else
-                {
-                    loggingRule.EnableLoggingForLevel(LogLevel.FromOrdinal(level));
-                }
-            }
-            LogManager.ReconfigExistingLoggers();
         }
 
         private static string GetCollectorUri(string endpoint, HttpProtocol protocol, int? port, HttpMethod method)
@@ -176,7 +145,7 @@ namespace Snowplow.Tracker
         {
             if (buffer.Count == 0)
             {
-                logger.Info("Buffer empty, returning");
+                Log.Logger.Info("Buffer empty, returning");
                 return;
             }
 
@@ -188,7 +157,7 @@ namespace Snowplow.Tracker
                 buffer.RemoveAt(0);
             }
 
-            logger.Info(String.Format("Attempting to send {0} event{1}", tempBuffer.Count, tempBuffer.Count == 1 ? "" : "s"));
+            Log.Logger.Info(String.Format("Attempting to send {0} event{1}", tempBuffer.Count, tempBuffer.Count == 1 ? "" : "s"));
             if (method == HttpMethod.POST)
             {
                 var data = new Dictionary<string, object>
@@ -200,7 +169,7 @@ namespace Snowplow.Tracker
                 string statusCode = HttpPost(data, collectorUri);
                 if (statusCode == "OK")
                 {
-                    logger.Info(String.Format("POST request to {0} finished with status '{1}'", collectorUri, statusCode));
+                    Log.Logger.Info(String.Format("POST request to {0} finished with status '{1}'", collectorUri, statusCode));
                     if (onSuccess != null)
                     {
                         onSuccess(tempBuffer.Count);
@@ -209,7 +178,7 @@ namespace Snowplow.Tracker
                 }
                 else
                 {
-                    logger.Warn(String.Format("POST request to {0} finished with status: '{1}'", collectorUri, statusCode));
+                    Log.Logger.Warn(String.Format("POST request to {0} finished with status: '{1}'", collectorUri, statusCode));
                     if (onFailure != null)
                     {
                         onFailure(0, tempBuffer);
@@ -227,13 +196,13 @@ namespace Snowplow.Tracker
                     string statusCode = HttpGet(payload, collectorUri);
                     if (statusCode == "OK")
                     {
-                        logger.Info(String.Format("GET request to {0} finished with status: '{1}'", collectorUri, statusCode));
+                        Log.Logger.Info(String.Format("GET request to {0} finished with status: '{1}'", collectorUri, statusCode));
                         successCount += 1;
                         ResendRequests();
                     }
                     else
                     {
-                        logger.Warn(String.Format("GET request to {0} finished with status: '{1}'", collectorUri, statusCode));
+                        Log.Logger.Warn(String.Format("GET request to {0} finished with status: '{1}'", collectorUri, statusCode));
                         unsentRequests.Add(payload);
                     }
                 }
@@ -277,8 +246,8 @@ namespace Snowplow.Tracker
         /// <returns>String representing the status of the request, e.g. "OK" or "Forbidden"</returns>
         private string HttpPost(Dictionary<string, object> payload, string collectorUri)
         {
-            logger.Info(String.Format("Sending POST request to {0}", collectorUri));
-            logger.Debug(() => String.Format("Payload: {0}", jss.Serialize(payload)));
+            Log.Logger.Info(String.Format("Sending POST request to {0}", collectorUri));
+            Log.Logger.Debug(() => String.Format("Payload: {0}", jss.Serialize(payload)));
             string destination = collectorUri;
             HttpWebRequest request = (HttpWebRequest)WebRequest.Create(destination);
             request.Timeout = 10000;
@@ -322,15 +291,14 @@ namespace Snowplow.Tracker
 
         /// <summary>
         /// Make a GET request to a collector
-        /// See http://stackoverflow.com/questions/9145667/how-to-post-json-to-the-server
         /// </summary>
         /// <param name="payload">The event to be sent</param>
         /// <param name="collectorUri">The collector URI</param>
         /// <returns>String representing the status of the request, e.g. "OK" or "Forbidden"</returns>
         private string HttpGet(Dictionary<string, string> payload, string collectorUri)
         {
-            logger.Info(String.Format("Sending GET request to {0}", collectorUri));
-            logger.Debug(() => String.Format("Payload: {0}", jss.Serialize(payload)));
+            Log.Logger.Info(String.Format("Sending GET request to {0}", collectorUri));
+            Log.Logger.Debug(() => String.Format("Payload: {0}", jss.Serialize(payload)));
             string destination = collectorUri + ToQueryString(payload);
             HttpWebRequest request = (HttpWebRequest)WebRequest.Create(destination);
             request.Timeout = 10000;
@@ -362,7 +330,7 @@ namespace Snowplow.Tracker
         {
             if (offlineModeEnabled)
             {
-                logger.Info("Could not connect to server, queueing event for later");
+                Log.Logger.Info("Could not connect to server, queueing event for later");
                 backupEmitter.Input(evt);
             }
         }
@@ -417,7 +385,7 @@ namespace Snowplow.Tracker
         {
             if (e.IsAvailable)
             {
-                logger.Info("Network availability change detected, attempting to send stored requests");
+                Log.Logger.Info("Network availability change detected, attempting to send stored requests");
                 ResendRequests();
             }
         }
@@ -433,7 +401,7 @@ namespace Snowplow.Tracker
                 flushTimer = new Timer();
                 flushTimer.Elapsed += (source, elapsedEventArgs) =>
                 {
-                    logger.Info("flushTimer elapsed, flushing buffer");
+                    Log.Logger.Info("flushTimer elapsed, flushing buffer");
                     Flush();
                 };
             }

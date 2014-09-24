@@ -51,7 +51,7 @@ namespace Snowplow.Tracker
         /// <param name="payload">The event to send</param>
         public void Input(Dictionary<string, string> payload)
         {
-            Emitter.logger.Info("Sending event to MSMQ message queue");
+            Log.Logger.Info("Sending event to MSMQ message queue");
             var message = new Message(jss.Serialize(payload));
             message.Recoverable = true;
             Queue.Send(message);
