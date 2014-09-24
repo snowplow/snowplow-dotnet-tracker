@@ -61,7 +61,6 @@ namespace Snowplow.Tracker
             return this;
         }
 
-
         /// <summary>
         /// Set the user's screen resolution
         /// </summary>
@@ -107,7 +106,6 @@ namespace Snowplow.Tracker
             nvPairs["tz"] = timezone;
             return this;
         }
-
 
         /// <summary>
         /// Set the user's language
