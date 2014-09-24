@@ -28,6 +28,9 @@ namespace Snowplow.Tracker
     {
         public Dictionary<string, string> nvPairs;
 
+        /// <summary>
+        /// Create a subject representing a user
+        /// </summary>
         public Subject()
         {
             nvPairs = new Dictionary<string, string>
@@ -36,42 +39,81 @@ namespace Snowplow.Tracker
             };
         }
 
+        /// <summary>
+        /// Set the user's platform
+        /// </summary>
+        /// <param name="value">The platform</param>
+        /// <returns>this</returns>
         public Subject SetPlatform(Platform value)
         {
             nvPairs["p"] = value.ToString().ToLower();
             return this;
         }
 
+        /// <summary>
+        /// Set a unique ID for the user
+        /// </summary>
+        /// <param name="id">User ID</param>
+        /// <returns>this</returns>
         public Subject SetUserId(string id)
         {
             nvPairs["uid"] = id;
             return this;
         }
 
+
+        /// <summary>
+        /// Set the user's screen resolution
+        /// </summary>
+        /// <param name="width">Screen width in pixels</param>
+        /// <param name="height">Screen height in pixels</param>
+        /// <returns>this</returns>
         public Subject SetScreenResolution(int width, int height)
         {
             nvPairs["res"] = String.Format("{0}x{1}", width.ToString(), height.ToString());
             return this;
         }
 
+        /// <summary>
+        /// Set the user's viewport dimensions
+        /// </summary>
+        /// <param name="width">Viewport width in pixels</param>
+        /// <param name="height">Viewport height in pixels</param>
+        /// <returns>this</returns>
         public Subject SetViewport(int width, int height)
         {
             nvPairs["vp"] = String.Format("{0}x{1}", width.ToString(), height.ToString());
             return this;
         }
 
+        /// <summary>
+        /// Set the user device's color depth
+        /// </summary>
+        /// <param name="depth">Number of distinct colors the device can display</param>
+        /// <returns>this</returns>
         public Subject SetColorDepth(int depth)
         {
             nvPairs["cd"] = depth.ToString();
             return this;
         }
 
+        /// <summary>
+        /// Set the user's timezone
+        /// </summary>
+        /// <param name="timezone">Timezone (for example, "Europe/London")</param>
+        /// <returns>this</returns>
         public Subject SetTimezone(string timezone)
         {
             nvPairs["tz"] = timezone;
             return this;
         }
 
+
+        /// <summary>
+        /// Set the user's language
+        /// </summary>
+        /// <param name="lang">Language</param>
+        /// <returns>this</returns>
         public Subject SetLang(string lang)
         {
             nvPairs["lang"] = lang;
