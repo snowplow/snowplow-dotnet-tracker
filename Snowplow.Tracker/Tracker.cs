@@ -68,6 +68,8 @@ namespace Snowplow.Tracker
         public Tracker(IEmitter endpoint, Subject subject = null, string trackerNamespace = null, string appId = null, bool encodeBase64 = true)
             : this(new List<IEmitter> { endpoint }, subject, trackerNamespace, appId, encodeBase64) { }
 
+        // Setter methods which call the relevant setter methods on the subject
+
         public Tracker SetPlatform(Platform value)
         {
             subject.SetPlatform(value);
@@ -110,11 +112,20 @@ namespace Snowplow.Tracker
             return this;
         }
 
+        /// <summary>
+        /// Gets the timestamp for an event
+        /// </summary>
+        /// <param name="tstamp">A user-provided timestamp or null</param>
+        /// <returns>The timestamp for the event</returns>
         private static Int64 GetTimestamp(Int64? tstamp)
         {
             return tstamp ?? (Int64)(DateTime.UtcNow.Subtract(new DateTime(1970, 1, 1))).TotalMilliseconds;
         }
 
+        /// <summary>
+        /// Inputs an event into each emitter
+        /// </summary>
+        /// <param name="pb">The event payload</param>
         private void Track(Payload pb)
         {
             foreach (IEmitter emitter in emitters)
@@ -149,6 +160,15 @@ namespace Snowplow.Tracker
             Track(pb);
         }
 
+        /// <summary>
+        /// Track a Snowplow page view event
+        /// </summary>
+        /// <param name="pageUrl">Page URL</param>
+        /// <param name="pageTitle">Page title</param>
+        /// <param name="referrer">Page referrer</param>
+        /// <param name="context">List of custom contexts for the event</param>
+        /// <param name="tstamp">User-provided timestamp for the event</param>
+        /// <returns>this</returns>
         public Tracker TrackPageView(string pageUrl, string pageTitle = null, string referrer = null, Context context = null, Int64? tstamp = null)
         {
             Payload pb = new Payload();
@@ -160,6 +180,14 @@ namespace Snowplow.Tracker
             return this;
         }
 
+        /// <summary>
+        /// Send an event corresponding to a single item in a transaction
+        /// </summary>
+        /// <param name="orderId">Unique ID for the whole order</param>
+        /// <param name="currency">Currency for the order</param>
+        /// <param name="item">TransactionItem object containing data about the item</param>
+        /// <param name="context">List of custom contexts for the event</param>
+        /// <param name="tstamp">User-provided timestamp for the event</param>
         private void TrackEcommerceTransactionItem(string orderId, string currency, TransactionItem item, Context context, Int64? tstamp)
         {
             Payload pb = new Payload();
@@ -174,6 +202,23 @@ namespace Snowplow.Tracker
             CompletePayload(pb, context, tstamp);
         }
 
+        /// <summary>
+        /// Track a Snowplow ecommerce transaction event
+        /// Fires one event for the whole transaction and one for each item in the transaction
+        /// </summary>
+        /// <param name="orderId">Unique ID for the whole order</param>
+        /// <param name="totalValue">Total transaction value</param>
+        /// <param name="affiliation">Transaction affiliation</param>
+        /// <param name="taxValue">Transaction tax value</param>
+        /// <param name="shipping">Delivery charge</param>
+        /// <param name="city">Delivery address city</param>
+        /// <param name="state">Delivery address state or province</param>
+        /// <param name="country">Delivery address country</param>
+        /// <param name="currency">Currency for the order</param>
+        /// <param name="items">List of items in the transaction</param>
+        /// <param name="context">List of custom contexts for the event</param>
+        /// <param name="tstamp">User-provided timestamp for the event</param>
+        /// <returns>this</returns>
         public Tracker TrackEcommerceTransaction(string orderId, double totalValue, string affiliation = null, double? taxValue = null, double? shipping = null, string city = null, string state = null, string country = null, string currency = null, List<TransactionItem> items = null, Context context = null, Int64? tstamp = null)
         {
             Payload pb = new Payload();
@@ -200,6 +245,17 @@ namespace Snowplow.Tracker
             return this;
         }
 
+        /// <summary>
+        /// Track a Snowplow structured event
+        /// </summary>
+        /// <param name="category">Event category</param>
+        /// <param name="action">The event itself</param>
+        /// <param name="label">The object upon which the action is performed</param>
+        /// <param name="property">Property associated with the action or its object</param>
+        /// <param name="value">Value associated with the action or its object</param>
+        /// <param name="context">List of custom contexts for the event</param>
+        /// <param name="tstamp">User-provided timestamp for the event</param>
+        /// <returns>this</returns>
         public Tracker TrackStructEvent(string category, string action, string label = null, string property = null, double? value = null, Context context = null, Int64? tstamp = null)
         {
             Payload pb = new Payload();
@@ -213,6 +269,13 @@ namespace Snowplow.Tracker
             return this;
         }
 
+        /// <summary>
+        /// Track a Snowplow custom unstructured event
+        /// </summary>
+        /// <param name="eventJson">Self-describing JSON for the event</param>
+        /// <param name="context">List of custom contexts for the event</param>
+        /// <param name="tstamp">User-provided timestamp for the event</param>
+        /// <returns>this</returns>
         public Tracker TrackUnstructEvent(SelfDescribingJson eventJson, Context context = null, Int64? tstamp = null)
         {
             var envelope = new Dictionary<string, object>
@@ -227,6 +290,14 @@ namespace Snowplow.Tracker
             return this;
         }
 
+        /// <summary>
+        /// Track a Snowplow screen view event
+        /// </summary>
+        /// <param name="name">Name of the screen</param>
+        /// <param name="id">Unique ID of the screen</param>
+        /// <param name="context">List of custom contexts for the event</param>
+        /// <param name="tstamp">User-provided timestamp for the event</param>
+        /// <returns>this</returns>
         public Tracker TrackScreenView(string name = null, string id = null, Context context = null, Int64? tstamp = null)
         {
             var screenViewProperties = new Dictionary<string, string>();
