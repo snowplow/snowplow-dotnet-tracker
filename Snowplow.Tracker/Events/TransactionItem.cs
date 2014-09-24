@@ -31,6 +31,7 @@ namespace Snowplow.Tracker
         public int quantity;
         public string name;
         public string category;
+        public List<Dictionary<string, object>> context;
 
         /// <summary>
         /// A struct representing a single item in an ecommerce transaction
@@ -40,13 +41,15 @@ namespace Snowplow.Tracker
         /// <param name="quantity">Quantity of the item purchased</param>
         /// <param name="name">Name of the item</param>
         /// <param name="category">Category of the item</param>
-        public TransactionItem(string sku, double price, int quantity, string name = null, string category = null)
+        /// <param name="context">List of custom contexts for the item</param>
+        public TransactionItem(string sku, double price, int quantity, string name = null, string category = null, List<Dictionary<string, object>> context = null)
         {
             this.sku = sku;
             this.price = price;
             this.quantity = quantity;
             this.name = name;
             this.category = category;
+            this.context = context;
         }
     }
 }

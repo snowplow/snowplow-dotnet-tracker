@@ -188,7 +188,7 @@ namespace Snowplow.Tracker
         /// <param name="item">TransactionItem object containing data about the item</param>
         /// <param name="context">List of custom contexts for the event</param>
         /// <param name="tstamp">User-provided timestamp for the event</param>
-        private void TrackEcommerceTransactionItem(string orderId, string currency, TransactionItem item, Context context, Int64? tstamp)
+        private void TrackEcommerceTransactionItem(string orderId, string currency, TransactionItem item, Int64? tstamp)
         {
             Payload pb = new Payload();
             pb.Add("e", "ti");
@@ -199,7 +199,7 @@ namespace Snowplow.Tracker
             pb.Add("ti_qu", item.quantity);
             pb.Add("ti_nm", item.name);
             pb.Add("ti_ca", item.category);
-            CompletePayload(pb, context, tstamp);
+            CompletePayload(pb, item.context, tstamp);
         }
 
         /// <summary>
@@ -238,7 +238,7 @@ namespace Snowplow.Tracker
             {
                 foreach (TransactionItem item in items)
                 {
-                    TrackEcommerceTransactionItem(orderId, currency, item, context, tstamp);
+                    TrackEcommerceTransactionItem(orderId, currency, item, tstamp);
                 }
             }
 
