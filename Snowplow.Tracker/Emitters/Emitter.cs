@@ -48,7 +48,7 @@ namespace Snowplow.Tracker
         private bool disposed = false;
 
         private static JavaScriptSerializer jss = new JavaScriptSerializer();
-        protected static Logger logger = LogManager.GetLogger("Snowplow.Tracker");
+        public static Logger logger = LogManager.GetLogger("Snowplow.Tracker");
         private static ColoredConsoleTarget logTarget = new ColoredConsoleTarget();
         private static LoggingRule loggingRule = new LoggingRule("*", LogLevel.Info, logTarget);
         private static bool loggingConfigured = false;
@@ -85,7 +85,7 @@ namespace Snowplow.Tracker
             this.offlineModeEnabled = offlineModeEnabled;
             if (!loggingConfigured)
             {
-                logTarget.Layout = "${level}: ${logger}: ${message} ${exception:format=tostring}";
+                logTarget.Layout = "${longdate} ${level} ${logger}: ${message} ${exception:format=tostring}";
                 LogManager.Configuration.LoggingRules.Add(loggingRule);
                 loggingConfigured = true;
                 SetLogLevel(Logging.Info);

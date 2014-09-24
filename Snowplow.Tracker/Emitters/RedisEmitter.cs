@@ -51,6 +51,7 @@ namespace Snowplow.Tracker
         /// <param name="payload">Event to store</param>
         public void Input(Dictionary<string, string> payload)
         {
+            Emitter.logger.Info(String.Format("Sending event to Redis list with key {0}", key));
             rdb.RPush(key, jss.Serialize(payload));
         }
 
