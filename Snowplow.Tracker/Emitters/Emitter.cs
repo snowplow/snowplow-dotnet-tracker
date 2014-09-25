@@ -39,6 +39,7 @@ namespace Snowplow.Tracker
         volatile protected List<Dictionary<string, string>> buffer;
         private Action<int> onSuccess;
         private Action<int, List<Dictionary<string, string>>> onFailure = null;
+        private bool offlineTrackingConfigured = false;
         private bool offlineModeEnabled;
         private MsmqEmitter backupEmitter;
         private Timer flushTimer;
@@ -49,7 +50,14 @@ namespace Snowplow.Tracker
         public bool OfflineModeEnabled
         {
             get { return offlineModeEnabled; }
-            set { offlineModeEnabled = value;  }
+            set
+            {
+                if (value)
+                {
+                    configureOfflineTracking();
+                }
+                offlineModeEnabled = value;
+            }
         }
 
         /// <summary>
@@ -74,13 +82,18 @@ namespace Snowplow.Tracker
             this.bufferSize = Math.Max(1, bufferSize ?? (method == HttpMethod.GET ? 1 : 10));
             this.onSuccess = onSuccess;
             this.onFailure = onFailure;
-            this.offlineModeEnabled = offlineModeEnabled;
+            this.OfflineModeEnabled = offlineModeEnabled;
             Log.Logger.Info(String.Format("{0} initialized with endpoint {1}", this.GetType(), collectorUri));
-            if (offlineModeEnabled)
+        }
+
+        private void configureOfflineTracking()
+        {
+            if (! offlineTrackingConfigured)
             {
                 backupEmitter = new MsmqEmitter(String.Format(".\\private$\\{0}", collectorUri));
                 WeakEventManager<NetworkChange, NetworkAvailabilityEventArgs>.AddHandler(null, "NetworkAvailabilityChanged", NetworkAvailabilityChange);
             }
+            offlineTrackingConfigured = true;
         }
 
         private static string GetCollectorUri(string endpoint, HttpProtocol protocol, int? port, HttpMethod method)
