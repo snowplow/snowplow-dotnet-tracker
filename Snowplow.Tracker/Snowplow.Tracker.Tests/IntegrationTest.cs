@@ -279,7 +279,7 @@ namespace Snowplow.Tracker.Tests
                     {"url", "http://www.example.com"},
                     {"page", "title page"},
                     {"refr", "http://www.referrer.com"},
-                    {"tv", "cs-0.1.0"},
+                    {"tv", Version.VERSION},
                     {"tna", "cf"},
                     {"aid", "train simulator"},
                     {"p", "mob"},
