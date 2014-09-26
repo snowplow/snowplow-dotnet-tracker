@@ -1,7 +1,5 @@
 # .NET Analytics for Snowplow 
 
-**WORK IN PROGRESS**
-
 ## Overview
 
 Add analytics to your .NET apps with the [Snowplow] [snowplow] C# event tracker.
