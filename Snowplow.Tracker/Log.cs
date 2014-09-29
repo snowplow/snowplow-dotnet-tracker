@@ -51,9 +51,9 @@ namespace Snowplow.Tracker
             {
                 if (! loggingConfigured)
                 {
+                    LogManager.Configuration = new LoggingConfiguration();
                     logTarget.Layout = "${longdate} ${level} ${logger}: ${message} ${exception:format=tostring}";
                     LogManager.Configuration.LoggingRules.Add(loggingRule);
-                    loggingConfigured = true;
                     SetLogLevel(Level.Info);
                     loggingConfigured = true;
                 }
