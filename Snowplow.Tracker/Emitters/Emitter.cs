@@ -28,6 +28,7 @@ using System.Web;
 using System.IO;
 using System.Web.Script.Serialization;
 using System.Windows;
+using System.ServiceProcess;
 
 namespace Snowplow.Tracker
 {
@@ -39,6 +40,7 @@ namespace Snowplow.Tracker
         volatile protected List<Dictionary<string, string>> buffer;
         private Action<int> onSuccess;
         private Action<int, List<Dictionary<string, string>>> onFailure = null;
+        private static bool? offlineModePossible; // Whether MSMQ is available
         private bool offlineTrackingConfigured = false;
         private bool offlineModeEnabled;
         private MsmqEmitter backupEmitter;
@@ -54,9 +56,28 @@ namespace Snowplow.Tracker
             {
                 if (value)
                 {
-                    configureOfflineTracking();
+                    if (offlineModePossible == null)
+                    {
+                        var services = ServiceController.GetServices().ToList();
+                        var msQue = services.Find(x => x.ServiceName == "MSMQ");
+                        offlineModePossible = (msQue != null && msQue.Status == ServiceControllerStatus.Running);
+                    }
+
+                    if ((bool)offlineModePossible)
+                    {
+                        configureOfflineTracking();
+                        offlineModeEnabled = true;
+                    }
+                    else if (! (bool)offlineModePossible)
+                    {
+                        Log.Logger.Warn("Offline mode cannot be enabled because MSMQ is not available");
+                        offlineModeEnabled = false;
+                    }
                 }
-                offlineModeEnabled = value;
+                else
+                {
+                    offlineModeEnabled = false;
+                }
             }
         }
 
