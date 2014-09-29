@@ -49,14 +49,7 @@ namespace Snowplow.Tracker
         {
             get
             {
-                if (! loggingConfigured)
-                {
-                    LogManager.Configuration = new LoggingConfiguration();
-                    logTarget.Layout = "${longdate} ${level} ${logger}: ${message} ${exception:format=tostring}";
-                    LogManager.Configuration.LoggingRules.Add(loggingRule);
-                    SetLogLevel(Level.Info);
-                    loggingConfigured = true;
-                }
+                configureLogging();
                 return logger;
             }
         }
@@ -67,6 +60,7 @@ namespace Snowplow.Tracker
         /// <param name="newLevel">Trace, Debug, Info, Warn, Error, Fatal, or Off</param>
         public static void SetLogLevel(Level newLevel)
         {
+            configureLogging();
             foreach (int level in Enumerable.Range(0, 6))
             {
                 if (level < (int)newLevel)
@@ -79,6 +73,21 @@ namespace Snowplow.Tracker
                 }
             }
             LogManager.ReconfigExistingLoggers();
+        }
+
+        /// <summary>
+        /// Set up the logger format and configuration
+        /// </summary>
+        private static void configureLogging()
+        {
+            if (! loggingConfigured)
+            {
+                loggingConfigured = true;
+                LogManager.Configuration = new LoggingConfiguration();
+                logTarget.Layout = "${longdate} ${level} ${logger}: ${message} ${exception:format=tostring}";
+                LogManager.Configuration.LoggingRules.Add(loggingRule);
+                SetLogLevel(Level.Info);
+            }
         }
     }
 }
