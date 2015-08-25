@@ -212,7 +212,10 @@ namespace Snowplow.Tracker
                 }
                 else
                 {
-                    Log.Logger.Warn(String.Format("POST request to {0} finished with status: '{1}'", collectorUri, statusCode));
+                    OfflineHandle(data);
+
+                    Log.Logger.Warn(String.Format("POST request to {0} finished with status: '{1}'. Sent to backup emitter.", collectorUri, statusCode));
+                    
                     if (onFailure != null)
                     {
                         onFailure(0, tempBuffer);
@@ -236,7 +239,8 @@ namespace Snowplow.Tracker
                     }
                     else
                     {
-                        Log.Logger.Warn(String.Format("GET request to {0} finished with status: '{1}'", collectorUri, statusCode));
+                        OfflineHandle(payload);
+                        Log.Logger.Warn(String.Format("GET request to {0} finished with status: '{1}'. Sent to backup emitter.", collectorUri, statusCode));
                         unsentRequests.Add(payload);
                     }
                 }
