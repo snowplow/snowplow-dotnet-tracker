@@ -46,6 +46,8 @@ namespace Snowplow.Tracker
         public AsyncEmitter(string endpoint, HttpProtocol protocol = HttpProtocol.HTTP, int? port = null, HttpMethod method = HttpMethod.GET, int? bufferSize = null, Action<int> onSuccess = null, Action<int, List<Dictionary<string, string>>> onFailure = null, bool offlineModeEnabled = true) :
             base(endpoint, protocol, port, method, bufferSize, onSuccess, onFailure, offlineModeEnabled) { tasks = new List<Task>(); }
 
+        private readonly object Locker = new object();
+
         /// <summary>
         /// Create a new Task to send all requests in the buffer
         /// </summary>
@@ -53,24 +55,27 @@ namespace Snowplow.Tracker
         /// <param name="forced">If set to true, flush no matter how many events are in the buffer</param>
         protected override void Flush(bool sync, bool forced)
         {
-            Task flushingTask = Task.Factory.StartNew(() =>
+            lock (Locker)
             {
-                if (forced || this.buffer.Count >= this.bufferSize)
+                Task flushingTask = Task.Factory.StartNew(() =>
                 {
-                    SendRequests();
-                }
-            });
-            tasks.Add(flushingTask);
-            tasks = tasks.Where(t => !t.IsCompleted).ToList();
+                    if (forced || this.buffer.Count >= this.bufferSize)
+                    {
+                        SendRequests();
+                    }
+                });
+                tasks.Add(flushingTask);
+                tasks = tasks.Where(t => !t.IsCompleted).ToList();
 
-            if (sync)
-            {
-                Log.Logger.Info("Starting synchronous flush");
-                Task.WaitAll(tasks.ToArray(), 10000);
-            }
-            else
-            {
-                Thread.Yield();
+                if (sync)
+                {
+                    Log.Logger.Info("Starting synchronous flush");
+                    Task.WaitAll(tasks.ToArray(), 10000);
+                }
+                else
+                {
+                    Thread.Yield();
+                }
             }
         }
 

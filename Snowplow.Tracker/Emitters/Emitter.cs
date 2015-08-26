@@ -409,6 +409,7 @@ namespace Snowplow.Tracker
                         allSent = false;
                         System.Messaging.Message evt = messageEnumerator.RemoveCurrent();
                         Input(jss.Deserialize<Dictionary<string, string>>(evt.Body.ToString()));
+
                     }
                 }
             }
