@@ -304,7 +304,6 @@ namespace Snowplow.Tracker
             }
             catch (WebException we)
             {
-                OfflineHandle(payload);
                 return noResponseMessage;
             }
 
@@ -351,7 +350,6 @@ namespace Snowplow.Tracker
                 var response = (HttpWebResponse)we.Response;
                 if (response == null)
                 {
-                    OfflineHandle(payload);
                     return noResponseMessage;
                 }
                 response.Close();
