@@ -338,7 +338,7 @@ namespace Snowplow.Tracker.Tests
                     {"url", "http://www.example.com"}
                 };
                 checkResult(expected, payloads[payloads.Count - 1]);
-                var expectedJsonString = @"{""schema"":""iglu:com.snowplowanalytics.snowplow/contexts/1-0-0"",""data"":[{""schema"":""iglu:com.snowplowanalytics.snowplow/page/jsonschema/1-0-0"",""data"":{""type"":""test"",""public"":false}},{""schema"":""iglu:com.snowplowanalytics.snowplow/user/jsonschema/1-0-0"",""data"":{""age"":40,""name"":""Ned""}}]}";
+                var expectedJsonString = @"{""schema"":""iglu:com.snowplowanalytics.snowplow/contexts/jsonschema/1-0-0"",""data"":[{""schema"":""iglu:com.snowplowanalytics.snowplow/page/jsonschema/1-0-0"",""data"":{""type"":""test"",""public"":false}},{""schema"":""iglu:com.snowplowanalytics.snowplow/user/jsonschema/1-0-0"",""data"":{""age"":40,""name"":""Ned""}}]}";
                 byte[] data = Convert.FromBase64String(payloads[payloads.Count - 1]["cx"]);
                 string actualJsonString = Encoding.UTF8.GetString(data);
                 Assert.AreEqual(expectedJsonString, actualJsonString);

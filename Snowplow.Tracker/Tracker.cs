@@ -149,7 +149,7 @@ namespace Snowplow.Tracker
             {
                 var contextEnvelope = new Dictionary<string, object>
                 {
-                    { "schema", "iglu:com.snowplowanalytics.snowplow/contexts/1-0-0" },
+                    { "schema", "iglu:com.snowplowanalytics.snowplow/contexts/jsonschema/1-0-0" },
                     { "data", context }
                 };
                 pb.AddJson(contextEnvelope, encodeBase64, "cx", "co");
