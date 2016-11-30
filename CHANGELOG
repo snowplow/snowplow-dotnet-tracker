@@ -1,3 +1,10 @@
+Version 0.1.2 (2016-11-30)
+--------------------------
+Fix Snowplow.Tracker.Tests build reference (#22)
+Update Log to pull in all settings from NLog.config file (#23)
+Add explicit reference to Newtonsoft.Json dependency (fixes #25)
+Add Snowplow.Tracker.nuspec (closes #26)
+
 Version 0.1.1 (2016-05-09)
 --------------------------
 Fix incorrect schema for contexts (#20)
