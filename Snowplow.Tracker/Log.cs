@@ -17,22 +17,13 @@
  */
 
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using NLog;
-using NLog.Targets;
-using NLog.Config;
 
 namespace Snowplow.Tracker
 {
     public static class Log
     {
         private static Logger logger = LogManager.GetLogger("Snowplow.Tracker");
-        private static ColoredConsoleTarget logTarget = new ColoredConsoleTarget();
-        private static LoggingRule loggingRule = new LoggingRule("*", LogLevel.Info, logTarget);
-        private static bool loggingConfigured = false;
 
         public enum Level
         {
@@ -49,7 +40,6 @@ namespace Snowplow.Tracker
         {
             get
             {
-                configureLogging();
                 return logger;
             }
         }
@@ -58,36 +48,10 @@ namespace Snowplow.Tracker
         /// Set the level at which messages will be logged
         /// </summary>
         /// <param name="newLevel">Trace, Debug, Info, Warn, Error, Fatal, or Off</param>
+        [Obsolete("SetLogLevel is deprecated, please use NLog.config instead.", true)]
         public static void SetLogLevel(Level newLevel)
         {
-            configureLogging();
-            foreach (int level in Enumerable.Range(0, 6))
-            {
-                if (level < (int)newLevel)
-                {
-                    loggingRule.DisableLoggingForLevel(LogLevel.FromOrdinal(level));
-                }
-                else
-                {
-                    loggingRule.EnableLoggingForLevel(LogLevel.FromOrdinal(level));
-                }
-            }
-            LogManager.ReconfigExistingLoggers();
-        }
-
-        /// <summary>
-        /// Set up the logger format and configuration
-        /// </summary>
-        private static void configureLogging()
-        {
-            if (! loggingConfigured)
-            {
-                loggingConfigured = true;
-                LogManager.Configuration = new LoggingConfiguration();
-                logTarget.Layout = "${longdate} ${level} ${logger}: ${message} ${exception:format=tostring}";
-                LogManager.Configuration.LoggingRules.Add(loggingRule);
-                SetLogLevel(Level.Info);
-            }
+            // All log settings must be configured from the NLog.config file
         }
     }
 }
