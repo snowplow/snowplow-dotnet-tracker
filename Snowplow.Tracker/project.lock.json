@@ -3,6 +3,15 @@
   "version": 2,
   "targets": {
     ".NETStandard,Version=v1.6": {
+      "LiteDB/3.0.0-beta2": {
+        "type": "package",
+        "compile": {
+          "lib/netstandard1.4/LiteDB.dll": {}
+        },
+        "runtime": {
+          "lib/netstandard1.4/LiteDB.dll": {}
+        }
+      },
       "Microsoft.CSharp/4.0.1": {
         "type": "package",
         "dependencies": {
@@ -28,6 +37,23 @@
         },
         "runtime": {
           "lib/netstandard1.3/Microsoft.CSharp.dll": {}
+        }
+      },
+      "Microsoft.Extensions.PlatformAbstractions/1.0.0": {
+        "type": "package",
+        "dependencies": {
+          "System.AppContext": "4.1.0",
+          "System.Reflection": "4.1.0",
+          "System.Reflection.Extensions": "4.0.1",
+          "System.Reflection.TypeExtensions": "4.1.0",
+          "System.Resources.ResourceManager": "4.0.1",
+          "System.Runtime.Extensions": "4.1.0"
+        },
+        "compile": {
+          "lib/netstandard1.3/Microsoft.Extensions.PlatformAbstractions.dll": {}
+        },
+        "runtime": {
+          "lib/netstandard1.3/Microsoft.Extensions.PlatformAbstractions.dll": {}
         }
       },
       "Microsoft.NETCore.Platforms/1.1.0": {
@@ -819,7 +845,7 @@
           "System.Runtime": "4.3.0"
         },
         "compile": {
-          "ref/netstandard1.5/_._": {}
+          "ref/netstandard1.5/System.Reflection.TypeExtensions.dll": {}
         },
         "runtime": {
           "lib/netstandard1.5/System.Reflection.TypeExtensions.dll": {}
@@ -1310,6 +1336,19 @@
     }
   },
   "libraries": {
+    "LiteDB/3.0.0-beta2": {
+      "sha512": "sicPcqHnW88nhTqrrHP56VrCqSJ5Ds/H1QvPCPv5gtAGmONTHuY0OQfMy51a9vJtMtDPqwCabS3kGY5MQ/CSZg==",
+      "type": "package",
+      "path": "LiteDB/3.0.0-beta2",
+      "files": [
+        "LiteDB.3.0.0-beta2.nupkg.sha512",
+        "LiteDB.nuspec",
+        "lib/net35/LiteDB.dll",
+        "lib/net35/LiteDB.xml",
+        "lib/netstandard1.4/LiteDB.dll",
+        "lib/netstandard1.4/LiteDB.xml"
+      ]
+    },
     "Microsoft.CSharp/4.0.1": {
       "sha512": "17h8b5mXa87XYKrrVqdgZ38JefSUqLChUQpXgSnpzsM0nDOhE40FTeNWOJ/YmySGV6tG6T8+hjz6vxbknHJr6A==",
       "type": "package",
@@ -1365,6 +1404,19 @@
         "ref/xamarinmac20/_._",
         "ref/xamarintvos10/_._",
         "ref/xamarinwatchos10/_._"
+      ]
+    },
+    "Microsoft.Extensions.PlatformAbstractions/1.0.0": {
+      "sha512": "zyjUzrOmuevOAJpIo3Mt5GmpALVYCVdLZ99keMbmCxxgQH7oxzU58kGHzE6hAgYEiWsdfMJLjVR7r+vSmaJmtg==",
+      "type": "package",
+      "path": "Microsoft.Extensions.PlatformAbstractions/1.0.0",
+      "files": [
+        "Microsoft.Extensions.PlatformAbstractions.1.0.0.nupkg.sha512",
+        "Microsoft.Extensions.PlatformAbstractions.nuspec",
+        "lib/net451/Microsoft.Extensions.PlatformAbstractions.dll",
+        "lib/net451/Microsoft.Extensions.PlatformAbstractions.xml",
+        "lib/netstandard1.3/Microsoft.Extensions.PlatformAbstractions.dll",
+        "lib/netstandard1.3/Microsoft.Extensions.PlatformAbstractions.xml"
       ]
     },
     "Microsoft.NETCore.Platforms/1.1.0": {
@@ -4695,6 +4747,8 @@
   },
   "projectFileDependencyGroups": {
     "": [
+      "LiteDB >= 3.0.0-beta2",
+      "Microsoft.Extensions.PlatformAbstractions >= 1.0.0",
       "NETStandard.Library >= 1.6.1",
       "Newtonsoft.Json >= 9.0.1",
       "System.Net.Http >= 4.3.0",
