@@ -7,7 +7,7 @@ namespace Snowplow.Tracker.Queues
 {
     public interface IPersistentBlockingQueue
     {
-        List<Payload> Dequeue();
+        List<Payload> Dequeue(int maxWait);
         void Enqueue(List<Payload> items);
     }
 }

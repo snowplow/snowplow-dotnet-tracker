@@ -322,7 +322,7 @@ namespace Snowplow.Tracker
         {
             foreach (IEmitter emitter in emitters)
             {
-                emitter.Flush(sync);
+                emitter.Flush();
             }
             return this;
         }

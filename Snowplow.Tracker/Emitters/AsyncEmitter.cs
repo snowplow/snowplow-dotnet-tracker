@@ -22,64 +22,102 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Threading;
+using Snowplow.Tracker.Queues;
+using Snowplow.Tracker.Emitters.Endpoints;
 
 namespace Snowplow.Tracker
 {
     public class AsyncEmitter : IEmitter
     {
-        private List<Task> tasks;
+        private readonly object _startStopLock = new object();
+        private Thread _runner;
+        private bool _keepRunning = false;
+        private IPersistentBlockingQueue _queue;
+        private IEndpoint _endpoint;
+        private int _stopPollIntervalMs;
 
-        /// <summary>
-        /// Asynchronous emitter to send non-blocking HTTP requests
-        /// </summary>
-        /// <param name="endpoint">Collector domain</param>
-        /// <param name="protocol">HttpProtocol.HTTP or HttpProtocol.HTTPS</param>
-        /// <param name="port">Port to connect to</param>
-        /// <param name="method">HttpMethod.GET or HttpMethod.POST</param>
-        /// <param name="bufferSize">Maximum number of events queued before the buffer is flushed automatically.
-        /// Defaults to 10 for POST requests and 1 for GET requests.</param>
-        /// <param name="onSuccess">Callback executed when every request in a flush has status code 200.
-        /// Gets passed the number of events flushed.</param>
-        /// <param name="onFailure">Callback executed when not every request in a flush has status code 200.
-        /// Gets passed the number of events sent successfully and a list of unsuccessful events.</param>
-        /// <param name="offlineModeEnabled">Whether to store unsent requests using MSMQ</param>
-        public AsyncEmitter(string endpoint, HttpProtocol protocol = HttpProtocol.HTTP, int? port = null, HttpMethod method = HttpMethod.GET, int? bufferSize = null, Action<int> onSuccess = null, Action<int, List<Dictionary<string, string>>> onFailure = null, bool offlineModeEnabled = true) // :base(endpoint, protocol, port, method, bufferSize, onSuccess, onFailure, offlineModeEnabled)
-        { tasks = new List<Task>(); }
-
-        private readonly object Locker = new object();
-
-        /// <summary>
-        /// Create a new Task to send all requests in the buffer
-        /// </summary>
-        /// <param name="sync">If set to true, flush synchronously</param>
-        /// <param name="forced">If set to true, flush no matter how many events are in the buffer</param>
-        protected void Flush(bool sync, bool forced)
+        public bool Running
         {
-            lock (Locker)
+            get
             {
-                Task flushingTask = Task.Factory.StartNew(() =>
+                lock (_startStopLock)
                 {
-                    //if (forced || this.buffer.Count >= this.bufferSize)
-                    //{
-                    //    SendRequests();
-                    //}
-                });
-                tasks.Add(flushingTask);
-                tasks = tasks.Where(t => !t.IsCompleted).ToList();
-
-                if (sync)
-                {
-                    //Log.Logger.Info("Starting synchronous flush");
-                    Task.WaitAll(tasks.ToArray(), 10000);
-                }
-                else
-                {
-                    //Thread.Yield();
+                    return _runner != null;
                 }
             }
         }
 
-        public void Flush(bool sync)
+        public AsyncEmitter(IEndpoint endpoint,
+                            IPersistentBlockingQueue queue,
+                            int stopPollIntervalMs = 300) 
+        {
+            _queue = queue;
+            _endpoint = endpoint;
+            _stopPollIntervalMs = stopPollIntervalMs;
+        }
+
+        public void Start()
+        {
+            lock (_startStopLock)
+            {
+                if (_runner == null)
+                {
+                    _keepRunning = true;
+                    _runner = new Thread(new ThreadStart(this.loop));
+                    _runner.Start();
+                } else
+                {
+                    throw new InvalidOperationException("Cannot start - already started");
+                }
+            }
+        }
+
+        private void loop()
+        {
+            for (;;)
+            {
+                lock(_startStopLock)
+                {
+                    if (_keepRunning)
+                    {
+                        // take item(s) off the queue and send it
+                        var items = _queue.Dequeue(_stopPollIntervalMs);
+                        foreach (var item in items)
+                        {
+                            _endpoint.Send(item);
+                        }
+
+                    } else
+                    {
+                        break;
+                    }
+                }
+            }
+        }
+
+        public void Stop()
+        {
+           lock (_startStopLock)
+            {
+                if (_runner == null)
+                {
+                    throw new InvalidOperationException("Cannot stop - not started");
+                } else
+                {
+                    _keepRunning = false;
+                }
+            }
+
+            _runner.Join();
+
+            lock(_startStopLock) { 
+                _runner = null;
+            }
+        }
+
+    
+
+        public void Flush()
         {
             throw new NotImplementedException();
         }

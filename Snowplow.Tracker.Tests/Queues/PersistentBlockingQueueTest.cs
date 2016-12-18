@@ -107,11 +107,13 @@ namespace Snowplow.Tracker.Tests.Queues
 
             private IPersistentBlockingQueue _q;
             private int _count;
+            private int _timeout;
 
-            public MockConsumer(int count, IPersistentBlockingQueue q)
+            public MockConsumer(int count, IPersistentBlockingQueue q, int timeout = 1000)
             {
                 _count = count;
                 _q = q;
+                _timeout = timeout;
             }
 
             public void Consume()
@@ -120,7 +122,10 @@ namespace Snowplow.Tracker.Tests.Queues
 
                 for (int i = 0; i < _count; i++)
                 {
-                    Consumed.Add(_q.Dequeue()[0]);
+                    var items = _q.Dequeue(_timeout);
+                    foreach (var item in items) {
+                        Consumed.Add(item);
+                    }
                 }
             }
         }
@@ -213,6 +218,22 @@ namespace Snowplow.Tracker.Tests.Queues
 
             Assert.IsTrue(allConsumedOneItem);
             Assert.AreEqual(expectedRecordCount, total);
+        }
+
+        [TestMethod] 
+        public void testConsumerTimeout()
+        {
+            var mockStorage = new MockStorage();
+
+            var q = new PersistentBlockingQueue(mockStorage, new PayloadToJsonString());
+
+            var consumer = new MockConsumer(1, q, 10);
+            var consumerThread = new Thread(new ThreadStart(consumer.Consume));
+            consumerThread.Start();
+
+            consumerThread.Join(500);
+
+            Assert.AreEqual(0, consumer.Consumed.Count);
         }
 
     }

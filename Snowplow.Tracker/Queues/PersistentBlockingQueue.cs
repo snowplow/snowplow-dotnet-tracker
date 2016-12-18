@@ -41,13 +41,16 @@ namespace Snowplow.Tracker.Queues
             }
         }
 
-        public List<Payload> Dequeue()
+        public List<Payload> Dequeue(int maxWait = 300)
         {
             lock (_queueLock)
             {
                 while(_storage.TotalItems == 0)
                 {
-                    Monitor.Wait(_queueLock);
+                    if (!Monitor.Wait(_queueLock, maxWait))
+                    {
+                        return new List<Payload>();
+                    }
                 }
 
                 var items = _storage.TakeLast(1);

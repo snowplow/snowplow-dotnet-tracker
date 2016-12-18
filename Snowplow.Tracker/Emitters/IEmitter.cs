@@ -26,7 +26,7 @@ namespace Snowplow.Tracker
 {
     public interface IEmitter
     {
-        void Flush(bool sync);
+        void Flush();
 
         void Input(Dictionary<string, string> payload);
     }

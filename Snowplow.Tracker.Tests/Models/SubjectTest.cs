@@ -25,7 +25,7 @@ namespace Snowplow.Tracker.Tests
     // Emitter that does no operations
     class MockEmitter : IEmitter
     {
-        public void Flush(bool sync)
+        public void Flush()
         {
         }
 
