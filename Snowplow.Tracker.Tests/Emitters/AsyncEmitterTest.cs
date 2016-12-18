@@ -59,16 +59,15 @@ namespace Snowplow.Tracker.Tests.Emitters
         }
 
         [TestMethod]
-        [ExpectedException(typeof(InvalidOperationException),
-                   @"Cannot stop - already stopped")]
         public void testEmitterStopAlreadyStopped()
         {
             var e = buildMockEmitter();
 
             e.Start();
             e.Stop();
-
+            Assert.IsFalse(e.Running);
             e.Stop();
+            Assert.IsFalse(e.Running);
         }
 
         [TestMethod] 
@@ -84,6 +83,13 @@ namespace Snowplow.Tracker.Tests.Emitters
             Assert.IsTrue(e.Running);
             e.Stop();
             Assert.IsFalse(e.Running);
+        }
+
+        [TestMethod]
+        public void testFlush()
+        {
+            var e = buildMockEmitter();
+            Assert.Fail("come back to me");
         }
 
     }

@@ -27,7 +27,7 @@ using Snowplow.Tracker.Emitters.Endpoints;
 
 namespace Snowplow.Tracker
 {
-    public class AsyncEmitter : IEmitter
+    public class AsyncEmitter : IEmitter, IDisposable
     {
         private readonly object _startStopLock = new object();
         private Thread _runner;
@@ -101,7 +101,7 @@ namespace Snowplow.Tracker
             {
                 if (_runner == null)
                 {
-                    throw new InvalidOperationException("Cannot stop - not started");
+                    return;
                 } else
                 {
                     _keepRunning = false;
@@ -114,17 +114,49 @@ namespace Snowplow.Tracker
                 _runner = null;
             }
         }
-
-    
-
+          
         public void Flush()
         {
-            throw new NotImplementedException();
+            Stop();
+
+            var items = _queue.Dequeue(50);
+            var failed = new List<Payload>();
+
+            while (items.Count > 0)
+            {
+                foreach (var item in items)
+                {
+                   if (!_endpoint.Send(item))
+                    {
+                        failed.Add(item);
+                    }
+                }
+
+                items = _queue.Dequeue(50);
+            }
+
+            _queue.Enqueue(failed);
+
+            Start();
         }
 
         public void Input(Dictionary<string, string> payload)
         {
             throw new NotImplementedException();
+        }
+
+        public void Dispose()
+        {
+            Dispose(true);
+            GC.SuppressFinalize(this);
+        }
+
+        protected virtual void Dispose(bool disposing)
+        {
+            if (disposing)
+            {
+                Stop();
+            }
         }
     }
 }
