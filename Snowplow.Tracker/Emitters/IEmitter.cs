@@ -28,6 +28,6 @@ namespace Snowplow.Tracker
     {
         void Flush();
 
-        void Input(Dictionary<string, string> payload);
+        void Input(Payload payload);
     }
 }

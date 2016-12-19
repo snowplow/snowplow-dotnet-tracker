@@ -29,7 +29,7 @@ namespace Snowplow.Tracker.Tests
         {
         }
 
-        public void Input(Dictionary<string, string> payload)
+        public void Input(Payload payload)
         {
         }
     }

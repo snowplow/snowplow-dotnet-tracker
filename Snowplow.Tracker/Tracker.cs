@@ -125,7 +125,7 @@ namespace Snowplow.Tracker
         {
             foreach (IEmitter emitter in emitters)
             {
-                emitter.Input(pb.NvPairs);
+                emitter.Input(pb);
             }
         }
 
