@@ -24,12 +24,49 @@ using Context = System.Collections.Generic.List<System.Collections.Generic.Dicti
 
 namespace Snowplow.Tracker
 {
-    public class Tracker
+    public sealed class Tracker
     {
-        private Subject subject;
-        private List<IEmitter> emitters;
-        private bool encodeBase64;
-        private Dictionary<string, string> standardNvPairs;
+        private static readonly object _createLock = new object();
+        private static volatile Tracker _t;
+
+        private readonly object _lock = new object();
+        private volatile bool _running = false;
+
+        private Subject _subject;
+        private IEmitter _emitter;
+        private bool _encodeBase64;
+        private Dictionary<string, string> _standardNvPairs;
+
+
+        public static Tracker Instance
+        {
+            get
+            {
+                lock (_createLock) {
+
+                    if (_t == null)
+                    {
+                        _t = new Tracker();
+                    }
+
+                    return _t;
+                }
+            }
+        }
+
+        private Tracker() { }
+
+        public bool Started
+        {
+            get
+            {
+                lock (_lock)
+                {
+                    return _running;
+                }
+            }
+        }
+
 
         /// <summary>
         /// Snowplow Tracker class
@@ -39,71 +76,113 @@ namespace Snowplow.Tracker
         /// <param name="trackerNamespace">Identifier for the tracker instance</param>
         /// <param name="appId">Application ID</param>
         /// <param name="encodeBase64">Whether custom event JSONs and custom context JSONs should be base 64 encoded</param>
-        public Tracker(List<IEmitter> emitters, Subject subject = null, string trackerNamespace = null, string appId = null, bool encodeBase64 = true)
+        public void Start(IEmitter endpoint, Subject subject = null, string trackerNamespace = null, string appId = null, bool encodeBase64 = true)
         {
-            this.emitters = emitters;
-            this.subject = subject ?? new Subject();
-            this.encodeBase64 = encodeBase64;
-            standardNvPairs = new Dictionary<string, string>
+            lock(_lock)
             {
-                { "tv", Version.VERSION },
-                { "tna", trackerNamespace },
-                { "aid", appId }
-            };
+                if (_running) {
+                    throw new InvalidOperationException("Cannot start - already started");
+                } 
+                _emitter = endpoint;
+                _subject = subject ?? new Subject();
+                _encodeBase64 = encodeBase64;
+                _standardNvPairs = new Dictionary<string, string>
+                {
+                    { "tv", Version.VERSION },
+                    { "tna", trackerNamespace },
+                    { "aid", appId }
+                };
+                _running = true;
+            }
+
         }
 
-        /// <summary>
-        /// Overload method to create a Tracker from a single emitter rather than a list
-        /// </summary>
-        /// <param name="emitters">List of emitters to which events will be sent</param>
-        /// <param name="subject">Subject to be tracked</param>
-        /// <param name="trackerNamespace">Identifier for the tracker instance</param>
-        /// <param name="appId">Application ID</param>
-        /// <param name="encodeBase64">Whether custom event JSONs and custom context JSONs should be base 64 encoded</param>
-        public Tracker(IEmitter endpoint, Subject subject = null, string trackerNamespace = null, string appId = null, bool encodeBase64 = true)
-            : this(new List<IEmitter> { endpoint }, subject, trackerNamespace, appId, encodeBase64) { }
+        public void Stop()
+        {
+            lock (_createLock)
+            {
+                lock (_lock)
+                {
+                    if (_running)
+                    {
+                        _t = null;
+                        _emitter.Close();
+                        _emitter = null;
+                        _running = false;
+                    }
+                }
+            }
+        }
 
         // Setter methods which call the relevant setter methods on the subject
 
         public Tracker SetPlatform(Platform value)
         {
-            subject.SetPlatform(value);
+            lock (_lock)
+            {
+                ensureTrackerStarted();
+                _subject.SetPlatform(value);
+            }
             return this;
         }
 
         public Tracker SetUserId(string id)
         {
-            subject.SetUserId(id);
+            lock (_lock)
+            {
+                ensureTrackerStarted();
+                _subject.SetUserId(id);
+            }
             return this;
         }
 
         public Tracker SetScreenResolution(int width, int height)
         {
-            subject.SetScreenResolution(width, height);
+            lock (_lock)
+            {
+                ensureTrackerStarted();
+                _subject.SetScreenResolution(width, height);
+            }
             return this;
         }
 
         public Tracker SetViewport(int width, int height)
         {
-            subject.SetViewport(width, height);
+            lock (_lock)
+            {
+                ensureTrackerStarted();
+                _subject.SetViewport(width, height);
+            }
             return this;
         }
 
         public Tracker SetColorDepth(int depth)
         {
-            subject.SetColorDepth(depth);
+            lock (_lock)
+            {
+                ensureTrackerStarted();
+                _subject.SetColorDepth(depth);
+            }
             return this;
         }
 
         public Tracker SetTimezone(string timezone)
         {
-            subject.SetTimezone(timezone);
+            lock (_lock)
+            {
+                ensureTrackerStarted();
+                _subject.SetTimezone(timezone);
+            }
             return this;
         }
 
         public Tracker SetLang(string lang)
         {
-            subject.SetLang(lang);
+            lock (_lock)
+            {
+                ensureTrackerStarted();
+                _subject.SetLang(lang);
+            }
             return this;
         }
 
@@ -123,10 +202,11 @@ namespace Snowplow.Tracker
         /// <param name="pb">The event payload</param>
         private void Track(Payload pb)
         {
-            foreach (IEmitter emitter in emitters)
+            if (!_running)
             {
-                emitter.Input(pb);
+                throw new InvalidOperationException("Cannot track anything - not started");
             }
+            _emitter.Input(pb);
         }
 
         /// <summary>
@@ -147,12 +227,20 @@ namespace Snowplow.Tracker
                     { "schema", "iglu:com.snowplowanalytics.snowplow/contexts/jsonschema/1-0-0" },
                     { "data", context }
                 };
-                pb.AddJson(contextEnvelope, encodeBase64, "cx", "co");
+                pb.AddJson(contextEnvelope, _encodeBase64, "cx", "co");
             }
-            pb.AddDict(standardNvPairs);
-            pb.AddDict(subject.nvPairs);
+            pb.AddDict(_standardNvPairs);
+            pb.AddDict(_subject.nvPairs);
 
             Track(pb);
+        }
+
+        private void ensureTrackerStarted()
+        {
+            if (!_running)
+            {
+                throw new NotSupportedException("Cannot track - tracker is not started. Please use Tracker.Start prior to use.");
+            }
         }
 
         /// <summary>
@@ -166,12 +254,17 @@ namespace Snowplow.Tracker
         /// <returns>this</returns>
         public Tracker TrackPageView(string pageUrl, string pageTitle = null, string referrer = null, Context context = null, Int64? tstamp = null)
         {
-            Payload pb = new Payload();
-            pb.Add("e", "pv");
-            pb.Add("url", pageUrl);
-            pb.Add("page", pageTitle);
-            pb.Add("refr", referrer);
-            CompletePayload(pb, context, tstamp);
+            lock (_lock)
+            {
+                ensureTrackerStarted();
+
+                Payload pb = new Payload();
+                pb.Add("e", "pv");
+                pb.Add("url", pageUrl);
+                pb.Add("page", pageTitle);
+                pb.Add("refr", referrer);
+                CompletePayload(pb, context, tstamp);
+            }
             return this;
         }
 
@@ -185,16 +278,21 @@ namespace Snowplow.Tracker
         /// <param name="tstamp">User-provided timestamp for the event</param>
         private void TrackEcommerceTransactionItem(string orderId, string currency, TransactionItem item, Int64? tstamp)
         {
-            Payload pb = new Payload();
-            pb.Add("e", "ti");
-            pb.Add("ti_id", orderId);
-            pb.Add("ti_cu", currency);
-            pb.Add("ti_sk", item.sku);
-            pb.Add("ti_pr", item.price);
-            pb.Add("ti_qu", item.quantity);
-            pb.Add("ti_nm", item.name);
-            pb.Add("ti_ca", item.category);
-            CompletePayload(pb, item.context, tstamp);
+            lock (_lock)
+            {
+                ensureTrackerStarted();
+
+                Payload pb = new Payload();
+                pb.Add("e", "ti");
+                pb.Add("ti_id", orderId);
+                pb.Add("ti_cu", currency);
+                pb.Add("ti_sk", item.sku);
+                pb.Add("ti_pr", item.price);
+                pb.Add("ti_qu", item.quantity);
+                pb.Add("ti_nm", item.name);
+                pb.Add("ti_ca", item.category);
+                CompletePayload(pb, item.context, tstamp);
+            }
         }
 
         /// <summary>
@@ -216,27 +314,31 @@ namespace Snowplow.Tracker
         /// <returns>this</returns>
         public Tracker TrackEcommerceTransaction(string orderId, double totalValue, string affiliation = null, double? taxValue = null, double? shipping = null, string city = null, string state = null, string country = null, string currency = null, List<TransactionItem> items = null, Context context = null, Int64? tstamp = null)
         {
-            Payload pb = new Payload();
-            pb.Add("e", "tr");
-            pb.Add("tr_id", orderId);
-            pb.Add("tr_tt", totalValue);
-            pb.Add("tr_af", affiliation);
-            pb.Add("tr_tx", taxValue);
-            pb.Add("tr_sh", shipping);
-            pb.Add("tr_ci", city);
-            pb.Add("tr_st", state);
-            pb.Add("tr_co", country);
-            pb.Add("tr_cu", currency);
-            CompletePayload(pb, context, tstamp);
-
-            if (items != null)
+            lock (_lock)
             {
-                foreach (TransactionItem item in items)
+                ensureTrackerStarted();
+
+                Payload pb = new Payload();
+                pb.Add("e", "tr");
+                pb.Add("tr_id", orderId);
+                pb.Add("tr_tt", totalValue);
+                pb.Add("tr_af", affiliation);
+                pb.Add("tr_tx", taxValue);
+                pb.Add("tr_sh", shipping);
+                pb.Add("tr_ci", city);
+                pb.Add("tr_st", state);
+                pb.Add("tr_co", country);
+                pb.Add("tr_cu", currency);
+                CompletePayload(pb, context, tstamp);
+
+                if (items != null)
                 {
-                    TrackEcommerceTransactionItem(orderId, currency, item, tstamp);
+                    foreach (TransactionItem item in items)
+                    {
+                        TrackEcommerceTransactionItem(orderId, currency, item, tstamp);
+                    }
                 }
             }
-
             return this;
         }
 
@@ -253,14 +355,20 @@ namespace Snowplow.Tracker
         /// <returns>this</returns>
         public Tracker TrackStructEvent(string category, string action, string label = null, string property = null, double? value = null, Context context = null, Int64? tstamp = null)
         {
-            Payload pb = new Payload();
-            pb.Add("e", "se");
-            pb.Add("se_ca", category);
-            pb.Add("se_ac", action);
-            pb.Add("se_la", label);
-            pb.Add("se_pr", property);
-            pb.Add("se_va", value);
-            CompletePayload(pb, context, tstamp);
+            lock (_lock)
+            {
+                ensureTrackerStarted();
+
+                Payload pb = new Payload();
+                pb.Add("e", "se");
+                pb.Add("se_ca", category);
+                pb.Add("se_ac", action);
+                pb.Add("se_la", label);
+                pb.Add("se_pr", property);
+                pb.Add("se_va", value);
+                CompletePayload(pb, context, tstamp);
+            }
+
             return this;
         }
 
@@ -273,15 +381,21 @@ namespace Snowplow.Tracker
         /// <returns>this</returns>
         public Tracker TrackUnstructEvent(SelfDescribingJson eventJson, Context context = null, Int64? tstamp = null)
         {
-            var envelope = new Dictionary<string, object>
+            lock (_lock)
             {
-                { "schema", "iglu:com.snowplowanalytics.snowplow/unstruct_event/jsonschema/1-0-0" },
-                { "data", eventJson }
-            };
-            Payload pb = new Payload();
-            pb.Add("e", "ue");
-            pb.AddJson(envelope, encodeBase64, "ue_px", "ue_pr");
-            CompletePayload(pb, context, tstamp);
+                ensureTrackerStarted();
+
+                var envelope = new Dictionary<string, object>
+                {
+                    { "schema", "iglu:com.snowplowanalytics.snowplow/unstruct_event/jsonschema/1-0-0" },
+                    { "data", eventJson }
+                };
+                Payload pb = new Payload();
+                pb.Add("e", "ue");
+                pb.AddJson(envelope, _encodeBase64, "ue_px", "ue_pr");
+                CompletePayload(pb, context, tstamp);
+            }
+
             return this;
         }
 
@@ -318,11 +432,12 @@ namespace Snowplow.Tracker
         /// </summary>
         /// <param name="sync">Whether the flush should be synchronous</param>
         /// <returns>this</returns>
-        public Tracker Flush(bool sync = false)
+        public Tracker Flush()
         {
-            foreach (IEmitter emitter in emitters)
+            lock (_lock)
             {
-                emitter.Flush();
+                ensureTrackerStarted();
+                _emitter.Flush();
             }
             return this;
         }
@@ -334,19 +449,12 @@ namespace Snowplow.Tracker
         /// <returns>this</returns>
         public Tracker SetSubject(Subject subject)
         {
-            this.subject = subject;
+            lock (_lock)
+            {
+                _subject = subject;
+            }
             return this;
         }
 
-        /// <summary>
-        /// Add a new emitter to which events will be sent
-        /// </summary>
-        /// <param name="emitter">The new emitter</param>
-        /// <returns>this</returns>
-        public Tracker AddEmitter(IEmitter emitter)
-        {
-            emitters.Add(emitter);
-            return this;
-        }
     }
 }

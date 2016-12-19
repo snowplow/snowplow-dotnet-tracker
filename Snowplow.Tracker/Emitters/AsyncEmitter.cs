@@ -24,6 +24,7 @@ using System.Threading.Tasks;
 using System.Threading;
 using Snowplow.Tracker.Queues;
 using Snowplow.Tracker.Emitters.Endpoints;
+using System.Diagnostics;
 
 namespace Snowplow.Tracker
 {
@@ -69,7 +70,7 @@ namespace Snowplow.Tracker
                 if (_runner == null)
                 {
                     _keepRunning = true;
-                    _runner = new Thread(new ThreadStart(this.loop));
+                    _runner = new Thread(new ThreadStart(this.loop)) { IsBackground = false };
                     _runner.Start();
                 }
                 else
@@ -203,6 +204,16 @@ namespace Snowplow.Tracker
             {
                 Stop();
             }
+        }
+
+        public void Close()
+        {
+            Dispose();
+        }
+
+        ~AsyncEmitter()
+        {
+            Close();
         }
     }
 }

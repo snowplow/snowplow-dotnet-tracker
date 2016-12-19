@@ -27,7 +27,7 @@ namespace Snowplow.Tracker
     public interface IEmitter
     {
         void Flush();
-
         void Input(Payload payload);
+        void Close();
     }
 }

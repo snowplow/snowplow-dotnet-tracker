@@ -81,5 +81,10 @@ namespace Snowplow.Tracker.Storage
             }
         }
 
+        ~LiteDBStorage()
+        {
+            Dispose();
+        }
+
     }
 }
