@@ -1,4 +1,20 @@
-﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
+﻿/*
+ * Copyright (c) 2016 Snowplow Analytics Ltd. All rights reserved.
+ * This program is licensed to you under the Apache License Version 2.0,
+ * and you may not use this file except in compliance with the Apache License
+ * Version 2.0. You may obtain a copy of the Apache License Version 2.0 at
+ * http://www.apache.org/licenses/LICENSE-2.0.
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the Apache License Version 2.0 is distributed on
+ * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
+ * express or implied. See the Apache License Version 2.0 for the specific
+ * language governing permissions and limitations there under.
+ * Authors: Ed Lewis
+ * Copyright: Copyright (c) 2016 Snowplow Analytics Ltd
+ * License: Apache License Version 2.0
+ */
+
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Snowplow.Tracker.Models.Adapters;
 using Snowplow.Tracker.Queues;
 using Snowplow.Tracker.Storage;
@@ -14,13 +30,13 @@ namespace Snowplow.Tracker.Tests.Queues
     class MockStorage : IStorage
     {
 
-        private List<string> _items = new List<string>(); 
+        private List<string> _items = new List<string>();
 
         public int TotalItems
         {
             get
             {
-               return _items.Count;
+                return _items.Count;
             }
         }
 
@@ -123,14 +139,16 @@ namespace Snowplow.Tracker.Tests.Queues
                 for (int i = 0; i < _count; i++)
                 {
                     var items = _q.Dequeue(_timeout);
-                    foreach (var item in items) {
+                    foreach (var item in items)
+                    {
                         Consumed.Add(item);
                     }
                 }
             }
         }
 
-        class MockProducer {
+        class MockProducer
+        {
 
             private IPersistentBlockingQueue _q;
             private int _count;
@@ -143,7 +161,8 @@ namespace Snowplow.Tracker.Tests.Queues
 
             public void Produce()
             {
-                for (int i = 0; i < _count; i++) {
+                for (int i = 0; i < _count; i++)
+                {
                     var dict = new Dictionary<string, string>();
                     dict.Add("hello", "world");
                     var samplePayload = new Payload();
@@ -203,7 +222,8 @@ namespace Snowplow.Tracker.Tests.Queues
             var threads = new List<Thread>();
             var consumers = new List<MockConsumer>();
 
-            for (int i = 0; i < expectedRecordCount; i++) {
+            for (int i = 0; i < expectedRecordCount; i++)
+            {
                 var consumer = new MockConsumer(1, q);
                 var consumerThread = new Thread(new ThreadStart(consumer.Consume));
                 consumerThread.Start();
@@ -220,7 +240,7 @@ namespace Snowplow.Tracker.Tests.Queues
             Assert.AreEqual(expectedRecordCount, total);
         }
 
-        [TestMethod] 
+        [TestMethod]
         public void testConsumerTimeout()
         {
             var mockStorage = new MockStorage();

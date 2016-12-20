@@ -39,7 +39,7 @@ namespace Snowplow.Tracker.Tests
 
         private const string _testDbFilename = @"integration_test.db";
         private const string _testDbJournalFilename = @"integration_test-journal.db";
-        
+
         class MockGet
         {
             public List<string> Queries { get; private set; } = new List<string>();
@@ -71,9 +71,9 @@ namespace Snowplow.Tracker.Tests
             }
         }
 
-        private string flattenToQ(Dictionary<string,string> s)
+        private string flattenToQ(Dictionary<string, string> s)
         {
-            if (s==null)
+            if (s == null)
             {
                 throw new ArgumentException("??");
             }
@@ -137,7 +137,7 @@ namespace Snowplow.Tracker.Tests
             t.TrackPageView("http://www.example.com", "title page", "http://www.referrer.com");
             t.Flush();
 
-            var expectedRegex = new Regex(String.Format(@"http://snowplowanalytics.com/i\?e=pv&url={0}&page={1}&refr={2}&dtm=[^&]+&eid=[^&]+&tv=[^&]+&tna=testNamespace&aid=testAppId&p=pc", 
+            var expectedRegex = new Regex(String.Format(@"http://snowplowanalytics.com/i\?e=pv&url={0}&page={1}&refr={2}&dtm=[^&]+&eid=[^&]+&tv=[^&]+&tna=testNamespace&aid=testAppId&p=pc",
                                                           Regex.Escape(WebUtility.UrlEncode("http://www.example.com")),
                                                           Regex.Escape(WebUtility.UrlEncode("title page")),
                                                           Regex.Escape(WebUtility.UrlEncode("http://www.referrer.com"))));
@@ -146,7 +146,7 @@ namespace Snowplow.Tracker.Tests
 
             Assert.IsTrue(Uri.IsWellFormedUriString(actual, UriKind.Absolute));
 
-            Assert.IsTrue(expectedRegex.Match(actual).Success, String.Format("{0} doesn't match {1}", actual, expectedRegex.ToString()) );
+            Assert.IsTrue(expectedRegex.Match(actual).Success, String.Format("{0} doesn't match {1}", actual, expectedRegex.ToString()));
 
             return true;
         }
@@ -263,8 +263,8 @@ namespace Snowplow.Tracker.Tests
 
             var actual = g.Queries[0];
 
-            var expectedPayload = @"{""schema"":""iglu:com.snowplowanalytics.snowplow/unstruct_event/jsonschema/1-0-0"",""data"":{""schema"":""iglu:com.acme/test/jsonschema/1-0-0"",""data"":{""page"":""testpage"",""user"":""tester""}}}"; 
-            
+            var expectedPayload = @"{""schema"":""iglu:com.snowplowanalytics.snowplow/unstruct_event/jsonschema/1-0-0"",""data"":{""schema"":""iglu:com.acme/test/jsonschema/1-0-0"",""data"":{""page"":""testpage"",""user"":""tester""}}}";
+
             var expected = new Dictionary<string, string>
                             {
                                 {"e", "ue"}
@@ -274,7 +274,8 @@ namespace Snowplow.Tracker.Tests
             {
                 string base64encoded = Convert.ToBase64String(Encoding.UTF8.GetBytes(expectedPayload));
                 expected.Add("ue_px", base64encoded);
-            } else
+            }
+            else
             {
                 expected.Add("ue_pr", expectedPayload);
             }
@@ -291,7 +292,7 @@ namespace Snowplow.Tracker.Tests
             return true;
         }
 
-        private bool ensureScreenViewWorksGet(Tracker t, MockGet g, bool expectB64 = true) 
+        private bool ensureScreenViewWorksGet(Tracker t, MockGet g, bool expectB64 = true)
         {
             if (!expectB64)
             {
@@ -304,7 +305,7 @@ namespace Snowplow.Tracker.Tests
             var actual = g.Queries[0];
 
             var expectedJsonString = @"{""schema"":""iglu:com.snowplowanalytics.snowplow/unstruct_event/jsonschema/1-0-0"",""data"":{""schema"":""iglu:com.snowplowanalytics.snowplow/screen_view/jsonschema/1-0-0"",""data"":{""name"":""entry screen"",""id"":""0001""}}}";
-            var expectedB64 = Convert.ToBase64String(Encoding.UTF8.GetBytes(expectedJsonString)); 
+            var expectedB64 = Convert.ToBase64String(Encoding.UTF8.GetBytes(expectedJsonString));
 
             var expected = new Dictionary<string, string>
                             {
@@ -419,7 +420,7 @@ namespace Snowplow.Tracker.Tests
                                 {"dtm", "1000000000000"}
                             };
 
-            
+
 
             foreach (var k in expected.Keys)
             {
@@ -429,7 +430,7 @@ namespace Snowplow.Tracker.Tests
                 Assert.IsTrue(match.Success, "Couldn't find key " + k + " in query " + actual);
                 var found = match.Result("${value}");
                 string decoded = WebUtility.UrlDecode(found);
-                Assert.AreEqual(expected[k], decoded, "key " + k + " has the wrong value " + decoded);               
+                Assert.AreEqual(expected[k], decoded, "key " + k + " has the wrong value " + decoded);
             }
 
             return true;
@@ -441,7 +442,7 @@ namespace Snowplow.Tracker.Tests
             var storage = new LiteDBStorage(_testDbFilename);
 
             Assert.AreEqual(0, storage.TotalItems);
-           
+
             var queue = new PersistentBlockingQueue(storage, new PayloadToJsonString());
 
             var getRequestMock = new MockGet();

@@ -43,13 +43,17 @@ namespace Snowplow.Tracker
         private IDisposable _storage;
         private Dictionary<string, string> _standardNvPairs;
 
-        private ILogger _logger; 
+        private ILogger _logger;
 
+        /// <summary>
+        /// The tracker instance
+        /// </summary>
         public static Tracker Instance
         {
             get
             {
-                lock (_createLock) {
+                lock (_createLock)
+                {
 
                     if (_t == null)
                     {
@@ -63,6 +67,9 @@ namespace Snowplow.Tracker
 
         private Tracker() { }
 
+        /// <summary>
+        /// If the tracker is started (open for events)
+        /// </summary>
         public bool Started
         {
             get
@@ -74,11 +81,21 @@ namespace Snowplow.Tracker
             }
         }
 
-
+        /// <summary>
+        /// Start a tracker with a default emitter 
+        /// </summary>
+        /// <param name="endpoint">Hostname of your collector</param>
+        /// <param name="dbPath">A filename/path to store queued events in</param>
+        /// <param name="method">The method used to send events to a collector. GET or POST</param>
+        /// <param name="subject">Information on the user</param>
+        /// <param name="trackerNamespace">Namespace of tracker</param>
+        /// <param name="appId">Application ID of tracker</param>
+        /// <param name="encodeBase64">Base64 encode collector parameters</param>
+        /// <param name="l">A logger to emit an activity stream to</param>
         public void Start(string endpoint, string dbPath, HttpMethod method = HttpMethod.POST, Subject subject = null, string trackerNamespace = null, string appId = null, bool encodeBase64 = true, ILogger l = null)
         {
             AsyncEmitter emitter;
-            lock(_lock)
+            lock (_lock)
             {
                 var dest = new SnowplowHttpCollectorEndpoint(endpoint, method: method, l: l);
                 var storage = new LiteDBStorage(dbPath);
@@ -99,11 +116,12 @@ namespace Snowplow.Tracker
         /// <param name="encodeBase64">Whether custom event JSONs and custom context JSONs should be base 64 encoded</param>
         public void Start(IEmitter endpoint, Subject subject = null, string trackerNamespace = null, string appId = null, bool encodeBase64 = true, ILogger l = null)
         {
-            lock(_lock)
+            lock (_lock)
             {
-                if (_running) {
+                if (_running)
+                {
                     throw new InvalidOperationException("Cannot start - already started");
-                } 
+                }
                 _emitter = endpoint;
                 _emitter.Start();
                 
@@ -122,6 +140,9 @@ namespace Snowplow.Tracker
 
         }
 
+        /// <summary>
+        /// Stop the tracker processing new events
+        /// </summary>
         public void Stop()
         {
             lock (_createLock)
@@ -133,7 +154,7 @@ namespace Snowplow.Tracker
                         _t = null;
                         _emitter.Close();
                         _emitter = null;
-                        if (_storage!=null)
+                        if (_storage != null)
                         {
                             _storage.Dispose();
                         }
@@ -141,7 +162,7 @@ namespace Snowplow.Tracker
                         _running = false;
                         _logger.Info("Tracker stopped");
                         _logger = null;
-                    } 
+                    }
                 }
             }
         }

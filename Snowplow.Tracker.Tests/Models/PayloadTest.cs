@@ -40,7 +40,7 @@ namespace Snowplow.Tracker.Tests
             var payload = new Payload();
             payload.Add("price", 99.9);
             var pairs = payload.NvPairs;
-            Assert.AreEqual(pairs["price"],"99.9");
+            Assert.AreEqual(pairs["price"], "99.9");
         }
 
         [TestMethod]

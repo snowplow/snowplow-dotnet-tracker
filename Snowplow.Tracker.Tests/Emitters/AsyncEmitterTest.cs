@@ -1,4 +1,20 @@
-﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
+﻿/*
+ * Copyright (c) 2016 Snowplow Analytics Ltd. All rights reserved.
+ * This program is licensed to you under the Apache License Version 2.0,
+ * and you may not use this file except in compliance with the Apache License
+ * Version 2.0. You may obtain a copy of the Apache License Version 2.0 at
+ * http://www.apache.org/licenses/LICENSE-2.0.
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the Apache License Version 2.0 is distributed on
+ * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
+ * express or implied. See the Apache License Version 2.0 for the specific
+ * language governing permissions and limitations there under.
+ * Authors: Ed Lewis
+ * Copyright: Copyright (c) 2016 Snowplow Analytics Ltd
+ * License: Apache License Version 2.0
+ */
+
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Snowplow.Tracker.Emitters.Endpoints;
 using Snowplow.Tracker.Models.Adapters;
 using Snowplow.Tracker.Queues;
@@ -57,7 +73,8 @@ namespace Snowplow.Tracker.Tests.Emitters
             try
             {
                 e.Start();
-            } finally
+            }
+            finally
             {
                 e.Stop();
             }
@@ -75,7 +92,7 @@ namespace Snowplow.Tracker.Tests.Emitters
             Assert.IsFalse(e.Running);
         }
 
-        [TestMethod] 
+        [TestMethod]
         public void testEmitterRestart()
         {
             var e = buildMockEmitter();
@@ -107,7 +124,7 @@ namespace Snowplow.Tracker.Tests.Emitters
             Assert.AreEqual(1, inQueue.Count);
         }
 
-        [TestMethod] 
+        [TestMethod]
         public void testBackoffInterval()
         {
             // because of the back off period (5sec +), this event should only be sent once
@@ -133,7 +150,7 @@ namespace Snowplow.Tracker.Tests.Emitters
             var mockEndpoint = new MockEndpoint() { Response = true };
             AsyncEmitter e = new AsyncEmitter(mockEndpoint, q);
 
-            for (int i=0; i<100; i++)
+            for (int i = 0; i < 100; i++)
             {
                 var p = new Payload();
                 p.AddDict(new Dictionary<string, string>() { { "foo", "bar" } });
@@ -146,11 +163,12 @@ namespace Snowplow.Tracker.Tests.Emitters
             e.Stop();
 
             Assert.AreEqual(100, mockEndpoint.CallCount);
-            Assert.AreEqual(0, storage.TotalItems); 
+            Assert.AreEqual(0, storage.TotalItems);
         }
 
         [TestMethod]
-        public void testFlushStopsAfterFirstFailure() {
+        public void testFlushStopsAfterFirstFailure()
+        {
             var storage = new MockStorage();
             var q = new PersistentBlockingQueue(storage, new PayloadToJsonString());
             var mockEndpoint = new MockEndpoint() { Response = false };
@@ -166,7 +184,7 @@ namespace Snowplow.Tracker.Tests.Emitters
             Assert.IsFalse(e.Running);
             e.Flush(true);
             Assert.IsFalse(e.Running);
- 
+
             Assert.AreEqual(1, mockEndpoint.CallCount);
             Assert.AreEqual(100, storage.TotalItems);
         }

@@ -54,7 +54,7 @@ namespace Snowplow.Tracker
             }
         }
 
-        public void AddJson(Dictionary <string, object> jsonDict, bool encodeBase64, string typeWhenEncoded, string typeWhenNotEncoded)
+        public void AddJson(Dictionary<string, object> jsonDict, bool encodeBase64, string typeWhenEncoded, string typeWhenNotEncoded)
         {
             if (jsonDict != null && jsonDict.Count > 0)
             {

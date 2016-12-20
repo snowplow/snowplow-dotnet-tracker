@@ -1,4 +1,20 @@
-﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
+﻿/*
+ * Copyright (c) 2016 Snowplow Analytics Ltd. All rights reserved.
+ * This program is licensed to you under the Apache License Version 2.0,
+ * and you may not use this file except in compliance with the Apache License
+ * Version 2.0. You may obtain a copy of the Apache License Version 2.0 at
+ * http://www.apache.org/licenses/LICENSE-2.0.
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the Apache License Version 2.0 is distributed on
+ * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
+ * express or implied. See the Apache License Version 2.0 for the specific
+ * language governing permissions and limitations there under.
+ * Authors: Ed Lewis
+ * Copyright: Copyright (c) 2016 Snowplow Analytics Ltd
+ * License: Apache License Version 2.0
+ */
+
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Snowplow.Tracker.Emitters.Endpoints;
 using System;
 using System.Collections.Generic;
@@ -27,7 +43,7 @@ namespace Snowplow.Tracker.Tests.Endpoints
         class PostRequest
         {
             public string Uri { get; set; }
-            public string PostData { get; set;  }
+            public string PostData { get; set; }
         }
 
         class MockPost
@@ -74,7 +90,7 @@ namespace Snowplow.Tracker.Tests.Endpoints
             Assert.IsTrue(getReq.Queries.Count == 1);
             Assert.AreEqual(@"https://somewhere.com/i?hello=world&ts=123", getReq.Queries[0]);
         }
-        
+
         [TestMethod]
         public void testSendGetRequestNoResponseHttps()
         {
@@ -107,7 +123,7 @@ namespace Snowplow.Tracker.Tests.Endpoints
             Assert.AreEqual(@"https://somewhere.com/i?hello=world&ts=123", getReq.Queries[0]);
         }
 
-        [TestMethod] 
+        [TestMethod]
         public void testGetIgnoreSchemePathQueryInUri()
         {
             var getReq = new MockGet();

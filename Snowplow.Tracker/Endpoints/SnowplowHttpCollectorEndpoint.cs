@@ -1,4 +1,22 @@
-﻿using Snowplow.Tracker.Emitters.Endpoints;
+﻿/*
+ * SnowplowHttpCollectorEndpoint.cs
+ * 
+ * Copyright (c) 2014 Snowplow Analytics Ltd. All rights reserved.
+ * This program is licensed to you under the Apache License Version 2.0,
+ * and you may not use this file except in compliance with the Apache License
+ * Version 2.0. You may obtain a copy of the Apache License Version 2.0 at
+ * http://www.apache.org/licenses/LICENSE-2.0.
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the Apache License Version 2.0 is distributed on
+ * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
+ * express or implied. See the Apache License Version 2.0 for the specific
+ * language governing permissions and limitations there under.
+ * Authors: Ed Lewis
+ * Copyright: Copyright (c) 2016 Snowplow Analytics Ltd
+ * License: Apache License Version 2.0
+ */
+
+using Snowplow.Tracker.Emitters.Endpoints;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -29,6 +47,17 @@ namespace Snowplow.Tracker.Emitters.Endpoints
 
         private ILogger _logger;
 
+
+        /// <summary>
+        /// Create a connection to a Snowplow collector
+        /// <param name="host">The hostname of the collector (not including the scheme, e.g. http://)</param>
+        /// <param name="protocol">The protocol to use. HTTP or HTTPS</param>
+        /// <param name="port">The port number the collector is listening on</param>
+        /// <param name="method">The request method to use. GET or POST</param>
+        /// <param name="postMethod">Internal use</param>
+        /// <param name="getMethod">Internal use</param>
+        /// <param name="l">Send log messages using this logger</param>
+        /// </summary>
         public SnowplowHttpCollectorEndpoint(string host,
                                              HttpProtocol protocol = HttpProtocol.HTTP,
                                              int? port = null,
@@ -38,21 +67,28 @@ namespace Snowplow.Tracker.Emitters.Endpoints
                                              ILogger l = null)
         {
 
-            if (Uri.IsWellFormedUriString(host, UriKind.Absolute)) { 
+            if (Uri.IsWellFormedUriString(host, UriKind.Absolute))
+            {
                 var uri = new Uri(host);
                 var endpointWithoutScheme = uri.Host;
                 _collectorUri = getCollectorUri(endpointWithoutScheme, protocol, port, method);
-            } else
+            }
+            else
             {
                 _collectorUri = getCollectorUri(host, protocol, port, method);
             }
-            
+
             _method = method;
             _postMethod = postMethod ?? DefaultPostMethod;
             _getMethod = getMethod ?? DefaultGetMethod;
             _logger = l ?? new NoLogging();
         }
 
+        /// <summary>
+        /// Send a request to the endpoint using the current settings
+        /// </summary>
+        /// <param name="p">The paylaod to send</param>
+        /// <returns>true if successful (200), otherwise false</returns>
         public bool Send(Payload p)
         {
             if (_method == HttpMethod.GET)
@@ -63,7 +99,8 @@ namespace Snowplow.Tracker.Emitters.Endpoints
                 var message = (response.HasValue) ? response.Value.ToString() : "(timed out)";
                 _logger.Info(String.Format("Endpoint GET {0} responded with {1}", uri, message));
                 return isGoodResponse(response);
-            } else if ( _method == HttpMethod.POST)
+            }
+            else if (_method == HttpMethod.POST)
             {
                 var data = new Dictionary<string, object>()
                 {
@@ -76,11 +113,12 @@ namespace Snowplow.Tracker.Emitters.Endpoints
                 var message = (response.HasValue) ? response.Value.ToString() : "(timed out)";
                 _logger.Info(String.Format("Endpoint POST {0} responded with {1}", _collectorUri, message));
                 return isGoodResponse(response);
-            } else
+            }
+            else
             {
                 throw new NotSupportedException("Only post and get supported");
             }
-            
+
         }
 
         private bool isGoodResponse(int? response)
@@ -132,18 +170,15 @@ namespace Snowplow.Tracker.Emitters.Endpoints
             return String.Format("?{0}", String.Join("&", array));
         }
 
+
         /// <summary>
-        /// Make a POST request to a collector
-        /// See http://stackoverflow.com/questions/9145667/how-to-post-json-to-the-server
+        /// Make a POST request with the given data. Content type application/json
         /// </summary>
-        /// <param name="payload">The body of the request</param>
-        /// <param name="collectorUri">The collector URI</param>
-        /// <returns>String representing the status of the request, e.g. "OK" or "Forbidden"</returns>
+        /// <param name="collectorUri">The URI to POST to</param>
+        /// <param name="postData">JSON string of POST data</param>
+        /// <returns>The HTTP return code, or null if couldn't connect</returns>
         public static int? HttpPost(string collectorUri, string postData)
         {
-            //Log.Logger.Info(String.Format("Sending POST request to {0}", collectorUri));
-            //Log.Logger.Debug(() => String.Format("Payload: {0}", jss.Serialize(payload)));
-
             try
             {
                 using (HttpClient c = new HttpClient())
@@ -153,34 +188,30 @@ namespace Snowplow.Tracker.Emitters.Endpoints
                     return (int)response.StatusCode;
                 }
 
-            } catch (Exception e)
+            }
+            catch
             {
-                // logger.log e
                 return null;
             }
         }
 
         /// <summary>
-        /// Make a GET request to a collector
+        /// Make a GET request
         /// </summary>
-        /// <param name="payload">The event to be sent</param>
-        /// <param name="collectorUri">The collector URI</param>
-        /// <returns>String representing the status of the request, e.g. "OK" or "Forbidden"</returns>
+        /// <param name="uri">The URI to GET</param>
+        /// <returns>The HTTP return code, or null if couldn't connect</returns>
         public static int? HttpGet(string uri)
         {
-            //Log.Logger.Info(String.Format("Sending GET request to {0}", collectorUri));
-            //Log.Logger.Debug(() => String.Format("Payload: {0}", jss.Serialize(payload)));
-            
             try
             {
                 using (HttpClient c = new HttpClient())
                 {
                     var result = c.GetAsync(uri).Result;
                     return (int)result.StatusCode;
-                }                    
-            } catch (Exception e)
+                }
+            }
+            catch
             {
-                // log e
                 return null;
             }
 

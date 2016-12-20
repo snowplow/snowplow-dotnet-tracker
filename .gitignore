@@ -184,3 +184,5 @@ integration_test-journal.db
 
 snowplow-demo-app.db
 snowplow-demo-app-journal.db
+
+project.lock.json

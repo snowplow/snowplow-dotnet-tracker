@@ -45,6 +45,9 @@ namespace Snowplow.Tracker
         private readonly int _backOffIntervalMinMs = 5000;
         private readonly int _backOffIntervalMaxMs = 30000;
 
+        /// <summary>
+        /// A flag indicating that the emitter is processing events
+        /// </summary>
         public bool Running
         {
             get
@@ -67,6 +70,9 @@ namespace Snowplow.Tracker
             _logger = l ?? new NoLogging();
         }
 
+        /// <summary>
+        /// Start the emitter processing events (in another thread)
+        /// </summary>
         public void Start()
         {
             lock (_startStopLock)
@@ -135,6 +141,9 @@ namespace Snowplow.Tracker
             }
         }
 
+        /// <summary>
+        /// Stop the emitter processing
+        /// </summary>
         public void Stop()
         {
             lock (_startStopLock)
@@ -166,11 +175,22 @@ namespace Snowplow.Tracker
             }
         }
 
+        /// <summary>
+        /// Flush the events currently in the queue. If an event fails,
+        /// re-queue all further events for processing later. 
+        /// </summary>
         public void Flush()
         {
             Flush(false);
         }
 
+        /// <summary>
+        /// Flush the events currently in the queue. If an event fails,
+        /// re-queue all further events for processing later. 
+        /// <param name="disableRestart">
+        ///  Restart the emitter after flushing if false (otherwise restart or start the emitter after flushing)
+        /// </param>
+        /// </summary>
         public void Flush(bool disableRestart = false)
         {
             Stop();
@@ -217,17 +237,26 @@ namespace Snowplow.Tracker
             }
         }
 
+        /// <summary>
+        /// Add an event to the queue, return immediately
+        /// </summary>
         public void Input(Payload payload)
         {
             _queue.Enqueue(new List<Payload>() { payload });
         }
 
+        /// <summary>
+        /// Cleanup
+        /// </summary>
         public void Dispose()
         {
             Dispose(true);
             GC.SuppressFinalize(this);
         }
 
+        /// <summary>
+        /// Cleanup - stop the emitter thread
+        /// </summary>
         protected virtual void Dispose(bool disposing)
         {
             if (disposing)
@@ -235,7 +264,10 @@ namespace Snowplow.Tracker
                 Stop();
             }
         }
-
+        
+        /// <summary>
+        /// Cleanup - stop the emitter thread
+        /// </summary>
         public void Close()
         {
             Dispose();
