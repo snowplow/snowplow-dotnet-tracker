@@ -7,6 +7,7 @@ using System.Net;
 using Newtonsoft.Json;
 using System.Net.Http;
 using System.Text;
+using Snowplow.Tracker.Logging;
 
 namespace Snowplow.Tracker.Emitters.Endpoints
 {
@@ -26,12 +27,15 @@ namespace Snowplow.Tracker.Emitters.Endpoints
         private GetDelegate _getMethod;
         private PostDelegate _postMethod;
 
+        private ILogger _logger;
+
         public SnowplowHttpCollectorEndpoint(string host,
                                              HttpProtocol protocol = HttpProtocol.HTTP,
                                              int? port = null,
                                              HttpMethod method = HttpMethod.GET,
                                              PostDelegate postMethod = null,
-                                             GetDelegate getMethod = null)
+                                             GetDelegate getMethod = null,
+                                             ILogger l = null)
         {
 
             if (Uri.IsWellFormedUriString(host, UriKind.Absolute)) { 
@@ -46,13 +50,19 @@ namespace Snowplow.Tracker.Emitters.Endpoints
             _method = method;
             _postMethod = postMethod ?? DefaultPostMethod;
             _getMethod = getMethod ?? DefaultGetMethod;
+            _logger = l ?? new NoLogging();
         }
 
         public bool Send(Payload p)
         {
             if (_method == HttpMethod.GET)
             {
-                return isGoodResponse(_getMethod(_collectorUri + ToQueryString(p.NvPairs)));
+                var uri = _collectorUri + ToQueryString(p.NvPairs);
+                _logger.Info(String.Format("Endpoint GET {0}", uri));
+                var response = _getMethod(uri);
+                var message = (response.HasValue) ? response.Value.ToString() : "(timed out)";
+                _logger.Info(String.Format("Endpoint GET {0} responded with {1}", uri, message));
+                return isGoodResponse(response);
             } else if ( _method == HttpMethod.POST)
             {
                 var data = new Dictionary<string, object>()
@@ -60,7 +70,12 @@ namespace Snowplow.Tracker.Emitters.Endpoints
                     { "schema", "iglu:com.snowplowanalytics.snowplow/payload_data/jsonschema/1-0-0" },
                     { "data", new List<object> {  p.NvPairs } }
                 };
-                return isGoodResponse(_postMethod(_collectorUri, JsonConvert.SerializeObject(data)));
+
+                _logger.Info(String.Format("Endpoint POST {0}", _collectorUri));
+                var response = _postMethod(_collectorUri, JsonConvert.SerializeObject(data));
+                var message = (response.HasValue) ? response.Value.ToString() : "(timed out)";
+                _logger.Info(String.Format("Endpoint POST {0} responded with {1}", _collectorUri, message));
+                return isGoodResponse(response);
             } else
             {
                 throw new NotSupportedException("Only post and get supported");
@@ -76,6 +91,7 @@ namespace Snowplow.Tracker.Emitters.Endpoints
             }
             else
             {
+                _logger.Warn("Endpoint returned non 200");
                 return false;
             }
         }

@@ -21,6 +21,7 @@ using System.Collections.Generic;
 using System.Linq;
 using SelfDescribingJson = System.Collections.Generic.Dictionary<string, object>;
 using Context = System.Collections.Generic.List<System.Collections.Generic.Dictionary<string, object>>;
+using Snowplow.Tracker.Logging;
 
 namespace Snowplow.Tracker
 {
@@ -37,6 +38,7 @@ namespace Snowplow.Tracker
         private bool _encodeBase64;
         private Dictionary<string, string> _standardNvPairs;
 
+        private ILogger _logger; 
 
         public static Tracker Instance
         {
@@ -76,7 +78,7 @@ namespace Snowplow.Tracker
         /// <param name="trackerNamespace">Identifier for the tracker instance</param>
         /// <param name="appId">Application ID</param>
         /// <param name="encodeBase64">Whether custom event JSONs and custom context JSONs should be base 64 encoded</param>
-        public void Start(IEmitter endpoint, Subject subject = null, string trackerNamespace = null, string appId = null, bool encodeBase64 = true)
+        public void Start(IEmitter endpoint, Subject subject = null, string trackerNamespace = null, string appId = null, bool encodeBase64 = true, ILogger l = null)
         {
             lock(_lock)
             {
@@ -86,6 +88,7 @@ namespace Snowplow.Tracker
                 _emitter = endpoint;
                 _subject = subject ?? new Subject();
                 _encodeBase64 = encodeBase64;
+                _logger = l ?? new NoLogging();
                 _standardNvPairs = new Dictionary<string, string>
                 {
                     { "tv", Version.VERSION },
@@ -93,6 +96,7 @@ namespace Snowplow.Tracker
                     { "aid", appId }
                 };
                 _running = true;
+                _logger.Info("Tracker started");
             }
 
         }
@@ -109,7 +113,9 @@ namespace Snowplow.Tracker
                         _emitter.Close();
                         _emitter = null;
                         _running = false;
-                    }
+                        _logger.Info("Tracker stopped");
+                        _logger = null;
+                    } 
                 }
             }
         }

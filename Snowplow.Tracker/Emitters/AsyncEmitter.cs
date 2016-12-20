@@ -25,6 +25,7 @@ using System.Threading;
 using Snowplow.Tracker.Queues;
 using Snowplow.Tracker.Emitters.Endpoints;
 using System.Diagnostics;
+using Snowplow.Tracker.Logging;
 
 namespace Snowplow.Tracker
 {
@@ -39,6 +40,7 @@ namespace Snowplow.Tracker
         private IPersistentBlockingQueue _queue;
         private IEndpoint _endpoint;
         private int _stopPollIntervalMs;
+        private ILogger _logger;
 
         private readonly int _backOffIntervalMinMs = 5000;
         private readonly int _backOffIntervalMaxMs = 30000;
@@ -56,11 +58,13 @@ namespace Snowplow.Tracker
 
         public AsyncEmitter(IEndpoint endpoint,
                             IPersistentBlockingQueue queue,
-                            int stopPollIntervalMs = 300)
+                            int stopPollIntervalMs = 300,
+                            ILogger l = null)
         {
             _queue = queue;
             _endpoint = endpoint;
             _stopPollIntervalMs = stopPollIntervalMs;
+            _logger = l ?? new NoLogging();
         }
 
         public void Start()
@@ -72,6 +76,7 @@ namespace Snowplow.Tracker
                     _keepRunning = true;
                     _runner = new Thread(new ThreadStart(this.loop)) { IsBackground = false };
                     _runner.Start();
+                    _logger.Info("Emitter started - waiting for events");
                 }
                 else
                 {
@@ -94,10 +99,14 @@ namespace Snowplow.Tracker
                 {
                     // take item(s) off the queue and send it
                     var items = _queue.Dequeue(_stopPollIntervalMs);
+
+                    _logger.Info(String.Format("Emitter dequeued {0} events", items.Count));
+
                     foreach (var item in items)
                     {
                         if (!_endpoint.Send(item))
                         {
+                            _logger.Warn("Emitter returning event to queue");
                             _queue.Enqueue(new List<Payload>() { item });
                             // slow down - back off 30 secs
                             // NB this can be interrupted by Flush
@@ -106,7 +115,11 @@ namespace Snowplow.Tracker
                                 if (!_denyBackOff)
                                 {
                                     var interval = new Random().Next(_backOffIntervalMinMs, _backOffIntervalMaxMs);
+                                    _logger.Info(String.Format("Emitter waiting {0}ms after error", interval));
                                     Monitor.Wait(_backOffLock, interval);
+                                } else
+                                {
+                                    _logger.Info("Emitter not waiting for back-off period");
                                 }
                             }
                         }
@@ -115,6 +128,7 @@ namespace Snowplow.Tracker
                 }
                 else
                 {
+                    _logger.Info("Emitter thread finished processing");
                     break;
                 }
 
@@ -140,8 +154,10 @@ namespace Snowplow.Tracker
                 _denyBackOff = true;
                 Monitor.Pulse(_backOffLock);
             }
-            
+
+            _logger.Info("Emitter stopping");
             _runner.Join();
+            _logger.Info("Emitter stopped");
 
             lock (_startStopLock)
             {
@@ -159,6 +175,8 @@ namespace Snowplow.Tracker
         {
             Stop();
 
+            _logger.Info("Emitter flushing queue");
+
             var items = new List<Payload>();
             List<Payload> newItems; 
 
@@ -166,6 +184,8 @@ namespace Snowplow.Tracker
             {
                 items.AddRange(newItems);
             }
+
+            _logger.Info(String.Format("Emitter has {0} events to flush", items.Count));
 
             var failed = new List<Payload>();
             bool stopSending = false;
@@ -179,11 +199,21 @@ namespace Snowplow.Tracker
                 }
             }
 
-            _queue.Enqueue(failed);
-
+            if (failed.Count > 0)
+            {
+                _logger.Warn(String.Format("Emitter failed to flush {0}/{1} events", failed.Count, items.Count));
+                _queue.Enqueue(failed);
+            } else
+            {
+                _logger.Info(String.Format("Emitter flushed all ({0}) events successfully", items.Count));
+            }
+                       
             if (!disableRestart)
             {
                 Start();
+            } else
+            {
+                _logger.Info("Emitter skipping restart as requested");
             }
         }
 
