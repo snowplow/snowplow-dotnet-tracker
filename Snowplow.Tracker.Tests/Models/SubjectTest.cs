@@ -36,6 +36,10 @@ namespace Snowplow.Tracker.Tests
         public void Input(Payload payload)
         {
         }
+
+        public void Start()
+        {
+        }
     }
 
     [TestClass]

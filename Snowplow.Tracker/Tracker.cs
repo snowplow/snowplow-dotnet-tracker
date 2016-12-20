@@ -22,6 +22,10 @@ using System.Linq;
 using SelfDescribingJson = System.Collections.Generic.Dictionary<string, object>;
 using Context = System.Collections.Generic.List<System.Collections.Generic.Dictionary<string, object>>;
 using Snowplow.Tracker.Logging;
+using Snowplow.Tracker.Emitters.Endpoints;
+using Snowplow.Tracker.Storage;
+using Snowplow.Tracker.Queues;
+using Snowplow.Tracker.Models.Adapters;
 
 namespace Snowplow.Tracker
 {
@@ -36,6 +40,7 @@ namespace Snowplow.Tracker
         private Subject _subject;
         private IEmitter _emitter;
         private bool _encodeBase64;
+        private IDisposable _storage;
         private Dictionary<string, string> _standardNvPairs;
 
         private ILogger _logger; 
@@ -70,6 +75,20 @@ namespace Snowplow.Tracker
         }
 
 
+        public void Start(string endpoint, string dbPath, HttpMethod method = HttpMethod.POST, Subject subject = null, string trackerNamespace = null, string appId = null, bool encodeBase64 = true, ILogger l = null)
+        {
+            AsyncEmitter emitter;
+            lock(_lock)
+            {
+                var dest = new SnowplowHttpCollectorEndpoint(endpoint, method: method, l: l);
+                var storage = new LiteDBStorage(dbPath);
+                _storage = storage;
+                var queue = new PersistentBlockingQueue(storage, new PayloadToJsonString());
+                emitter = new AsyncEmitter(dest, queue, l: l);
+            }
+            Start(emitter, subject, trackerNamespace, appId, encodeBase64, l);
+        }
+
         /// <summary>
         /// Snowplow Tracker class
         /// </summary>
@@ -86,6 +105,8 @@ namespace Snowplow.Tracker
                     throw new InvalidOperationException("Cannot start - already started");
                 } 
                 _emitter = endpoint;
+                _emitter.Start();
+                
                 _subject = subject ?? new Subject();
                 _encodeBase64 = encodeBase64;
                 _logger = l ?? new NoLogging();
@@ -112,6 +133,11 @@ namespace Snowplow.Tracker
                         _t = null;
                         _emitter.Close();
                         _emitter = null;
+                        if (_storage!=null)
+                        {
+                            _storage.Dispose();
+                        }
+                        _storage = null;
                         _running = false;
                         _logger.Info("Tracker stopped");
                         _logger = null;

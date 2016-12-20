@@ -28,6 +28,7 @@ namespace Snowplow.Tracker
     {
         void Flush();
         void Input(Payload payload);
+        void Start();
         void Close();
     }
 }
