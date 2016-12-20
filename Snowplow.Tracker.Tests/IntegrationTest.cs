@@ -258,7 +258,7 @@ namespace Snowplow.Tracker.Tests
                         }
                         };
 
-            t.TrackUnstructEvent(eventJson);
+            t.TrackSelfDescribingEvent(eventJson);
             t.Flush();
 
             var actual = g.Queries[0];

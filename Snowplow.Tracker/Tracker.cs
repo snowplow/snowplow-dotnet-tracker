@@ -426,13 +426,13 @@ namespace Snowplow.Tracker
         }
 
         /// <summary>
-        /// Track a Snowplow custom unstructured event
+        /// Track a Snowplow self describing event
         /// </summary>
         /// <param name="eventJson">Self-describing JSON for the event</param>
         /// <param name="context">List of custom contexts for the event</param>
         /// <param name="tstamp">User-provided timestamp for the event</param>
         /// <returns>this</returns>
-        public Tracker TrackUnstructEvent(SelfDescribingJson eventJson, Context context = null, Int64? tstamp = null)
+        public Tracker TrackSelfDescribingEvent(SelfDescribingJson eventJson, Context context = null, Int64? tstamp = null)
         {
             lock (_lock)
             {
@@ -450,6 +450,20 @@ namespace Snowplow.Tracker
             }
 
             return this;
+    
+        }
+
+        /// <summary>
+        /// Track a Snowplow custom unstructured event. Desupported in favour of TrackSelfDescribingEvent (a more fitting name)
+        /// </summary>
+        /// <param name="eventJson">Self-describing JSON for the event</param>
+        /// <param name="context">List of custom contexts for the event</param>
+        /// <param name="tstamp">User-provided timestamp for the event</param>
+        /// <returns>this</returns>
+        [Obsolete("TrackSelfDescribingEvent is the new name for this")]
+        public Tracker TrackUnstructEvent(SelfDescribingJson eventJson, Context context = null, Int64? tstamp = null)
+        {
+            return TrackSelfDescribingEvent(eventJson, context, tstamp);
         }
 
         /// <summary>
@@ -476,7 +490,7 @@ namespace Snowplow.Tracker
                 { "schema", "iglu:com.snowplowanalytics.snowplow/screen_view/jsonschema/1-0-0" },
                 { "data", screenViewProperties }
             };
-            TrackUnstructEvent(envelope, context, tstamp);
+            TrackSelfDescribingEvent(envelope, context, tstamp);
             return this;
         }
 
