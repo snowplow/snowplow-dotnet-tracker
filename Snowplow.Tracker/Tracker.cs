@@ -18,12 +18,7 @@
 
 using System;
 using System.Collections.Generic;
-using System.Collections.Specialized;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Net;
-using System.Web;
 using SelfDescribingJson = System.Collections.Generic.Dictionary<string, object>;
 using Context = System.Collections.Generic.List<System.Collections.Generic.Dictionary<string, object>>;
 
@@ -348,7 +343,7 @@ namespace Snowplow.Tracker
         /// </summary>
         /// <param name="emitter">The new emitter</param>
         /// <returns>this</returns>
-        public Tracker AddEmitter(Emitter emitter)
+        public Tracker AddEmitter(IEmitter emitter)
         {
             emitters.Add(emitter);
             return this;

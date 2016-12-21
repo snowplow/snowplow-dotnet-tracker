@@ -25,7 +25,7 @@ using System.Threading;
 
 namespace Snowplow.Tracker
 {
-    public class AsyncEmitter : IEmitter
+    public class AsyncEmitter : Emitter
     {
         private List<Task> tasks;
 
@@ -43,8 +43,8 @@ namespace Snowplow.Tracker
         /// <param name="onFailure">Callback executed when not every request in a flush has status code 200.
         /// Gets passed the number of events sent successfully and a list of unsuccessful events.</param>
         /// <param name="offlineModeEnabled">Whether to store unsent requests using MSMQ</param>
-        public AsyncEmitter(string endpoint, HttpProtocol protocol = HttpProtocol.HTTP, int? port = null, HttpMethod method = HttpMethod.GET, int? bufferSize = null, Action<int> onSuccess = null, Action<int, List<Dictionary<string, string>>> onFailure = null, bool offlineModeEnabled = true) // :base(endpoint, protocol, port, method, bufferSize, onSuccess, onFailure, offlineModeEnabled)
-        { tasks = new List<Task>(); }
+        public AsyncEmitter(string endpoint, HttpProtocol protocol = HttpProtocol.HTTP, int? port = null, HttpMethod method = HttpMethod.GET, int? bufferSize = null, Action<int> onSuccess = null, Action<int, List<Dictionary<string, string>>> onFailure = null, bool offlineModeEnabled = true) :
+            base(endpoint, protocol, port, method, bufferSize, onSuccess, onFailure, offlineModeEnabled) { tasks = new List<Task>(); }
 
         private readonly object Locker = new object();
 
@@ -53,40 +53,31 @@ namespace Snowplow.Tracker
         /// </summary>
         /// <param name="sync">If set to true, flush synchronously</param>
         /// <param name="forced">If set to true, flush no matter how many events are in the buffer</param>
-        protected void Flush(bool sync, bool forced)
+        protected override void Flush(bool sync, bool forced)
         {
             lock (Locker)
             {
                 Task flushingTask = Task.Factory.StartNew(() =>
                 {
-                    //if (forced || this.buffer.Count >= this.bufferSize)
-                    //{
-                    //    SendRequests();
-                    //}
+                    if (forced || this.buffer.Count >= this.bufferSize)
+                    {
+                        SendRequests();
+                    }
                 });
                 tasks.Add(flushingTask);
                 tasks = tasks.Where(t => !t.IsCompleted).ToList();
 
                 if (sync)
                 {
-                    //Log.Logger.Info("Starting synchronous flush");
+                    Log.Logger.Info("Starting synchronous flush");
                     Task.WaitAll(tasks.ToArray(), 10000);
                 }
                 else
                 {
-                    //Thread.Yield();
+                    Thread.Yield();
                 }
             }
         }
 
-        public void Flush(bool sync)
-        {
-            throw new NotImplementedException();
-        }
-
-        public void Input(Dictionary<string, string> payload)
-        {
-            throw new NotImplementedException();
-        }
     }
 }

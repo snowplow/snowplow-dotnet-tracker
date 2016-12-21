@@ -174,3 +174,13 @@ UpgradeLog*.htm
 
 # Microsoft Fakes
 FakesAssemblies/
+
+# Visual studio directory
+
+.vs/
+
+integration_test.db
+integration_test-journal.db
+
+snowplow-demo-app.db
+snowplow-demo-app-journal.db
