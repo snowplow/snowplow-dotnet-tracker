@@ -1,16 +1,9 @@
 {
-  "version": "1.0.0-*",
-
-
-  "testRunner": "mstest",
-
-
   "dependencies": {
     "dotnet-test-mstest": "1.1.2-preview",
     "MSTest.TestFramework": "1.0.7-preview",
     "Snowplow.Tracker": "1.0.0-*"
   },
-
   "frameworks": {
     "netcoreapp1.0": {
       "imports": [
@@ -25,5 +18,7 @@
         }
       }
     }
-  }
+  },
+  "testRunner": "mstest",
+  "version": "1.0.0-*"
 }
