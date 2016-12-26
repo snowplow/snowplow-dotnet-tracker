@@ -16,32 +16,13 @@
  * License: Apache License Version 2.0
  */
 
-using System;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System.Collections.Generic;
+using Snowplow.Tracker.Models;
+using Snowplow.Tracker.Models.Events;
 
 namespace Snowplow.Tracker.Tests
 {
-    // Emitter that does no operations
-    class MockEmitter : IEmitter
-    {
-        public void Close()
-        {
-        }
-
-        public void Flush()
-        {
-        }
-
-        public void Input(Payload payload)
-        {
-        }
-
-        public void Start()
-        {
-        }
-    }
-
     [TestClass]
     public class SubjectTest
     {

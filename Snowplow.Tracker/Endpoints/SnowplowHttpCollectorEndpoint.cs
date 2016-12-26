@@ -1,7 +1,7 @@
 ﻿/*
  * SnowplowHttpCollectorEndpoint.cs
  * 
- * Copyright (c) 2014 Snowplow Analytics Ltd. All rights reserved.
+ * Copyright (c) 2014-2016 Snowplow Analytics Ltd. All rights reserved.
  * This program is licensed to you under the Apache License Version 2.0,
  * and you may not use this file except in compliance with the Apache License
  * Version 2.0. You may obtain a copy of the Apache License Version 2.0 at
@@ -11,25 +11,23 @@
  * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
  * express or implied. See the Apache License Version 2.0 for the specific
  * language governing permissions and limitations there under.
- * Authors: Ed Lewis
- * Copyright: Copyright (c) 2016 Snowplow Analytics Ltd
+ * Authors: Ed Lewis, Joshua Beemster
+ * Copyright: Copyright (c) 2014-2016 Snowplow Analytics Ltd
  * License: Apache License Version 2.0
  */
 
-using Snowplow.Tracker.Emitters.Endpoints;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading.Tasks;
 using System.Net;
 using Newtonsoft.Json;
 using System.Net.Http;
 using System.Text;
 using Snowplow.Tracker.Logging;
+using Snowplow.Tracker.Models;
 
-namespace Snowplow.Tracker.Emitters.Endpoints
+namespace Snowplow.Tracker.Endpoints
 {
-
     public class SnowplowHttpCollectorEndpoint : IEndpoint
     {
         public delegate int? PostDelegate(string uri, string postData);
@@ -40,7 +38,7 @@ namespace Snowplow.Tracker.Emitters.Endpoints
 
 
         private readonly string _collectorUri;
-        private readonly HttpMethod _method;
+        private readonly Snowplow.Tracker.Endpoints.HttpMethod _method;
 
         private GetDelegate _getMethod;
         private PostDelegate _postMethod;
@@ -61,7 +59,7 @@ namespace Snowplow.Tracker.Emitters.Endpoints
         public SnowplowHttpCollectorEndpoint(string host,
                                              HttpProtocol protocol = HttpProtocol.HTTP,
                                              int? port = null,
-                                             HttpMethod method = HttpMethod.GET,
+                                             Snowplow.Tracker.Endpoints.HttpMethod method = Snowplow.Tracker.Endpoints.HttpMethod.GET,
                                              PostDelegate postMethod = null,
                                              GetDelegate getMethod = null,
                                              ILogger l = null)
@@ -91,7 +89,7 @@ namespace Snowplow.Tracker.Emitters.Endpoints
         /// <returns>true if successful (200), otherwise false</returns>
         public bool Send(Payload p)
         {
-            if (_method == HttpMethod.GET)
+            if (_method == Snowplow.Tracker.Endpoints.HttpMethod.GET)
             {
                 var uri = _collectorUri + ToQueryString(p.NvPairs);
                 _logger.Info(String.Format("Endpoint GET {0}", uri));
@@ -100,7 +98,7 @@ namespace Snowplow.Tracker.Emitters.Endpoints
                 _logger.Info(String.Format("Endpoint GET {0} responded with {1}", uri, message));
                 return isGoodResponse(response);
             }
-            else if (_method == HttpMethod.POST)
+            else if (_method == Snowplow.Tracker.Endpoints.HttpMethod.POST)
             {
                 var data = new Dictionary<string, object>()
                 {
@@ -134,11 +132,11 @@ namespace Snowplow.Tracker.Emitters.Endpoints
             }
         }
 
-        private static string getCollectorUri(string endpoint, HttpProtocol protocol, int? port, HttpMethod method)
+        private static string getCollectorUri(string endpoint, HttpProtocol protocol, int? port, Snowplow.Tracker.Endpoints.HttpMethod method)
         {
             string path;
             string requestProtocol = (protocol == HttpProtocol.HTTP) ? "http" : "https";
-            if (method == HttpMethod.GET)
+            if (method == Snowplow.Tracker.Endpoints.HttpMethod.GET)
             {
                 path = Constants.GET_URI_SUFFIX;
             }

@@ -14,19 +14,39 @@
  * License: Apache License Version 2.0
  */
 
-using Microsoft.VisualStudio.TestTools.UnitTesting;
-using Snowplow.Tracker.Emitters.Endpoints;
-using Snowplow.Tracker.Models.Adapters;
-using Snowplow.Tracker.Queues;
-using Snowplow.Tracker.Tests.Queues;
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Threading;
-using System.Threading.Tasks;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Snowplow.Tracker.Endpoints;
+using Snowplow.Tracker.Models.Adapters;
+using Snowplow.Tracker.Models;
+using Snowplow.Tracker.Emitters;
+using Snowplow.Tracker.Queues;
+using Snowplow.Tracker.Tests.Queues;
 
 namespace Snowplow.Tracker.Tests.Emitters
 {
+    // Emitter that does no operations
+    class MockEmitter : IEmitter
+    {
+        public void Close()
+        {
+        }
+
+        public void Flush()
+        {
+        }
+
+        public void Input(Payload payload)
+        {
+        }
+
+        public void Start()
+        {
+        }
+    }
+
     [TestClass]
     public class AsyncEmitterTest
     {

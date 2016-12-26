@@ -15,6 +15,7 @@
  */
 
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Snowplow.Tracker.Models;
 using Snowplow.Tracker.Models.Adapters;
 using Snowplow.Tracker.Queues;
 using Snowplow.Tracker.Storage;
@@ -22,7 +23,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
-using System.Threading.Tasks;
 
 namespace Snowplow.Tracker.Tests.Queues
 {

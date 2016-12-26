@@ -15,12 +15,10 @@
  */
 
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using Snowplow.Tracker.Emitters.Endpoints;
-using System;
+using Snowplow.Tracker.Endpoints;
 using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using static Snowplow.Tracker.Emitters.Endpoints.SnowplowHttpCollectorEndpoint;
+using Snowplow.Tracker.Models;
+using static Snowplow.Tracker.Endpoints.SnowplowHttpCollectorEndpoint;
 
 namespace Snowplow.Tracker.Tests.Endpoints
 {

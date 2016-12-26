@@ -1,7 +1,4 @@
-﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
-using Snowplow.Tracker.Logging;
-using System;
-/*
+﻿/*
  * Copyright (c) 2016 Snowplow Analytics Ltd. All rights reserved.
  * This program is licensed to you under the Apache License Version 2.0,
  * and you may not use this file except in compliance with the Apache License
@@ -17,9 +14,9 @@ using System;
  * License: Apache License Version 2.0
  */
 
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Snowplow.Tracker.Logging;
+using System;
 
 namespace Snowplow.Tracker.Tests.Logging
 {

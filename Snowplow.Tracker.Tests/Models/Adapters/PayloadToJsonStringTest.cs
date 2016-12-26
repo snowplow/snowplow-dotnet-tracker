@@ -16,10 +16,8 @@
 
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Snowplow.Tracker.Models.Adapters;
+using Snowplow.Tracker.Models;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 
 namespace Snowplow.Tracker.Tests.Models.Adapters
 {
