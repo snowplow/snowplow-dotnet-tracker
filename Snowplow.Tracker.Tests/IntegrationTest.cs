@@ -369,7 +369,7 @@ namespace Snowplow.Tracker.Tests
                                 {"url", "http://www.example.com"}
                             };
 
-            var expectedJsonString = @"{""schema"":""iglu:com.snowplowanalytics.snowplow/contexts/jsonschema/1-0-0"",""data"":[{""schema"":""iglu:com.snowplowanalytics.snowplow/page/jsonschema/1-0-0"",""data"":{""type"":""test"",""public"":false}},{""schema"":""iglu:com.snowplowanalytics.snowplow/user/jsonschema/1-0-0"",""data"":{""age"":40,""name"":""Ned""}}]}";
+            var expectedJsonString = @"{""schema"":""iglu:com.snowplowanalytics.snowplow/contexts/jsonschema/1-0-1"",""data"":[{""schema"":""iglu:com.snowplowanalytics.snowplow/page/jsonschema/1-0-0"",""data"":{""type"":""test"",""public"":false}},{""schema"":""iglu:com.snowplowanalytics.snowplow/user/jsonschema/1-0-0"",""data"":{""age"":40,""name"":""Ned""}}]}";
             var expectedB64 = Convert.ToBase64String(Encoding.UTF8.GetBytes(expectedJsonString));
 
             var extractCx = new Regex("cx=(?<cx>[^&]+)");

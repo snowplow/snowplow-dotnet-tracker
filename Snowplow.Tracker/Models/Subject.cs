@@ -35,7 +35,7 @@ namespace Snowplow.Tracker
         {
             nvPairs = new Dictionary<string, string>
             {
-                { "p", "pc" }
+                { Constants.PLATFORM, "pc" }
             };
         }
 
@@ -46,7 +46,7 @@ namespace Snowplow.Tracker
         /// <returns>this</returns>
         public Subject SetPlatform(Platform value)
         {
-            nvPairs["p"] = value.ToString().ToLower();
+            nvPairs[Constants.PLATFORM] = value.ToString().ToLower();
             return this;
         }
 
@@ -57,7 +57,7 @@ namespace Snowplow.Tracker
         /// <returns>this</returns>
         public Subject SetUserId(string id)
         {
-            nvPairs["uid"] = id;
+            nvPairs[Constants.UID] = id;
             return this;
         }
 
@@ -69,7 +69,7 @@ namespace Snowplow.Tracker
         /// <returns>this</returns>
         public Subject SetScreenResolution(int width, int height)
         {
-            nvPairs["res"] = String.Format("{0}x{1}", width.ToString(), height.ToString());
+            nvPairs[Constants.RESOLUTION] = String.Format("{0}x{1}", width.ToString(), height.ToString());
             return this;
         }
 
@@ -81,7 +81,7 @@ namespace Snowplow.Tracker
         /// <returns>this</returns>
         public Subject SetViewport(int width, int height)
         {
-            nvPairs["vp"] = String.Format("{0}x{1}", width.ToString(), height.ToString());
+            nvPairs[Constants.VIEWPORT] = String.Format("{0}x{1}", width.ToString(), height.ToString());
             return this;
         }
 
@@ -92,7 +92,7 @@ namespace Snowplow.Tracker
         /// <returns>this</returns>
         public Subject SetColorDepth(int depth)
         {
-            nvPairs["cd"] = depth.ToString();
+            nvPairs[Constants.COLOR_DEPTH] = depth.ToString();
             return this;
         }
 
@@ -103,7 +103,7 @@ namespace Snowplow.Tracker
         /// <returns>this</returns>
         public Subject SetTimezone(string timezone)
         {
-            nvPairs["tz"] = timezone;
+            nvPairs[Constants.TIMEZONE] = timezone;
             return this;
         }
 
@@ -114,7 +114,7 @@ namespace Snowplow.Tracker
         /// <returns>this</returns>
         public Subject SetLang(string lang)
         {
-            nvPairs["lang"] = lang;
+            nvPairs[Constants.LANGUAGE] = lang;
             return this;
         }
     }

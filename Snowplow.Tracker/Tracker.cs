@@ -130,9 +130,9 @@ namespace Snowplow.Tracker
                 _logger = l ?? new NoLogging();
                 _standardNvPairs = new Dictionary<string, string>
                 {
-                    { "tv", Version.VERSION },
-                    { "tna", trackerNamespace },
-                    { "aid", appId }
+                    { Constants.TRACKER_VERSION, Version.VERSION },
+                    { Constants.NAMESPACE, trackerNamespace },
+                    { Constants.APP_ID, appId }
                 };
                 _running = true;
                 _logger.Info("Tracker started");
@@ -271,16 +271,16 @@ namespace Snowplow.Tracker
         /// <param name="tstamp">User-provided timestamp</param>
         private void CompletePayload(Payload pb, Context context, Int64? tstamp)
         {
-            pb.Add("dtm", GetTimestamp(tstamp));
-            pb.Add("eid", Guid.NewGuid().ToString());
+            pb.Add(Constants.TIMESTAMP, GetTimestamp(tstamp));
+            pb.Add(Constants.EID, Guid.NewGuid().ToString());
             if (context != null && context.Any())
             {
                 var contextEnvelope = new Dictionary<string, object>
                 {
-                    { "schema", "iglu:com.snowplowanalytics.snowplow/contexts/jsonschema/1-0-0" },
-                    { "data", context }
+                    { Constants.SCHEMA, Constants.SCHEMA_CONTEXTS },
+                    { Constants.DATA, context }
                 };
-                pb.AddJson(contextEnvelope, _encodeBase64, "cx", "co");
+                pb.AddJson(contextEnvelope, _encodeBase64, Constants.CONTEXT_ENCODED, Constants.CONTEXT);
             }
             pb.AddDict(_standardNvPairs);
             pb.AddDict(_subject.nvPairs);
@@ -312,10 +312,10 @@ namespace Snowplow.Tracker
                 ensureTrackerStarted();
 
                 Payload pb = new Payload();
-                pb.Add("e", "pv");
-                pb.Add("url", pageUrl);
-                pb.Add("page", pageTitle);
-                pb.Add("refr", referrer);
+                pb.Add(Constants.EVENT, Constants.EVENT_PAGE_VIEW);
+                pb.Add(Constants.PAGE_URL, pageUrl);
+                pb.Add(Constants.PAGE_TITLE, pageTitle);
+                pb.Add(Constants.PAGE_REFR, referrer);
                 CompletePayload(pb, context, tstamp);
             }
             return this;
@@ -336,14 +336,14 @@ namespace Snowplow.Tracker
                 ensureTrackerStarted();
 
                 Payload pb = new Payload();
-                pb.Add("e", "ti");
-                pb.Add("ti_id", orderId);
-                pb.Add("ti_cu", currency);
-                pb.Add("ti_sk", item.sku);
-                pb.Add("ti_pr", item.price);
-                pb.Add("ti_qu", item.quantity);
-                pb.Add("ti_nm", item.name);
-                pb.Add("ti_ca", item.category);
+                pb.Add(Constants.EVENT, Constants.EVENT_ECOMM_ITEM);
+                pb.Add(Constants.TI_ITEM_ID, orderId);
+                pb.Add(Constants.TI_ITEM_CURRENCY, currency);
+                pb.Add(Constants.TI_ITEM_SKU, item.sku);
+                pb.Add(Constants.TI_ITEM_PRICE, item.price);
+                pb.Add(Constants.TI_ITEM_QUANTITY, item.quantity);
+                pb.Add(Constants.TI_ITEM_NAME, item.name);
+                pb.Add(Constants.TI_ITEM_CATEGORY, item.category);
                 CompletePayload(pb, item.context, tstamp);
             }
         }
@@ -372,16 +372,16 @@ namespace Snowplow.Tracker
                 ensureTrackerStarted();
 
                 Payload pb = new Payload();
-                pb.Add("e", "tr");
-                pb.Add("tr_id", orderId);
-                pb.Add("tr_tt", totalValue);
-                pb.Add("tr_af", affiliation);
-                pb.Add("tr_tx", taxValue);
-                pb.Add("tr_sh", shipping);
-                pb.Add("tr_ci", city);
-                pb.Add("tr_st", state);
-                pb.Add("tr_co", country);
-                pb.Add("tr_cu", currency);
+                pb.Add(Constants.EVENT, Constants.EVENT_ECOMM);
+                pb.Add(Constants.TR_ID, orderId);
+                pb.Add(Constants.TR_TOTAL, totalValue);
+                pb.Add(Constants.TR_AFFILIATION, affiliation);
+                pb.Add(Constants.TR_TAX, taxValue);
+                pb.Add(Constants.TR_SHIPPING, shipping);
+                pb.Add(Constants.TR_CITY, city);
+                pb.Add(Constants.TR_STATE, state);
+                pb.Add(Constants.TR_COUNTRY, country);
+                pb.Add(Constants.TR_CURRENCY, currency);
                 CompletePayload(pb, context, tstamp);
 
                 if (items != null)
@@ -413,12 +413,12 @@ namespace Snowplow.Tracker
                 ensureTrackerStarted();
 
                 Payload pb = new Payload();
-                pb.Add("e", "se");
-                pb.Add("se_ca", category);
-                pb.Add("se_ac", action);
-                pb.Add("se_la", label);
-                pb.Add("se_pr", property);
-                pb.Add("se_va", value);
+                pb.Add(Constants.EVENT, Constants.EVENT_STRUCTURED);
+                pb.Add(Constants.SE_CATEGORY, category);
+                pb.Add(Constants.SE_ACTION, action);
+                pb.Add(Constants.SE_LABEL, label);
+                pb.Add(Constants.SE_PROPERTY, property);
+                pb.Add(Constants.SE_VALUE, value);
                 CompletePayload(pb, context, tstamp);
             }
 
@@ -440,12 +440,12 @@ namespace Snowplow.Tracker
 
                 var envelope = new Dictionary<string, object>
                 {
-                    { "schema", "iglu:com.snowplowanalytics.snowplow/unstruct_event/jsonschema/1-0-0" },
-                    { "data", eventJson }
+                    { Constants.SCHEMA, Constants.SCHEMA_UNSTRUCT_EVENT },
+                    { Constants.DATA, eventJson }
                 };
                 Payload pb = new Payload();
-                pb.Add("e", "ue");
-                pb.AddJson(envelope, _encodeBase64, "ue_px", "ue_pr");
+                pb.Add(Constants.EVENT, Constants.EVENT_UNSTRUCTURED);
+                pb.AddJson(envelope, _encodeBase64, Constants.UNSTRUCTURED_ENCODED, Constants.UNSTRUCTURED);
                 CompletePayload(pb, context, tstamp);
             }
 
@@ -479,16 +479,16 @@ namespace Snowplow.Tracker
             var screenViewProperties = new Dictionary<string, string>();
             if (name != null)
             {
-                screenViewProperties["name"] = name;
+                screenViewProperties[Constants.SV_NAME] = name;
             }
             if (id != null)
             {
-                screenViewProperties["id"] = id;
+                screenViewProperties[Constants.SV_ID] = id;
             }
             var envelope = new Dictionary<string, object>
             {
-                { "schema", "iglu:com.snowplowanalytics.snowplow/screen_view/jsonschema/1-0-0" },
-                { "data", screenViewProperties }
+                { Constants.SCHEMA, Constants.SCHEMA_SCREEN_VIEW },
+                { Constants.DATA, screenViewProperties }
             };
             TrackSelfDescribingEvent(envelope, context, tstamp);
             return this;

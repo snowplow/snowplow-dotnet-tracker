@@ -104,8 +104,8 @@ namespace Snowplow.Tracker.Emitters.Endpoints
             {
                 var data = new Dictionary<string, object>()
                 {
-                    { "schema", "iglu:com.snowplowanalytics.snowplow/payload_data/jsonschema/1-0-0" },
-                    { "data", new List<object> {  p.NvPairs } }
+                    { Constants.SCHEMA, Constants.SCHEMA_PAYLOAD_DATA },
+                    { Constants.DATA, new List<object> {  p.NvPairs } }
                 };
 
                 _logger.Info(String.Format("Endpoint POST {0}", _collectorUri));
@@ -140,11 +140,11 @@ namespace Snowplow.Tracker.Emitters.Endpoints
             string requestProtocol = (protocol == HttpProtocol.HTTP) ? "http" : "https";
             if (method == HttpMethod.GET)
             {
-                path = "/i";
+                path = Constants.GET_URI_SUFFIX;
             }
             else
             {
-                path = "/com.snowplowanalytics.snowplow/tp2";
+                path = Constants.POST_URI_SUFFIX;
             }
             if (port == null)
             {
@@ -183,7 +183,7 @@ namespace Snowplow.Tracker.Emitters.Endpoints
             {
                 using (HttpClient c = new HttpClient())
                 {
-                    var postContent = new StringContent(postData, Encoding.UTF8, "application/json");
+                    var postContent = new StringContent(postData, Encoding.UTF8, Constants.POST_CONTENT_TYPE);
                     var response = c.PostAsync(collectorUri, postContent).Result;
                     return (int)response.StatusCode;
                 }

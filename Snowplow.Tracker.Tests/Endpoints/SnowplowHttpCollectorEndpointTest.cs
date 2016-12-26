@@ -179,7 +179,7 @@ namespace Snowplow.Tracker.Tests.Endpoints
             Assert.IsTrue(resp);
             Assert.IsTrue(postReq.Queries.Count == 1);
             Assert.AreEqual(@"https://somewhere.com/com.snowplowanalytics.snowplow/tp2", postReq.Queries[0].Uri);
-            Assert.AreEqual(@"{""schema"":""iglu:com.snowplowanalytics.snowplow/payload_data/jsonschema/1-0-0"",""data"":[{""foo"":""bar""}]}", postReq.Queries[0].PostData);
+            Assert.AreEqual(@"{""schema"":""iglu:com.snowplowanalytics.snowplow/payload_data/jsonschema/1-0-4"",""data"":[{""foo"":""bar""}]}", postReq.Queries[0].PostData);
         }
 
         [TestMethod]
