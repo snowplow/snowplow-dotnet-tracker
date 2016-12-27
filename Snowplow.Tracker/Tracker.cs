@@ -43,6 +43,7 @@ namespace Snowplow.Tracker
         private IEmitter _emitter;
         private bool _encodeBase64;
         private IDisposable _storage;
+        private ClientSession _clientSession;
         private Dictionary<string, string> _standardNvPairs;
 
         private ILogger _logger;
@@ -94,7 +95,7 @@ namespace Snowplow.Tracker
         /// <param name="appId">Application ID of tracker</param>
         /// <param name="encodeBase64">Base64 encode collector parameters</param>
         /// <param name="l">A logger to emit an activity stream to</param>
-        public void Start(string endpoint, string dbPath, HttpMethod method = HttpMethod.POST, Subject subject = null, string trackerNamespace = null, string appId = null, bool encodeBase64 = true, ILogger l = null)
+        public void Start(string endpoint, string dbPath, HttpMethod method = HttpMethod.POST, Subject subject = null, ClientSession clientSession = null, string trackerNamespace = null, string appId = null, bool encodeBase64 = true, ILogger l = null)
         {
             AsyncEmitter emitter;
             lock (_lock)
@@ -105,7 +106,7 @@ namespace Snowplow.Tracker
                 var queue = new PersistentBlockingQueue(storage, new PayloadToJsonString());
                 emitter = new AsyncEmitter(dest, queue, l: l);
             }
-            Start(emitter, subject, trackerNamespace, appId, encodeBase64, l);
+            Start(emitter, subject, clientSession, trackerNamespace, appId, encodeBase64, l);
         }
 
         /// <summary>
@@ -116,7 +117,7 @@ namespace Snowplow.Tracker
         /// <param name="trackerNamespace">Identifier for the tracker instance</param>
         /// <param name="appId">Application ID</param>
         /// <param name="encodeBase64">Whether custom event JSONs and custom context JSONs should be base 64 encoded</param>
-        public void Start(IEmitter endpoint, Subject subject = null, string trackerNamespace = null, string appId = null, bool encodeBase64 = true, ILogger l = null)
+        public void Start(IEmitter endpoint, Subject subject = null, ClientSession clientSession = null, string trackerNamespace = null, string appId = null, bool encodeBase64 = true, ILogger l = null)
         {
             lock (_lock)
             {
@@ -124,18 +125,27 @@ namespace Snowplow.Tracker
                 {
                     throw new InvalidOperationException("Cannot start - already started");
                 }
+
                 _emitter = endpoint;
                 _emitter.Start();
-                
+
+                if (clientSession != null)
+                {
+                    _clientSession = clientSession;
+                    _clientSession.StartChecker();
+                }
+
                 _subject = subject ?? new Subject();
                 _encodeBase64 = encodeBase64;
                 _logger = l ?? new NoLogging();
+
                 _standardNvPairs = new Dictionary<string, string>
                 {
                     { Constants.TRACKER_VERSION, Version.VERSION },
                     { Constants.NAMESPACE, trackerNamespace },
                     { Constants.APP_ID, appId }
                 };
+
                 _running = true;
                 _logger.Info("Tracker started");
             }
@@ -159,8 +169,13 @@ namespace Snowplow.Tracker
                         if (_storage != null)
                         {
                             _storage.Dispose();
+                            _storage = null;
                         }
-                        _storage = null;
+                        if (_clientSession != null)
+                        {
+                            _clientSession.Dispose();
+                            _clientSession = null;
+                        }
                         _running = false;
                         _logger.Info("Tracker stopped");
                         _logger = null;
@@ -263,8 +278,24 @@ namespace Snowplow.Tracker
         /// <param name="tstamp">User-provided timestamp</param>
         private void CompletePayload(Payload pb, List<IContext> contexts, Int64? tstamp)
         {
+            var eid = Utils.GetGUID();
             pb.Add(Constants.TIMESTAMP, Utils.GetTimestamp(tstamp).ToString());
-            pb.Add(Constants.EID, Utils.GetGUID());
+            pb.Add(Constants.EID, eid);
+
+            if (_clientSession != null)
+            {
+                var sessionContext = _clientSession.GetSessionContext(eid);
+
+                if (contexts != null)
+                {
+                    contexts.Add(sessionContext);
+                }
+                else
+                {
+                    contexts = new List<IContext> { sessionContext };
+                }
+            }
+
             if (contexts != null && contexts.Any())
             {
                 var contextArray = new List<Dictionary<string, object>>();
@@ -275,6 +306,7 @@ namespace Snowplow.Tracker
                 var contextEnvelope = new SelfDescribingJson(Constants.SCHEMA_CONTEXTS, contextArray);
                 pb.AddJson(contextEnvelope.Payload, _encodeBase64, Constants.CONTEXT_ENCODED, Constants.CONTEXT);
             }
+
             pb.AddDict(_standardNvPairs);
             pb.AddDict(_subject.nvPairs);
 
