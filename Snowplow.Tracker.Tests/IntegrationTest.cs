@@ -24,6 +24,7 @@ using System.IO;
 using Snowplow.Tracker.Queues;
 using Snowplow.Tracker.Storage;
 using Snowplow.Tracker.Models;
+using Snowplow.Tracker.Models.Contexts;
 using Snowplow.Tracker.Models.Events;
 using Snowplow.Tracker.Models.Adapters;
 using Snowplow.Tracker.Endpoints;
@@ -328,36 +329,26 @@ namespace Snowplow.Tracker.Tests
         {
             Assert.IsTrue(useb64);
 
-            var pageContext = new Dictionary<string, object>
-                            {
-                                {"schema", "iglu:com.snowplowanalytics.snowplow/page/jsonschema/1-0-0"},
-                                {"data", new Dictionary<string, object>
-                                    {
-                                        { "type", "test" },
-                                        { "public", false }
-                                    }
-                                }
-                            };
+            var pageContext = new GenericContext()
+                .SetSchema("iglu:com.snowplowanalytics.snowplow/page/jsonschema/1-0-0")
+                .Add("type", "test")
+                .Add("public", false)
+                .Build();
 
-            var userContext = new Dictionary<string, object>
-                            {
-                                {"schema", "iglu:com.snowplowanalytics.snowplow/user/jsonschema/1-0-0"},
-                                {"data", new Dictionary<string, object>
-                                    {
-                                        { "age", 40 },
-                                        { "name", "Ned" }
-                                    }
-                                }
-                            };
+            var userContext = new GenericContext()
+                .SetSchema("iglu:com.snowplowanalytics.snowplow/user/jsonschema/1-0-0")
+                .Add("age", 40)
+                .Add("name", "ned")
+                .Build();
 
-            var context = new List<Dictionary<string, object>>
+            var contexts = new List<IContext>
                             {
                                 pageContext,
                                 userContext
                             };
 
 
-            t.TrackPageView("http://www.example.com", null, null, context);
+            t.TrackPageView("http://www.example.com", null, null, contexts);
             t.Flush();
 
             var actual = g.Queries[0];
@@ -368,7 +359,7 @@ namespace Snowplow.Tracker.Tests
                                 {"url", "http://www.example.com"}
                             };
 
-            var expectedJsonString = @"{""schema"":""iglu:com.snowplowanalytics.snowplow/contexts/jsonschema/1-0-1"",""data"":[{""schema"":""iglu:com.snowplowanalytics.snowplow/page/jsonschema/1-0-0"",""data"":{""type"":""test"",""public"":false}},{""schema"":""iglu:com.snowplowanalytics.snowplow/user/jsonschema/1-0-0"",""data"":{""age"":40,""name"":""Ned""}}]}";
+            var expectedJsonString = @"{""schema"":""iglu:com.snowplowanalytics.snowplow/contexts/jsonschema/1-0-1"",""data"":[{""schema"":""iglu:com.snowplowanalytics.snowplow/page/jsonschema/1-0-0"",""data"":{""type"":""test"",""public"":false}},{""schema"":""iglu:com.snowplowanalytics.snowplow/user/jsonschema/1-0-0"",""data"":{""age"":40,""name"":""ned""}}]}";
             var expectedB64 = Convert.ToBase64String(Encoding.UTF8.GetBytes(expectedJsonString));
 
             var extractCx = new Regex("cx=(?<cx>[^&]+)");

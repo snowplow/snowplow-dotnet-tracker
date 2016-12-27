@@ -19,13 +19,13 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using Context = System.Collections.Generic.List<System.Collections.Generic.Dictionary<string, object>>;
 using Snowplow.Tracker.Logging;
 using Snowplow.Tracker.Endpoints;
 using Snowplow.Tracker.Storage;
 using Snowplow.Tracker.Queues;
 using Snowplow.Tracker.Emitters;
 using Snowplow.Tracker.Models;
+using Snowplow.Tracker.Models.Contexts;
 using Snowplow.Tracker.Models.Events;
 using Snowplow.Tracker.Models.Adapters;
 
@@ -261,18 +261,19 @@ namespace Snowplow.Tracker
         /// <param name="pb">Payload to complete</param>
         /// <param name="context">Custom context</param>
         /// <param name="tstamp">User-provided timestamp</param>
-        private void CompletePayload(Payload pb, Context context, Int64? tstamp)
+        private void CompletePayload(Payload pb, List<IContext> contexts, Int64? tstamp)
         {
             pb.Add(Constants.TIMESTAMP, Utils.GetTimestamp(tstamp).ToString());
             pb.Add(Constants.EID, Utils.GetGUID());
-            if (context != null && context.Any())
+            if (contexts != null && contexts.Any())
             {
-                var contextEnvelope = new Dictionary<string, object>
+                var contextArray = new List<Dictionary<string, object>>();
+                foreach (IContext context in contexts)
                 {
-                    { Constants.SCHEMA, Constants.SCHEMA_CONTEXTS },
-                    { Constants.DATA, context }
-                };
-                pb.AddJson(contextEnvelope, _encodeBase64, Constants.CONTEXT_ENCODED, Constants.CONTEXT);
+                    contextArray.Add(context.GetJson().Payload);
+                }
+                var contextEnvelope = new SelfDescribingJson(Constants.SCHEMA_CONTEXTS, contextArray);
+                pb.AddJson(contextEnvelope.Payload, _encodeBase64, Constants.CONTEXT_ENCODED, Constants.CONTEXT);
             }
             pb.AddDict(_standardNvPairs);
             pb.AddDict(_subject.nvPairs);
@@ -297,7 +298,7 @@ namespace Snowplow.Tracker
         /// <param name="context">List of custom contexts for the event</param>
         /// <param name="tstamp">User-provided timestamp for the event</param>
         /// <returns>this</returns>
-        public Tracker TrackPageView(string pageUrl, string pageTitle = null, string referrer = null, Context context = null, Int64? tstamp = null)
+        public Tracker TrackPageView(string pageUrl, string pageTitle = null, string referrer = null, List<IContext> contexts = null, Int64? tstamp = null)
         {
             lock (_lock)
             {
@@ -308,7 +309,7 @@ namespace Snowplow.Tracker
                 pb.Add(Constants.PAGE_URL, pageUrl);
                 pb.Add(Constants.PAGE_TITLE, pageTitle);
                 pb.Add(Constants.PAGE_REFR, referrer);
-                CompletePayload(pb, context, tstamp);
+                CompletePayload(pb, contexts, tstamp);
             }
             return this;
         }
@@ -336,7 +337,7 @@ namespace Snowplow.Tracker
                 pb.Add(Constants.TI_ITEM_QUANTITY, item.quantity.ToString());
                 pb.Add(Constants.TI_ITEM_NAME, item.name);
                 pb.Add(Constants.TI_ITEM_CATEGORY, item.category);
-                CompletePayload(pb, item.context, tstamp);
+                CompletePayload(pb, item.contexts, tstamp);
             }
         }
 
@@ -357,7 +358,7 @@ namespace Snowplow.Tracker
         /// <param name="context">List of custom contexts for the event</param>
         /// <param name="tstamp">User-provided timestamp for the event</param>
         /// <returns>this</returns>
-        public Tracker TrackEcommerceTransaction(string orderId, double totalValue, string affiliation = null, double? taxValue = null, double? shipping = null, string city = null, string state = null, string country = null, string currency = null, List<TransactionItem> items = null, Context context = null, Int64? tstamp = null)
+        public Tracker TrackEcommerceTransaction(string orderId, double totalValue, string affiliation = null, double? taxValue = null, double? shipping = null, string city = null, string state = null, string country = null, string currency = null, List<TransactionItem> items = null, List<IContext> contexts = null, Int64? tstamp = null)
         {
             lock (_lock)
             {
@@ -374,7 +375,7 @@ namespace Snowplow.Tracker
                 pb.Add(Constants.TR_STATE, state);
                 pb.Add(Constants.TR_COUNTRY, country);
                 pb.Add(Constants.TR_CURRENCY, currency);
-                CompletePayload(pb, context, tstamp);
+                CompletePayload(pb, contexts, tstamp);
 
                 if (items != null)
                 {
@@ -398,7 +399,7 @@ namespace Snowplow.Tracker
         /// <param name="context">List of custom contexts for the event</param>
         /// <param name="tstamp">User-provided timestamp for the event</param>
         /// <returns>this</returns>
-        public Tracker TrackStructEvent(string category, string action, string label = null, string property = null, double? value = null, Context context = null, Int64? tstamp = null)
+        public Tracker TrackStructEvent(string category, string action, string label = null, string property = null, double? value = null, List<IContext> contexts = null, Int64? tstamp = null)
         {
             lock (_lock)
             {
@@ -411,7 +412,7 @@ namespace Snowplow.Tracker
                 pb.Add(Constants.SE_LABEL, label);
                 pb.Add(Constants.SE_PROPERTY, property);
                 pb.Add(Constants.SE_VALUE, value != null ? value.ToString() : null);
-                CompletePayload(pb, context, tstamp);
+                CompletePayload(pb, contexts, tstamp);
             }
 
             return this;
@@ -424,7 +425,7 @@ namespace Snowplow.Tracker
         /// <param name="context">List of custom contexts for the event</param>
         /// <param name="tstamp">User-provided timestamp for the event</param>
         /// <returns>this</returns>
-        public Tracker TrackSelfDescribingEvent(SelfDescribingJson eventJson, Context context = null, Int64? tstamp = null)
+        public Tracker TrackSelfDescribingEvent(SelfDescribingJson eventJson, List<IContext> contexts = null, Int64? tstamp = null)
         {
             lock (_lock)
             {
@@ -435,7 +436,7 @@ namespace Snowplow.Tracker
                 Payload pb = new Payload();
                 pb.Add(Constants.EVENT, Constants.EVENT_UNSTRUCTURED);
                 pb.AddJson(envelope.Payload, _encodeBase64, Constants.UNSTRUCTURED_ENCODED, Constants.UNSTRUCTURED);
-                CompletePayload(pb, context, tstamp);
+                CompletePayload(pb, contexts, tstamp);
             }
 
             return this;
@@ -450,9 +451,9 @@ namespace Snowplow.Tracker
         /// <param name="tstamp">User-provided timestamp for the event</param>
         /// <returns>this</returns>
         [Obsolete("TrackSelfDescribingEvent is the new name for this")]
-        public Tracker TrackUnstructEvent(SelfDescribingJson eventJson, Context context = null, Int64? tstamp = null)
+        public Tracker TrackUnstructEvent(SelfDescribingJson eventJson, List<IContext> contexts = null, Int64? tstamp = null)
         {
-            return TrackSelfDescribingEvent(eventJson, context, tstamp);
+            return TrackSelfDescribingEvent(eventJson, contexts, tstamp);
         }
 
         /// <summary>
@@ -463,7 +464,7 @@ namespace Snowplow.Tracker
         /// <param name="context">List of custom contexts for the event</param>
         /// <param name="tstamp">User-provided timestamp for the event</param>
         /// <returns>this</returns>
-        public Tracker TrackScreenView(string name = null, string id = null, Context context = null, Int64? tstamp = null)
+        public Tracker TrackScreenView(string name = null, string id = null, List<IContext> contexts = null, Int64? tstamp = null)
         {
             var screenViewProperties = new Dictionary<string, string>();
             if (name != null)
@@ -476,7 +477,7 @@ namespace Snowplow.Tracker
             }
 
             var envelope = new SelfDescribingJson(Constants.SCHEMA_SCREEN_VIEW, screenViewProperties);
-            TrackSelfDescribingEvent(envelope, context, tstamp);
+            TrackSelfDescribingEvent(envelope, contexts, tstamp);
             return this;
         }
 

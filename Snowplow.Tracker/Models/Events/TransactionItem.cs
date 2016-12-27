@@ -17,6 +17,7 @@
  */
 
 using System.Collections.Generic;
+using Snowplow.Tracker.Models.Contexts;
 
 namespace Snowplow.Tracker.Models.Events
 {
@@ -27,7 +28,7 @@ namespace Snowplow.Tracker.Models.Events
         public int quantity;
         public string name;
         public string category;
-        public List<Dictionary<string, object>> context;
+        public List<IContext> contexts;
 
         /// <summary>
         /// A struct representing a single item in an ecommerce transaction
@@ -38,14 +39,14 @@ namespace Snowplow.Tracker.Models.Events
         /// <param name="name">Name of the item</param>
         /// <param name="category">Category of the item</param>
         /// <param name="context">List of custom contexts for the item</param>
-        public TransactionItem(string sku, double price, int quantity, string name = null, string category = null, List<Dictionary<string, object>> context = null)
+        public TransactionItem(string sku, double price, int quantity, string name = null, string category = null, List<IContext> contexts = null)
         {
             this.sku = sku;
             this.price = price;
             this.quantity = quantity;
             this.name = name;
             this.category = category;
-            this.context = context;
+            this.contexts = contexts;
         }
     }
 }
