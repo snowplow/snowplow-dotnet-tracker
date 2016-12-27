@@ -19,7 +19,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using SelfDescribingJson = System.Collections.Generic.Dictionary<string, object>;
 using Context = System.Collections.Generic.List<System.Collections.Generic.Dictionary<string, object>>;
 using Snowplow.Tracker.Logging;
 using Snowplow.Tracker.Endpoints;
@@ -243,16 +242,6 @@ namespace Snowplow.Tracker
         }
 
         /// <summary>
-        /// Gets the timestamp for an event
-        /// </summary>
-        /// <param name="tstamp">A user-provided timestamp or null</param>
-        /// <returns>The timestamp for the event</returns>
-        private static Int64 GetTimestamp(Int64? tstamp)
-        {
-            return tstamp ?? (Int64)(DateTime.UtcNow.Subtract(new DateTime(1970, 1, 1))).TotalMilliseconds;
-        }
-
-        /// <summary>
         /// Inputs an event into each emitter
         /// </summary>
         /// <param name="pb">The event payload</param>
@@ -274,8 +263,8 @@ namespace Snowplow.Tracker
         /// <param name="tstamp">User-provided timestamp</param>
         private void CompletePayload(Payload pb, Context context, Int64? tstamp)
         {
-            pb.Add(Constants.TIMESTAMP, GetTimestamp(tstamp));
-            pb.Add(Constants.EID, Guid.NewGuid().ToString());
+            pb.Add(Constants.TIMESTAMP, Utils.GetTimestamp(tstamp).ToString());
+            pb.Add(Constants.EID, Utils.GetGUID());
             if (context != null && context.Any())
             {
                 var contextEnvelope = new Dictionary<string, object>
@@ -343,8 +332,8 @@ namespace Snowplow.Tracker
                 pb.Add(Constants.TI_ITEM_ID, orderId);
                 pb.Add(Constants.TI_ITEM_CURRENCY, currency);
                 pb.Add(Constants.TI_ITEM_SKU, item.sku);
-                pb.Add(Constants.TI_ITEM_PRICE, item.price);
-                pb.Add(Constants.TI_ITEM_QUANTITY, item.quantity);
+                pb.Add(Constants.TI_ITEM_PRICE, string.Format("{0:0.00}", item.price));
+                pb.Add(Constants.TI_ITEM_QUANTITY, item.quantity.ToString());
                 pb.Add(Constants.TI_ITEM_NAME, item.name);
                 pb.Add(Constants.TI_ITEM_CATEGORY, item.category);
                 CompletePayload(pb, item.context, tstamp);
@@ -377,10 +366,10 @@ namespace Snowplow.Tracker
                 Payload pb = new Payload();
                 pb.Add(Constants.EVENT, Constants.EVENT_ECOMM);
                 pb.Add(Constants.TR_ID, orderId);
-                pb.Add(Constants.TR_TOTAL, totalValue);
+                pb.Add(Constants.TR_TOTAL, string.Format("{0:0.00}", totalValue));
                 pb.Add(Constants.TR_AFFILIATION, affiliation);
-                pb.Add(Constants.TR_TAX, taxValue);
-                pb.Add(Constants.TR_SHIPPING, shipping);
+                pb.Add(Constants.TR_TAX, taxValue != null ? string.Format("{0:0.00}", taxValue) : null);
+                pb.Add(Constants.TR_SHIPPING, shipping != null ? string.Format("{0:0.00}", shipping) : null);
                 pb.Add(Constants.TR_CITY, city);
                 pb.Add(Constants.TR_STATE, state);
                 pb.Add(Constants.TR_COUNTRY, country);
@@ -421,7 +410,7 @@ namespace Snowplow.Tracker
                 pb.Add(Constants.SE_ACTION, action);
                 pb.Add(Constants.SE_LABEL, label);
                 pb.Add(Constants.SE_PROPERTY, property);
-                pb.Add(Constants.SE_VALUE, value);
+                pb.Add(Constants.SE_VALUE, value != null ? value.ToString() : null);
                 CompletePayload(pb, context, tstamp);
             }
 
@@ -441,14 +430,11 @@ namespace Snowplow.Tracker
             {
                 ensureTrackerStarted();
 
-                var envelope = new Dictionary<string, object>
-                {
-                    { Constants.SCHEMA, Constants.SCHEMA_UNSTRUCT_EVENT },
-                    { Constants.DATA, eventJson }
-                };
+                var envelope = new SelfDescribingJson(Constants.SCHEMA_UNSTRUCT_EVENT, eventJson);
+
                 Payload pb = new Payload();
                 pb.Add(Constants.EVENT, Constants.EVENT_UNSTRUCTURED);
-                pb.AddJson(envelope, _encodeBase64, Constants.UNSTRUCTURED_ENCODED, Constants.UNSTRUCTURED);
+                pb.AddJson(envelope.Payload, _encodeBase64, Constants.UNSTRUCTURED_ENCODED, Constants.UNSTRUCTURED);
                 CompletePayload(pb, context, tstamp);
             }
 
@@ -488,11 +474,8 @@ namespace Snowplow.Tracker
             {
                 screenViewProperties[Constants.SV_ID] = id;
             }
-            var envelope = new Dictionary<string, object>
-            {
-                { Constants.SCHEMA, Constants.SCHEMA_SCREEN_VIEW },
-                { Constants.DATA, screenViewProperties }
-            };
+
+            var envelope = new SelfDescribingJson(Constants.SCHEMA_SCREEN_VIEW, screenViewProperties);
             TrackSelfDescribingEvent(envelope, context, tstamp);
             return this;
         }

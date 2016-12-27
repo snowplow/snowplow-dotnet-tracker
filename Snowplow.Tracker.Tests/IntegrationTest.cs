@@ -191,10 +191,10 @@ namespace Snowplow.Tracker.Tests
                             {
                                 {"e", "tr"},
                                 {"tr_id", "6a8078be"},
-                                {"tr_tt", "35"},
+                                {"tr_tt", "35.00"},
                                 {"tr_af", "affiliation"},
-                                {"tr_tx", "3"},
-                                {"tr_sh", "0"},
+                                {"tr_tx", "3.00"},
+                                {"tr_sh", "0.00"},
                                 {"tr_ci", "Phoenix"},
                                 {"tr_st", "Arizona"},
                                 {"tr_co", "US"},
@@ -216,7 +216,7 @@ namespace Snowplow.Tracker.Tests
                                 {"ti_id", "6a8078be"},
                                 {"ti_cu", "USD"},
                                 {"ti_sk", "pbz0026"},
-                                {"ti_pr", "20"},
+                                {"ti_pr", "20.00"},
                                 {"ti_qu", "1"}
                             };
 
@@ -232,7 +232,7 @@ namespace Snowplow.Tracker.Tests
                                 {"ti_id", "6a8078be"},
                                 {"ti_cu", "USD"},
                                 {"ti_sk", "pbz0038"},
-                                {"ti_pr", "15"},
+                                {"ti_pr", "15.00"},
                                 {"ti_qu", "1"},
                                 {"ti_nm", "shirt"},
                                 {"ti_ca", "clothing"}
@@ -249,17 +249,13 @@ namespace Snowplow.Tracker.Tests
 
         private bool ensureUnstructEventGet(Tracker t, MockGet g, bool expectBase64 = false)
         {
-
-            var eventJson = new Dictionary<string, object>
-                        {
-                            {"schema", "iglu:com.acme/test/jsonschema/1-0-0"},
-                            {"data", new Dictionary<string, string>
-                            {
-                                { "page", "testpage" },
-                                { "user", "tester" }
-                            }
-                        }
-                        };
+            var eventJson = new SelfDescribingJson(
+                "iglu:com.acme/test/jsonschema/1-0-0", 
+                new Dictionary<string, string> {
+                    { "page", "testpage" },
+                    { "user", "tester" }
+                }
+            );
 
             t.TrackSelfDescribingEvent(eventJson);
             t.Flush();

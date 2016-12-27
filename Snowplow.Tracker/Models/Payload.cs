@@ -1,7 +1,7 @@
 ﻿/*
- * Payload.cs
+ * TrackerPayload.cs
  * 
- * Copyright (c) 2014-2016 Snowplow Analytics Ltd. All rights reserved.
+ * Copyright (c) 2014-2017 Snowplow Analytics Ltd. All rights reserved.
  * This program is licensed to you under the Apache License Version 2.0,
  * and you may not use this file except in compliance with the Apache License
  * Version 2.0. You may obtain a copy of the Apache License Version 2.0 at
@@ -11,71 +11,92 @@
  * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
  * express or implied. See the Apache License Version 2.0 for the specific
  * language governing permissions and limitations there under.
- * Authors: Ed Lewis, Joshua Beemster
- * Copyright: Copyright (c) 2014-2016 Snowplow Analytics Ltd
+ * Authors: Fred Blundun, Ed Lewis, Joshua Beemster
+ * Copyright: Copyright (c) 2014-2017 Snowplow Analytics Ltd
  * License: Apache License Version 2.0
  */
 
-using System;
 using System.Collections.Generic;
-using Newtonsoft.Json;
 
 namespace Snowplow.Tracker.Models
 {
-    public class Payload
+    public class Payload : AbstractPayload
     {
-        private Dictionary<string, string> nvPairs;
-        public Payload()
-        {
-            nvPairs = new Dictionary<string, string>();
-        }
 
-        public void Add(string name, double? value)
+        /// <summary>
+        /// Add the specified key and value.
+        /// </summary>
+        /// <param name="key">Key.</param>
+        /// <param name="value">Value.</param>
+        public void Add(string key, string value)
         {
-            Add(name, value.ToString());
-        }
-
-        public void Add(string name, string value)
-        {
-            if (!String.IsNullOrEmpty(value))
+            if (string.IsNullOrEmpty(key) || string.IsNullOrEmpty(value))
             {
-                nvPairs.Add(name, value);
+                return;
+            }
+            payload[key] = value;
+        }
+
+        /// <summary>
+        /// Adds a dictionary of key-value pairs
+        /// </summary>
+        /// <param name="dictionary">Dictionary to add</param>
+        public void AddDict(Dictionary<string, string> dictionary)
+        {
+            if (dictionary == null)
+            {
+                return;
+            }
+            foreach (KeyValuePair<string, string> entry in dictionary)
+            {
+                Add(entry.Key, entry.Value);
             }
         }
 
-        public void AddDict(Dictionary<string, string> dict)
+        /// <summary>
+        /// Adds a dictionary of key-value pairs
+        /// </summary>
+        /// <param name="dictionary">Dictionary to add</param>
+        public void AddDict(Dictionary<string, object> dictionary)
         {
-            foreach (KeyValuePair<string, string> nvPair in dict)
+            if (dictionary == null)
             {
-                Add(nvPair.Key, nvPair.Value);
+                return;
+            }
+            foreach (KeyValuePair<string, object> entry in dictionary)
+            {
+                if (entry.Value is string)
+                {
+                    Add(entry.Key, (string)entry.Value);
+                }
             }
         }
 
-        public void AddJson(Dictionary<string, object> jsonDict, bool encodeBase64, string typeWhenEncoded, string typeWhenNotEncoded)
+        /// <summary>
+        /// Adds a json dictionary as an encoded string
+        /// </summary>
+        /// <param name="jsonDict">Json dict.</param>
+        /// <param name="encodeBase64">If set to <c>true</c> encode base64.</param>
+        /// <param name="typeEncoded">Type encoded.</param>
+        /// <param name="typeNotEncoded">Type not encoded.</param>
+        public void AddJson(Dictionary<string, object> jsonDict, bool encodeBase64, string typeEncoded, string typeNotEncoded)
         {
-            if (jsonDict != null && jsonDict.Count > 0)
+            if (jsonDict == null || jsonDict.Count == 0)
             {
-                string jsonString = JsonConvert.SerializeObject(jsonDict);
+                return;
+            }
+            string jsonString = Utils.DictToJSONString(jsonDict);
+            if (!string.IsNullOrEmpty(jsonString))
+            {
                 if (encodeBase64)
                 {
-                    byte[] plainTextBytes = System.Text.Encoding.UTF8.GetBytes(jsonString);
-                    string encodedDict = System.Convert.ToBase64String(plainTextBytes);
-                    Add(typeWhenEncoded, encodedDict);
+                    Add(typeEncoded, Utils.Base64EncodeString(jsonString));
                 }
                 else
                 {
-                    Add(typeWhenNotEncoded, jsonString);
+                    Add(typeNotEncoded, jsonString);
                 }
             }
         }
-
-        public Dictionary<string, string> NvPairs
-        {
-            get
-            {
-                return nvPairs;
-            }
-        }
-
     }
 }

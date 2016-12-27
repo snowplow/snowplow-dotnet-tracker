@@ -1,7 +1,7 @@
 ﻿/*
  * PayloadTest.cs
  * 
- * Copyright (c) 2014 Snowplow Analytics Ltd. All rights reserved.
+ * Copyright (c) 2014-2017 Snowplow Analytics Ltd. All rights reserved.
  * This program is licensed to you under the Apache License Version 2.0,
  * and you may not use this file except in compliance with the Apache License
  * Version 2.0. You may obtain a copy of the Apache License Version 2.0 at
@@ -11,8 +11,8 @@
  * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
  * express or implied. See the Apache License Version 2.0 for the specific
  * language governing permissions and limitations there under.
- * Authors: Fred Blundun
- * Copyright: Copyright (c) 2014 Snowplow Analytics Ltd
+ * Authors: Fred Blundun, Ed Lewis, Joshua Beemster
+ * Copyright: Copyright (c) 2014-2017 Snowplow Analytics Ltd
  * License: Apache License Version 2.0
  */
 
@@ -20,7 +20,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System.Collections.Generic;
 using Snowplow.Tracker.Models;
 
-namespace Snowplow.Tracker.Tests
+namespace Snowplow.Tracker.Tests.Models
 {
     [TestClass]
     public class PayloadTest
@@ -30,7 +30,7 @@ namespace Snowplow.Tracker.Tests
         {
             var payload = new Payload();
             payload.Add("name", "value");
-            var pairs = payload.NvPairs;
+            var pairs = payload.Payload;
             Assert.AreEqual(pairs["name"], "value");
         }
 
@@ -38,8 +38,8 @@ namespace Snowplow.Tracker.Tests
         public void testAddNumber()
         {
             var payload = new Payload();
-            payload.Add("price", 99.9);
-            var pairs = payload.NvPairs;
+            payload.Add("price", (99.9).ToString());
+            var pairs = payload.Payload;
             Assert.AreEqual(pairs["price"], "99.9");
         }
 
@@ -48,7 +48,7 @@ namespace Snowplow.Tracker.Tests
         {
             var payload = new Payload();
             payload.Add("empty", "");
-            var pairs = payload.NvPairs;
+            var pairs = payload.Payload;
             Assert.IsFalse(pairs.ContainsKey("name"));
         }
 
@@ -58,7 +58,7 @@ namespace Snowplow.Tracker.Tests
             var payload = new Payload();
             string nullString = null;
             payload.Add("null", nullString);
-            var pairs = payload.NvPairs;
+            var pairs = payload.Payload;
             Assert.IsFalse(pairs.ContainsKey("null"));
         }
 
@@ -73,7 +73,7 @@ namespace Snowplow.Tracker.Tests
                 { "three", "trois" }
             };
             payload.AddDict(dict);
-            var pairs = payload.NvPairs;
+            var pairs = payload.Payload;
             foreach (KeyValuePair<string, string> nvPair in dict)
             {
                 Assert.AreEqual(nvPair.Value, pairs[nvPair.Key]);
@@ -99,7 +99,7 @@ namespace Snowplow.Tracker.Tests
                 }
             };
             payload.AddJson(json, false, "ue_px", "ue_pr");
-            var pairs = payload.NvPairs;
+            var pairs = payload.Payload;
             var expected = @"{""schema"":""iglu:com.snowplowanalytics.snowplow/unstruct_event/jsonschema/1-0-0"",""data"":{""schema"":""iglu:com.acme/test/jsonschema/1-0-0"",""data"":{""user_type"":""test""}}}";
             Assert.AreEqual(pairs["ue_pr"], expected);
         }

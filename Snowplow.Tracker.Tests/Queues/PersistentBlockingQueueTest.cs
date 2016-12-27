@@ -110,7 +110,7 @@ namespace Snowplow.Tracker.Tests.Queues
             var actualPayload = queue.Dequeue();
 
             Assert.AreEqual(1, actualPayload.Count);
-            CollectionAssert.AreEqual(samplePayload.NvPairs, actualPayload[0].NvPairs);
+            CollectionAssert.AreEqual(samplePayload.Payload, actualPayload[0].Payload);
         }
 
         class MockConsumer

@@ -91,7 +91,7 @@ namespace Snowplow.Tracker.Endpoints
         {
             if (_method == Snowplow.Tracker.Endpoints.HttpMethod.GET)
             {
-                var uri = _collectorUri + ToQueryString(p.NvPairs);
+                var uri = _collectorUri + ToQueryString(p.Payload);
                 _logger.Info(String.Format("Endpoint GET {0}", uri));
                 var response = _getMethod(uri);
                 var message = (response.HasValue) ? response.Value.ToString() : "(timed out)";
@@ -103,7 +103,7 @@ namespace Snowplow.Tracker.Endpoints
                 var data = new Dictionary<string, object>()
                 {
                     { Constants.SCHEMA, Constants.SCHEMA_PAYLOAD_DATA },
-                    { Constants.DATA, new List<object> {  p.NvPairs } }
+                    { Constants.DATA, new List<object> {  p.Payload } }
                 };
 
                 _logger.Info(String.Format("Endpoint POST {0}", _collectorUri));
@@ -160,10 +160,10 @@ namespace Snowplow.Tracker.Endpoints
         /// </summary>
         /// <param name="payload">The event to convert</param>
         /// <returns>Querystring of the form "?e=pv&tna=cf&..."</returns>
-        private static string ToQueryString(Dictionary<string, string> payload)
+        private static string ToQueryString(Dictionary<string, object> payload)
         {
             var array = (from key in payload.Keys
-                         select string.Format("{0}={1}", WebUtility.UrlEncode(key), WebUtility.UrlEncode(payload[key])))
+                         select string.Format("{0}={1}", WebUtility.UrlEncode(key), WebUtility.UrlEncode((string)payload[key])))
                 .ToArray();
             return String.Format("?{0}", String.Join("&", array));
         }

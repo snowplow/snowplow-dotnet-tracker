@@ -36,7 +36,7 @@ namespace Snowplow.Tracker.Tests.Models.Adapters
 
             var serialized = p.ToString(payload);
 
-            Assert.AreEqual(@"{""NvPairs"":{""name"":""value""}}", serialized);
+            Assert.AreEqual(@"{""Payload"":{""name"":""value""}}", serialized);
         }
 
         [TestMethod]
@@ -44,12 +44,12 @@ namespace Snowplow.Tracker.Tests.Models.Adapters
         {
             var p = new PayloadToJsonString();
 
-            var actual = p.FromString(@"{""NvPairs"":{""name"":""value""}}");
+            var actual = p.FromString(@"{""Payload"":{""name"":""value""}}");
 
             var expected = new Payload();
             expected.Add("name", "value");
 
-            CollectionAssert.AreEqual(expected.NvPairs, actual.NvPairs);
+            CollectionAssert.AreEqual(expected.Payload, actual.Payload);
         }
 
         [TestMethod]
