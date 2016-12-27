@@ -17,8 +17,10 @@
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Snowplow.Tracker.Endpoints;
 using System.Collections.Generic;
+using System.Text.RegularExpressions;
 using Snowplow.Tracker.Models;
 using static Snowplow.Tracker.Endpoints.SnowplowHttpCollectorEndpoint;
+using System;
 
 namespace Snowplow.Tracker.Tests.Endpoints
 {
@@ -69,7 +71,10 @@ namespace Snowplow.Tracker.Tests.Endpoints
 
             Assert.IsTrue(resp);
             Assert.IsTrue(getReq.Queries.Count == 1);
-            Assert.AreEqual(@"http://somewhere.com/i?hello=world", getReq.Queries[0]);
+
+            var actual = getReq.Queries[0];
+            var expectedRegex = new Regex("http://somewhere\\.com/i\\?hello=world&stm=[0-9]{13}");
+            Assert.IsTrue(expectedRegex.Match(actual).Success, String.Format("{0} doesn't match {1}", actual, expectedRegex.ToString()));
         }
 
 
@@ -86,7 +91,10 @@ namespace Snowplow.Tracker.Tests.Endpoints
 
             Assert.IsTrue(resp);
             Assert.IsTrue(getReq.Queries.Count == 1);
-            Assert.AreEqual(@"https://somewhere.com/i?hello=world&ts=123", getReq.Queries[0]);
+
+            var actual = getReq.Queries[0];
+            var expectedRegex = new Regex("https://somewhere\\.com/i\\?hello=world&ts=123&stm=[0-9]{13}");
+            Assert.IsTrue(expectedRegex.Match(actual).Success, String.Format("{0} doesn't match {1}", actual, expectedRegex.ToString()));
         }
 
         [TestMethod]
@@ -102,7 +110,10 @@ namespace Snowplow.Tracker.Tests.Endpoints
 
             Assert.IsFalse(resp);
             Assert.IsTrue(getReq.Queries.Count == 1);
-            Assert.AreEqual(@"https://somewhere.com/i?hello=world&ts=123", getReq.Queries[0]);
+
+            var actual = getReq.Queries[0];
+            var expectedRegex = new Regex("https://somewhere\\.com/i\\?hello=world&ts=123&stm=[0-9]{13}");
+            Assert.IsTrue(expectedRegex.Match(actual).Success, String.Format("{0} doesn't match {1}", actual, expectedRegex.ToString()));
         }
 
         [TestMethod]
@@ -118,7 +129,10 @@ namespace Snowplow.Tracker.Tests.Endpoints
 
             Assert.IsFalse(resp);
             Assert.IsTrue(getReq.Queries.Count == 1);
-            Assert.AreEqual(@"https://somewhere.com/i?hello=world&ts=123", getReq.Queries[0]);
+
+            var actual = getReq.Queries[0];
+            var expectedRegex = new Regex("https://somewhere\\.com/i\\?hello=world&ts=123&stm=[0-9]{13}");
+            Assert.IsTrue(expectedRegex.Match(actual).Success, String.Format("{0} doesn't match {1}", actual, expectedRegex.ToString()));
         }
 
         [TestMethod]
@@ -132,7 +146,10 @@ namespace Snowplow.Tracker.Tests.Endpoints
 
             Assert.IsTrue(resp);
             Assert.IsTrue(getReq.Queries.Count == 1);
-            Assert.AreEqual(@"https://somewhere.com/i?sample=value", getReq.Queries[0]);
+
+            var actual = getReq.Queries[0];
+            var expectedRegex = new Regex("https://somewhere\\.com/i\\?sample=value&stm=[0-9]{13}");
+            Assert.IsTrue(expectedRegex.Match(actual).Success, String.Format("{0} doesn't match {1}", actual, expectedRegex.ToString()));
         }
 
         [TestMethod]
@@ -146,7 +163,10 @@ namespace Snowplow.Tracker.Tests.Endpoints
 
             Assert.IsTrue(resp);
             Assert.IsTrue(getReq.Queries.Count == 1);
-            Assert.AreEqual(@"https://somewhere.com/i?%3C=%3E", getReq.Queries[0]);
+
+            var actual = getReq.Queries[0];
+            var expectedRegex = new Regex("https://somewhere\\.com/i\\?%3C=%3E&stm=[0-9]{13}");
+            Assert.IsTrue(expectedRegex.Match(actual).Success, String.Format("{0} doesn't match {1}", actual, expectedRegex.ToString()));
         }
 
         [TestMethod]
@@ -160,7 +180,10 @@ namespace Snowplow.Tracker.Tests.Endpoints
 
             Assert.IsTrue(resp);
             Assert.IsTrue(getReq.Queries.Count == 1);
-            Assert.AreEqual(@"https://somewhere.com:999/i?foo=bar", getReq.Queries[0]);
+
+            var actual = getReq.Queries[0];
+            var expectedRegex = new Regex("https://somewhere\\.com:999/i\\?foo=bar&stm=[0-9]{13}");
+            Assert.IsTrue(expectedRegex.Match(actual).Success, String.Format("{0} doesn't match {1}", actual, expectedRegex.ToString()));
         }
 
         [TestMethod]
@@ -177,7 +200,10 @@ namespace Snowplow.Tracker.Tests.Endpoints
             Assert.IsTrue(resp);
             Assert.IsTrue(postReq.Queries.Count == 1);
             Assert.AreEqual(@"https://somewhere.com/com.snowplowanalytics.snowplow/tp2", postReq.Queries[0].Uri);
-            Assert.AreEqual(@"{""schema"":""iglu:com.snowplowanalytics.snowplow/payload_data/jsonschema/1-0-4"",""data"":[{""foo"":""bar""}]}", postReq.Queries[0].PostData);
+
+            var actual = postReq.Queries[0].PostData;
+            var expectedRegex = new Regex("{\\\"schema\\\":\\\"iglu:com\\.snowplowanalytics\\.snowplow/payload_data/jsonschema/1-0-4\\\",\\\"data\\\":\\[{\\\"foo\\\":\\\"bar\\\",\\\"stm\\\":\\\"[0-9]{13}\\\"}\\]}");
+            Assert.IsTrue(expectedRegex.Match(actual).Success, String.Format("{0} doesn't match {1}", actual, expectedRegex.ToString()));
         }
 
         [TestMethod]

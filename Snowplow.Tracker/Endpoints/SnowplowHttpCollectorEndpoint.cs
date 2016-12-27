@@ -89,6 +89,8 @@ namespace Snowplow.Tracker.Endpoints
         /// <returns>true if successful (200), otherwise false</returns>
         public bool Send(Payload p)
         {
+            p.Add(Constants.SENT_TIMESTAMP, Utils.GetTimestamp(null).ToString());
+
             if (_method == Snowplow.Tracker.Endpoints.HttpMethod.GET)
             {
                 var uri = _collectorUri + ToQueryString(p.Payload);
@@ -185,7 +187,6 @@ namespace Snowplow.Tracker.Endpoints
                     var response = c.PostAsync(collectorUri, postContent).Result;
                     return (int)response.StatusCode;
                 }
-
             }
             catch
             {
