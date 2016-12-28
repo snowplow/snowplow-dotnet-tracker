@@ -346,6 +346,39 @@ namespace Snowplow.Tracker.Tests
             return true;
         }
 
+        private bool ensureTimingWorksGet(Tracker t, MockGet g, bool expectB64 = true)
+        {
+            if (!expectB64)
+            {
+                Assert.Fail("non b64 mode not supported");
+            }
+
+            t.Track(new Timing().SetCategory("category").SetVariable("variable").SetTiming(5).SetLabel("label").Build());
+            t.Flush();
+
+            var actual = g.Queries[0];
+
+            var expectedJsonString = @"{""schema"":""iglu:com.snowplowanalytics.snowplow/unstruct_event/jsonschema/1-0-0"",""data"":{""schema"":""iglu:com.snowplowanalytics.snowplow/timing/jsonschema/1-0-0"",""data"":{""category"":""category"",""label"":""label"",""timing"":5,""variable"":""variable""}}}";
+            var expectedB64 = Convert.ToBase64String(Encoding.UTF8.GetBytes(expectedJsonString));
+
+            var expected = new Dictionary<string, string>
+                            {
+                                {"e", "ue"},
+                                {"ue_px", expectedB64}
+                            };
+
+            var opening = @"http://snowplowanalytics.com/i\?";
+            var trailing = @"&eid=[^&]+&dtm=[^&]+&tv=[^&]+&tna=testNamespace&aid=testAppId&p=pc&stm=[0-9]{13}";
+
+            var svQ = flattenToQ(expected);
+
+            var expectedRegex = new Regex(opening + svQ + trailing);
+
+            Assert.IsTrue(expectedRegex.Match(actual).Success, expectedRegex.ToString() + " didn't match " + actual);
+
+            return true;
+        }
+
         private bool ensureContextsWorkGet(Tracker t, MockGet g, bool useb64 = true)
         {
             Assert.IsTrue(useb64);
@@ -487,6 +520,8 @@ namespace Snowplow.Tracker.Tests
             Assert.IsTrue(ensureUnstructEventGet(tracker, getRequestMock, true));
 
             Assert.IsTrue(ensureScreenViewWorksGet(tracker, getRequestMock, true));
+
+            Assert.IsTrue(ensureTimingWorksGet(tracker, getRequestMock, true));
 
             Assert.IsTrue(ensureContextsWorkGet(tracker, getRequestMock, true));
 
