@@ -123,12 +123,12 @@ namespace Snowplow.Tracker.Tests
 
             foreach (string key in expectedOne.Keys)
             {
-                Assert.AreEqual(subjectOne.nvPairs[key], expectedOne[key]);
+                Assert.AreEqual(subjectOne._payload.Payload[key], expectedOne[key]);
             }
 
             foreach (string key in expectedTwo.Keys)
             {
-                Assert.AreEqual(subjectTwo.nvPairs[key], expectedTwo[key]);
+                Assert.AreEqual(subjectTwo._payload.Payload[key], expectedTwo[key]);
             }
 
             tracker.SetSubject(new Subject());

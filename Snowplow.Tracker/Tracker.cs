@@ -48,6 +48,10 @@ namespace Snowplow.Tracker
 
         private ILogger _logger;
 
+        private Tracker() { }
+
+        // --- Static Instance
+
         /// <summary>
         /// The tracker instance
         /// </summary>
@@ -57,18 +61,16 @@ namespace Snowplow.Tracker
             {
                 lock (_createLock)
                 {
-
                     if (_t == null)
                     {
                         _t = new Tracker();
                     }
-
                     return _t;
                 }
             }
         }
 
-        private Tracker() { }
+        // -- Controls
 
         /// <summary>
         /// If the tracker is started (open for events)
@@ -91,11 +93,13 @@ namespace Snowplow.Tracker
         /// <param name="dbPath">A filename/path to store queued events in</param>
         /// <param name="method">The method used to send events to a collector. GET or POST</param>
         /// <param name="subject">Information on the user</param>
+        /// <param name="clientSession"></param>
         /// <param name="trackerNamespace">Namespace of tracker</param>
         /// <param name="appId">Application ID of tracker</param>
         /// <param name="encodeBase64">Base64 encode collector parameters</param>
         /// <param name="l">A logger to emit an activity stream to</param>
-        public void Start(string endpoint, string dbPath, HttpMethod method = HttpMethod.POST, Subject subject = null, ClientSession clientSession = null, string trackerNamespace = null, string appId = null, bool encodeBase64 = true, ILogger l = null)
+        public void Start(string endpoint, string dbPath, HttpMethod method = HttpMethod.POST, Subject subject = null, ClientSession clientSession = null, 
+            string trackerNamespace = null, string appId = null, bool encodeBase64 = true, ILogger l = null)
         {
             AsyncEmitter emitter;
             lock (_lock)
@@ -110,14 +114,17 @@ namespace Snowplow.Tracker
         }
 
         /// <summary>
-        /// Snowplow Tracker class
+        /// Start a tracker with a custom emitter
         /// </summary>
-        /// <param name="emitters">List of emitters to which events will be sent</param>
-        /// <param name="subject">Subject to be tracked</param>
-        /// <param name="trackerNamespace">Identifier for the tracker instance</param>
-        /// <param name="appId">Application ID</param>
-        /// <param name="encodeBase64">Whether custom event JSONs and custom context JSONs should be base 64 encoded</param>
-        public void Start(IEmitter endpoint, Subject subject = null, ClientSession clientSession = null, string trackerNamespace = null, string appId = null, bool encodeBase64 = true, ILogger l = null)
+        /// <param name="emitter">The emitter to send events to</param>
+        /// <param name="subject">Information on the user</param>
+        /// <param name="clientSession">Client sessionization object</param>
+        /// <param name="trackerNamespace">Namespace of tracker</param>
+        /// <param name="appId">Application ID of tracker</param>
+        /// <param name="encodeBase64">Base64 encode collector parameters</param>
+        /// <param name="l">A logger to emit an activity stream to</param>
+        public void Start(IEmitter emitter, Subject subject = null, ClientSession clientSession = null, string trackerNamespace = null, string appId = null, 
+            bool encodeBase64 = true, ILogger l = null)
         {
             lock (_lock)
             {
@@ -126,7 +133,7 @@ namespace Snowplow.Tracker
                     throw new InvalidOperationException("Cannot start - already started");
                 }
 
-                _emitter = endpoint;
+                _emitter = emitter;
                 _emitter.Start();
 
                 if (clientSession != null)
@@ -149,7 +156,6 @@ namespace Snowplow.Tracker
                 _running = true;
                 _logger.Info("Tracker started");
             }
-
         }
 
         /// <summary>
@@ -164,24 +170,55 @@ namespace Snowplow.Tracker
                     if (_running)
                     {
                         _t = null;
+
                         _emitter.Close();
                         _emitter = null;
+
                         if (_storage != null)
                         {
                             _storage.Dispose();
                             _storage = null;
                         }
+
                         if (_clientSession != null)
                         {
                             _clientSession.Dispose();
                             _clientSession = null;
                         }
+
                         _running = false;
                         _logger.Info("Tracker stopped");
                         _logger = null;
                     }
                 }
             }
+        }
+
+        /// <summary>
+        /// Ensures that the Tracker has been started
+        /// to prevent improper use.
+        /// </summary>
+        private void ensureTrackerStarted()
+        {
+            if (!_running)
+            {
+                throw new NotSupportedException("Cannot track - tracker is not started. Please use Tracker.Start prior to use.");
+            }
+        }
+
+        /// <summary>
+        /// Manually flush all emitters to which the tracker sends events
+        /// </summary>
+        /// <param name="sync">Whether the flush should be synchronous</param>
+        /// <returns>this</returns>
+        public Tracker Flush()
+        {
+            lock (_lock)
+            {
+                ensureTrackerStarted();
+                _emitter.Flush();
+            }
+            return this;
         }
 
         // --- Thread-safe Subject setter methods
@@ -252,6 +289,46 @@ namespace Snowplow.Tracker
             {
                 ensureTrackerStarted();
                 _subject.SetLang(lang);
+            }
+            return this;
+        }
+
+        public Tracker SetIpAddress(string ipAddress)
+        {
+            lock (_lock)
+            {
+                ensureTrackerStarted();
+                _subject.SetIpAddress(ipAddress);
+            }
+            return this;
+        }
+
+        public Tracker SetUseragent(string useragent)
+        {
+            lock (_lock)
+            {
+                ensureTrackerStarted();
+                _subject.SetUseragent(useragent);
+            }
+            return this;
+        }
+
+        public Tracker SetDomainUserId(string domainUserId)
+        {
+            lock (_lock)
+            {
+                ensureTrackerStarted();
+                _subject.SetDomainUserId(domainUserId);
+            }
+            return this;
+        }
+
+        public Tracker SetNetworkUserId(string networkUserId)
+        {
+            lock (_lock)
+            {
+                ensureTrackerStarted();
+                _subject.SetNetworkUserId(networkUserId);
             }
             return this;
         }
@@ -332,7 +409,7 @@ namespace Snowplow.Tracker
             // Add the subject data if available
             if (_subject != null)
             {
-                payload.AddDict(_subject.nvPairs);
+                payload.AddDict(_subject._payload.Payload);
             }
 
             // Add the session context if available
@@ -355,31 +432,6 @@ namespace Snowplow.Tracker
 
             // Send the payload to the emitter
             _emitter.Input(payload);
-        }
-
-        // --- Controls
-
-        private void ensureTrackerStarted()
-        {
-            if (!_running)
-            {
-                throw new NotSupportedException("Cannot track - tracker is not started. Please use Tracker.Start prior to use.");
-            }
-        }
-
-        /// <summary>
-        /// Manually flush all emitters to which the tracker sends events
-        /// </summary>
-        /// <param name="sync">Whether the flush should be synchronous</param>
-        /// <returns>this</returns>
-        public Tracker Flush()
-        {
-            lock (_lock)
-            {
-                ensureTrackerStarted();
-                _emitter.Flush();
-            }
-            return this;
         }
 
         // --- Setters
