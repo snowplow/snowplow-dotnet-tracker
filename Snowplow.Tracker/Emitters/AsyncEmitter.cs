@@ -28,6 +28,8 @@ namespace Snowplow.Tracker.Emitters
 {
     public class AsyncEmitter : IEmitter, IDisposable
     {
+        public delegate void SendSuccessDelegate(int successCount, int failureCount);
+
         private readonly object _startStopLock = new object();
         private readonly object _backOffLock = new object();
         private bool _denyBackOff = false;
@@ -38,6 +40,7 @@ namespace Snowplow.Tracker.Emitters
         private IEndpoint _endpoint;
         private int _stopPollIntervalMs;
         private ILogger _logger;
+        private SendSuccessDelegate _sendSuccessMethod;
 
         private readonly int _backOffIntervalMinMs = 5000;
         private readonly int _backOffIntervalMaxMs = 30000;
@@ -56,14 +59,23 @@ namespace Snowplow.Tracker.Emitters
             }
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="endpoint"></param>
+        /// <param name="queue"></param>
+        /// <param name="stopPollIntervalMs"></param>
+        /// <param name="l"></param>
         public AsyncEmitter(IEndpoint endpoint,
                             IPersistentBlockingQueue queue,
                             int stopPollIntervalMs = 300,
+                            SendSuccessDelegate sendSuccessMethod = null,
                             ILogger l = null)
         {
             _queue = queue;
             _endpoint = endpoint;
             _stopPollIntervalMs = stopPollIntervalMs;
+            _sendSuccessMethod = sendSuccessMethod;
             _logger = l ?? new NoLogging();
         }
 
@@ -105,12 +117,18 @@ namespace Snowplow.Tracker.Emitters
 
                     _logger.Info(String.Format("Emitter dequeued {0} events", items.Count));
 
+                    var successCount = 0;
+                    var failureCount = 0;
+
                     foreach (var item in items)
                     {
                         if (!_endpoint.Send(item))
                         {
+                            failureCount++;
+
                             _logger.Warn("Emitter returning event to queue");
                             _queue.Enqueue(new List<Payload>() { item });
+
                             // slow down - back off 30 secs
                             // NB this can be interrupted by Flush
                             lock (_backOffLock)
@@ -126,8 +144,13 @@ namespace Snowplow.Tracker.Emitters
                                 }
                             }
                         }
+                        else
+                        {
+                            successCount++;
+                        }
                     }
 
+                    _sendSuccessMethod?.Invoke(successCount, failureCount);
                 }
                 else
                 {
