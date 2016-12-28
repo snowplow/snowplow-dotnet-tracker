@@ -16,6 +16,7 @@
  * License: Apache License Version 2.0
  */
 
+using System;
 using System.Collections.Generic;
 using Snowplow.Tracker.Models;
 
@@ -23,7 +24,8 @@ namespace Snowplow.Tracker.Queues
 {
     public interface IPersistentBlockingQueue
     {
-        List<Payload> Dequeue(int maxWait);
         void Enqueue(List<Payload> items);
+        List<Tuple<string, Payload>> Peek(int count, int maxWait);
+        bool Remove(List<string> idList);
     }
 }

@@ -64,9 +64,12 @@ namespace Snowplow.Tracker.Tests.Storage
 
                     var actual = storage.TakeLast(1);
 
-                    Assert.AreEqual(0, storage.TotalItems);
+                    Assert.AreEqual(1, storage.TotalItems);
 
-                    Assert.AreEqual(expected, actual[0]);
+                    var delete = storage.Delete(new List<string> { actual[0].Id });
+
+                    Assert.IsTrue(delete);
+                    Assert.AreEqual(expected, actual[0].Item);
                 }
             }
             finally
@@ -81,12 +84,12 @@ namespace Snowplow.Tracker.Tests.Storage
             var fn = getTempFile();
             int insertionCount = 100;
             var expected = new List<string>();
+
             try
             {
                 using (var storage = new LiteDBStorage(fn))
                 {
                     Assert.AreEqual(0, storage.TotalItems);
-
 
                     for (int i = 0; i < insertionCount; i++)
                     {
@@ -97,13 +100,23 @@ namespace Snowplow.Tracker.Tests.Storage
 
                     Assert.AreEqual(insertionCount, storage.TotalItems);
 
+                    var eventRecords = storage.TakeLast(insertionCount);
 
+                    var eventIds = new List<string>();
+                    var items = new List<string>();
 
-                    var actual = storage.TakeLast(insertionCount);
+                    foreach (var record in eventRecords)
+                    {
+                        eventIds.Add(record.Id);
+                        items.Add(record.Item);
+                    }
 
+                    var delete = storage.Delete(eventIds);
+
+                    Assert.IsTrue(delete);
                     Assert.AreEqual(0, storage.TotalItems);
 
-                    CollectionAssert.AreEqual(expected, actual);
+                    CollectionAssert.AreEqual(expected, items);
                 }
             }
             finally
@@ -133,10 +146,11 @@ namespace Snowplow.Tracker.Tests.Storage
                     Assert.AreEqual(1, reopenedStorage.TotalItems);
 
                     var actual = reopenedStorage.TakeLast(1);
+                    var delete = reopenedStorage.Delete(new List<string> { actual[0].Id });
 
+                    Assert.IsTrue(delete);
                     Assert.AreEqual(0, reopenedStorage.TotalItems);
-
-                    Assert.AreEqual("hello world", actual[0]);
+                    Assert.AreEqual("hello world", actual[0].Item);
                 }
             }
             finally

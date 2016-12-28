@@ -23,12 +23,6 @@ using System.Linq;
 
 namespace Snowplow.Tracker.Storage
 {
-    class StorageRecord
-    {
-        public int Id { get; set; }
-        public string Item { get; set; }
-    }
-
     public class LiteDBStorage : IStorage, IDisposable
     {
         /// <summary>
@@ -44,6 +38,12 @@ namespace Snowplow.Tracker.Storage
         /// <param name="path">Filename of database file (doesn't need to exist)</param>
         public LiteDBStorage(string path)
         {
+            BsonMapper.Global.RegisterAutoId<string>
+            (
+                isEmpty: (value) => value == null || value.Trim() == "",
+                newId: (db, col) => ""+db.Count(col, null)
+            );
+
             _db = new LiteDatabase(path);
             if (_db.CollectionExists(COLLECTION_NAME))
             {
@@ -77,25 +77,38 @@ namespace Snowplow.Tracker.Storage
         /// </summary>
         /// <param name="n">Number of items to take</param>
         /// <returns>A list of items retrieved from the database</returns>
-        public List<string> TakeLast(int n)
+        public List<StorageRecord> TakeLast(int n)
         {
             var recs = _db.GetCollection<StorageRecord>(COLLECTION_NAME);
 
-            var results = recs.FindAll()
-                .OrderByDescending(i => { return i.Id; })
+            return recs.FindAll()
+                .OrderByDescending(i => { return int.Parse(i.Id); })
                 .Take(n)
                 .ToList<StorageRecord>();
+        }
 
-            foreach (var result in results)
+        /// <summary>
+        /// Attempts to delete a list of events.
+        /// </summary>
+        /// <param name="idList"></param>
+        public bool Delete(List<string> idList)
+        {
+            var recs = _db.GetCollection<StorageRecord>(COLLECTION_NAME);
+            int failedDeletions = 0;
+
+            foreach (var id in idList)
             {
-                recs.Delete(result.Id);
-                TotalItems -= 1;
+                if (recs.Delete(id))
+                {
+                    TotalItems -= 1;
+                }
+                else
+                {
+                    failedDeletions++;
+                }
             }
 
-            var items = from result in results
-                        select result.Item;
-
-            return items.ToList();
+            return failedDeletions == 0;
         }
 
         /// <summary>

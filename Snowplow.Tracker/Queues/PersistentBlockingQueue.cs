@@ -16,19 +16,17 @@
  * License: Apache License Version 2.0
  */
 
-using Snowplow.Tracker.Models.Adapters;
-using Snowplow.Tracker.Storage;
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Threading;
 using Snowplow.Tracker.Models;
+using Snowplow.Tracker.Models.Adapters;
+using Snowplow.Tracker.Storage;
 
 namespace Snowplow.Tracker.Queues
 {
     public class PersistentBlockingQueue : IPersistentBlockingQueue
     {
-
         private IStorage _storage;
         private IPayloadToString _payloadToString;
 
@@ -69,11 +67,12 @@ namespace Snowplow.Tracker.Queues
         }
 
         /// <summary>
-        /// Remove an item from the queue, if possible. Block for maxWait ms if the queue is empty. MT safe
+        /// Peeks at a range of items from the storage target, if possible. Block for maxWait ms if the queue is empty. MT safe
         /// </summary>
+        /// <param name="count">Maximum amount of items to dequeue</param>
         /// <param name="maxWait">Maximum number of milliseconds to block</param>
         /// <returns>A list of items taken from the queue</returns>
-        public List<Payload> Dequeue(int maxWait = 300)
+        public List<Tuple<string, Payload>> Peek(int count, int maxWait = 300)
         {
             lock (_queueLock)
             {
@@ -81,16 +80,35 @@ namespace Snowplow.Tracker.Queues
                 {
                     if (!Monitor.Wait(_queueLock, maxWait))
                     {
-                        return new List<Payload>();
+                        return new List<Tuple<string, Payload>>();
                     }
                 }
 
-                var items = _storage.TakeLast(1);
+                var records = _storage.TakeLast(count);
+                var deserializedRecords = new List<Tuple<string, Payload>>();
 
-                var q = from item in items
-                        select _payloadToString.FromString(item);
+                foreach (StorageRecord record in records)
+                {
+                    deserializedRecords.Add(Tuple.Create(
+                        record.Id, _payloadToString.FromString(record.Item)
+                    ));
+                }
 
-                return q.ToList<Payload>();
+                return deserializedRecords;
+            }
+        }
+
+        /// <summary>
+        /// The list of ids to remove from the underlying persistent storage target.
+        /// </summary>
+        /// <param name="idList"></param>
+        /// <returns></returns>
+        public bool Remove(List<string> idList)
+        {
+            lock (_queueLock)
+            {
+                var result = _storage.Delete(idList);
+                return result;
             }
         }
     }

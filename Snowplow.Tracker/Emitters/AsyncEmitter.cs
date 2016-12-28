@@ -38,6 +38,7 @@ namespace Snowplow.Tracker.Emitters
         private bool _keepRunning = false;
         private IPersistentBlockingQueue _queue;
         private IEndpoint _endpoint;
+        private int _sendLimit;
         private int _stopPollIntervalMs;
         private ILogger _logger;
         private SendSuccessDelegate _sendSuccessMethod;
@@ -60,20 +61,24 @@ namespace Snowplow.Tracker.Emitters
         }
 
         /// <summary>
-        /// 
+        /// Creates a new Async Emitter
         /// </summary>
         /// <param name="endpoint"></param>
         /// <param name="queue"></param>
+        /// <param name="sendLimit"></param>
         /// <param name="stopPollIntervalMs"></param>
+        /// <param name="sendSuccessMethod"></param>
         /// <param name="l"></param>
         public AsyncEmitter(IEndpoint endpoint,
                             IPersistentBlockingQueue queue,
+                            int sendLimit = 100,
                             int stopPollIntervalMs = 300,
                             SendSuccessDelegate sendSuccessMethod = null,
                             ILogger l = null)
         {
             _queue = queue;
             _endpoint = endpoint;
+            _sendLimit = sendLimit;
             _stopPollIntervalMs = stopPollIntervalMs;
             _sendSuccessMethod = sendSuccessMethod;
             _logger = l ?? new NoLogging();
@@ -100,6 +105,9 @@ namespace Snowplow.Tracker.Emitters
             }
         }
 
+        /// <summary>
+        /// Sends event forever until stopped.
+        /// </summary>
         private void loop()
         {
             for (;;)
@@ -112,25 +120,30 @@ namespace Snowplow.Tracker.Emitters
 
                 if (run)
                 {
-                    // take item(s) off the queue and send it
-                    var items = _queue.Dequeue(_stopPollIntervalMs);
+                    var eventList = _queue.Peek(_sendLimit, _stopPollIntervalMs);
 
-                    _logger.Info(String.Format("Emitter dequeued {0} events", items.Count));
+                    _logger.Info(String.Format("Emitter found {0} events", eventList.Count));
 
-                    var successCount = 0;
-                    var failureCount = 0;
-
-                    foreach (var item in items)
+                    if (eventList.Count > 0)
                     {
-                        if (!_endpoint.Send(item))
+                        var sendResult = _endpoint.Send(eventList);
+
+                        // TODO: How should we handle a failure to delete the successfully sent event range?
+                        var deleteResult = _queue.Remove(sendResult.SuccessIds);
+
+                        var successCount = sendResult.SuccessIds.Count;
+                        var failureCount = sendResult.FailureIds.Count;
+
+                        _logger.Info(String.Format("Emitter sent and deleted {0} events", successCount));
+                        _logger.Info(String.Format("Emitter failed to send {0}", failureCount));
+
+                        // Send callback method
+                        _sendSuccessMethod?.Invoke(successCount, failureCount);
+
+                        // If all events failed to send slow down - back off 30 secs
+                        // NB this can be interrupted by Flush
+                        if (successCount == 0 && failureCount > 0)
                         {
-                            failureCount++;
-
-                            _logger.Warn("Emitter returning event to queue");
-                            _queue.Enqueue(new List<Payload>() { item });
-
-                            // slow down - back off 30 secs
-                            // NB this can be interrupted by Flush
                             lock (_backOffLock)
                             {
                                 if (!_denyBackOff)
@@ -138,26 +151,20 @@ namespace Snowplow.Tracker.Emitters
                                     var interval = new Random().Next(_backOffIntervalMinMs, _backOffIntervalMaxMs);
                                     _logger.Info(String.Format("Emitter waiting {0}ms after error", interval));
                                     Monitor.Wait(_backOffLock, interval);
-                                } else
+                                }
+                                else
                                 {
                                     _logger.Info("Emitter not waiting for back-off period");
                                 }
                             }
                         }
-                        else
-                        {
-                            successCount++;
-                        }
                     }
-
-                    _sendSuccessMethod?.Invoke(successCount, failureCount);
                 }
                 else
                 {
                     _logger.Info("Emitter thread finished processing");
                     break;
                 }
-
             }
         }
 
@@ -217,41 +224,40 @@ namespace Snowplow.Tracker.Emitters
 
             _logger.Info("Emitter flushing queue");
 
-            var items = new List<Payload>();
-            List<Payload> newItems; 
+            List<Tuple<string, Payload>> items;
+            var totalCount = 0;
+            var failureCount = 0;
 
-            while ((newItems = _queue.Dequeue(0)).Count > 0)
+            while ((items = _queue.Peek(_sendLimit, 0)).Count > 0)
             {
-                items.AddRange(newItems);
-            }
+                totalCount += items.Count;
+                var sendResult = _endpoint.Send(items);
+                failureCount += sendResult.FailureIds.Count;
 
-            _logger.Info(String.Format("Emitter has {0} events to flush", items.Count));
+                // TODO: handle delete failure
+                var deleteResult = _queue.Remove(sendResult.SuccessIds);
 
-            var failed = new List<Payload>();
-            bool stopSending = false;
-
-            foreach (var item in items)
-            {
-                if (stopSending || !_endpoint.Send(item))
+                // Exit eagerly on any failures
+                if (failureCount > 0 )
                 {
-                    failed.Add(item);
-                    stopSending = true;
+                    break;
                 }
             }
 
-            if (failed.Count > 0)
+            if (failureCount > 0)
             {
-                _logger.Warn(String.Format("Emitter failed to flush {0}/{1} events", failed.Count, items.Count));
-                _queue.Enqueue(failed);
-            } else
+                _logger.Warn(String.Format("Emitter failed to flush {0}/{1} events", failureCount, totalCount));
+            }
+            else
             {
-                _logger.Info(String.Format("Emitter flushed all ({0}) events successfully", items.Count));
+                _logger.Info(String.Format("Emitter flushed all ({0}) events successfully", totalCount));
             }
                        
             if (!disableRestart)
             {
                 Start();
-            } else
+            }
+            else
             {
                 _logger.Info("Emitter skipping restart as requested");
             }

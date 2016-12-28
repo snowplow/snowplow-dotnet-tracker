@@ -21,6 +21,7 @@ using System.Text.RegularExpressions;
 using Snowplow.Tracker.Models;
 using static Snowplow.Tracker.Endpoints.SnowplowHttpCollectorEndpoint;
 using System;
+using System.Threading.Tasks;
 
 namespace Snowplow.Tracker.Tests.Endpoints
 {
@@ -31,12 +32,21 @@ namespace Snowplow.Tracker.Tests.Endpoints
         class MockGet
         {
             public List<string> Queries { get; private set; } = new List<string>();
-            public int? ReturnValue { get; set; } = 200;
+            public int StatusCode { get; set; } = 200;
 
-            public int? HttpGet(string uri)
+            public RequestResult HttpGet(string uri, bool oversize, List<string> itemIds)
             {
                 Queries.Insert(0, uri);
-                return ReturnValue;
+
+                Task<int> responseTask = new Task<int>(() => StatusCode);
+                responseTask.Start();
+
+                return new RequestResult()
+                {
+                    IsOversize = oversize,
+                    ItemIds = itemIds,
+                    StatusCodeTask = responseTask
+                };
             }
         }
 
@@ -49,13 +59,22 @@ namespace Snowplow.Tracker.Tests.Endpoints
         class MockPost
         {
             public List<PostRequest> Queries { get; private set; } = new List<PostRequest>();
-            public int? Response { get; set; } = 200;
+            public int StatusCode { get; set; } = 200;
 
-            public int? HttpPost(string uri, string postData)
+            public RequestResult HttpPost(string uri, string postData, bool oversize, List<string> itemIds)
             {
                 var postRec = new PostRequest { Uri = uri, PostData = postData };
                 Queries.Insert(0, postRec);
-                return Response;
+
+                Task<int> responseTask = new Task<int>(() => StatusCode);
+                responseTask.Start();
+
+                return new RequestResult()
+                {
+                    IsOversize = oversize,
+                    ItemIds = itemIds,
+                    StatusCodeTask = responseTask
+                };
             }
         }
 
@@ -67,9 +86,12 @@ namespace Snowplow.Tracker.Tests.Endpoints
             var payload = new Payload();
             payload.Add("hello", "world");
 
-            var resp = endpoint.Send(payload);
+            var sendList = new List<Tuple<string, Payload>>();
+            sendList.Add(Tuple.Create("0", payload));
 
-            Assert.IsTrue(resp);
+            var sendResult = endpoint.Send(sendList);
+
+            Assert.IsTrue(sendResult.SuccessIds.Count == 1);
             Assert.IsTrue(getReq.Queries.Count == 1);
 
             var actual = getReq.Queries[0];
@@ -87,9 +109,12 @@ namespace Snowplow.Tracker.Tests.Endpoints
             payload.Add("hello", "world");
             payload.Add("ts", "123");
 
-            var resp = endpoint.Send(payload);
+            var sendList = new List<Tuple<string, Payload>>();
+            sendList.Add(Tuple.Create("0", payload));
+            
+            var sendResult = endpoint.Send(sendList);
 
-            Assert.IsTrue(resp);
+            Assert.IsTrue(sendResult.SuccessIds.Count == 1);
             Assert.IsTrue(getReq.Queries.Count == 1);
 
             var actual = getReq.Queries[0];
@@ -100,15 +125,18 @@ namespace Snowplow.Tracker.Tests.Endpoints
         [TestMethod]
         public void testSendGetRequestNoResponseHttps()
         {
-            var getReq = new MockGet() { ReturnValue = null };
+            var getReq = new MockGet() { StatusCode = 404 };
             var endpoint = new SnowplowHttpCollectorEndpoint("somewhere.com", HttpProtocol.HTTPS, getMethod: new GetDelegate(getReq.HttpGet));
             var payload = new Payload();
             payload.Add("hello", "world");
             payload.Add("ts", "123");
 
-            var resp = endpoint.Send(payload);
+            var sendList = new List<Tuple<string, Payload>>();
+            sendList.Add(Tuple.Create("0", payload));
 
-            Assert.IsFalse(resp);
+            var sendResult = endpoint.Send(sendList);
+
+            Assert.IsTrue(sendResult.FailureIds.Count == 1);
             Assert.IsTrue(getReq.Queries.Count == 1);
 
             var actual = getReq.Queries[0];
@@ -119,15 +147,18 @@ namespace Snowplow.Tracker.Tests.Endpoints
         [TestMethod]
         public void testSendGetRequestNon200ResponseHttps()
         {
-            var getReq = new MockGet() { ReturnValue = 500 };
+            var getReq = new MockGet() { StatusCode = 500 };
             var endpoint = new SnowplowHttpCollectorEndpoint("somewhere.com", HttpProtocol.HTTPS, getMethod: new GetDelegate(getReq.HttpGet));
             var payload = new Payload();
             payload.Add("hello", "world");
             payload.Add("ts", "123");
 
-            var resp = endpoint.Send(payload);
+            var sendList = new List<Tuple<string, Payload>>();
+            sendList.Add(Tuple.Create("0", payload));
 
-            Assert.IsFalse(resp);
+            var sendResult = endpoint.Send(sendList);
+
+            Assert.IsTrue(sendResult.FailureIds.Count == 1);
             Assert.IsTrue(getReq.Queries.Count == 1);
 
             var actual = getReq.Queries[0];
@@ -142,9 +173,13 @@ namespace Snowplow.Tracker.Tests.Endpoints
             var endpoint = new SnowplowHttpCollectorEndpoint("something://somewhere.com/things?1=1", HttpProtocol.HTTPS, getMethod: new GetDelegate(getReq.HttpGet));
             var payload = new Payload();
             payload.Add("sample", "value");
-            var resp = endpoint.Send(payload);
 
-            Assert.IsTrue(resp);
+            var sendList = new List<Tuple<string, Payload>>();
+            sendList.Add(Tuple.Create("0", payload));
+
+            var sendResult = endpoint.Send(sendList);
+
+            Assert.IsTrue(sendResult.SuccessIds.Count == 1);
             Assert.IsTrue(getReq.Queries.Count == 1);
 
             var actual = getReq.Queries[0];
@@ -159,9 +194,13 @@ namespace Snowplow.Tracker.Tests.Endpoints
             var endpoint = new SnowplowHttpCollectorEndpoint("somewhere.com", HttpProtocol.HTTPS, getMethod: new GetDelegate(getReq.HttpGet));
             var payload = new Payload();
             payload.Add("<", ">");
-            var resp = endpoint.Send(payload);
 
-            Assert.IsTrue(resp);
+            var sendList = new List<Tuple<string, Payload>>();
+            sendList.Add(Tuple.Create("0", payload));
+
+            var sendResult = endpoint.Send(sendList);
+
+            Assert.IsTrue(sendResult.SuccessIds.Count == 1);
             Assert.IsTrue(getReq.Queries.Count == 1);
 
             var actual = getReq.Queries[0];
@@ -176,9 +215,13 @@ namespace Snowplow.Tracker.Tests.Endpoints
             var endpoint = new SnowplowHttpCollectorEndpoint("somewhere.com", HttpProtocol.HTTPS, getMethod: new GetDelegate(getReq.HttpGet), port: 999);
             var payload = new Payload();
             payload.Add("foo", "bar");
-            var resp = endpoint.Send(payload);
 
-            Assert.IsTrue(resp);
+            var sendList = new List<Tuple<string, Payload>>();
+            sendList.Add(Tuple.Create("0", payload));
+
+            var sendResult = endpoint.Send(sendList);
+
+            Assert.IsTrue(sendResult.SuccessIds.Count == 1);
             Assert.IsTrue(getReq.Queries.Count == 1);
 
             var actual = getReq.Queries[0];
@@ -192,12 +235,14 @@ namespace Snowplow.Tracker.Tests.Endpoints
             var postReq = new MockPost();
             var endpoint = new SnowplowHttpCollectorEndpoint("somewhere.com", HttpProtocol.HTTPS, method: HttpMethod.POST, postMethod: new PostDelegate(postReq.HttpPost));
             var payload = new Payload();
-
             payload.Add("foo", "bar");
 
-            var resp = endpoint.Send(payload);
+            var sendList = new List<Tuple<string, Payload>>();
+            sendList.Add(Tuple.Create("0", payload));
 
-            Assert.IsTrue(resp);
+            var sendResult = endpoint.Send(sendList);
+
+            Assert.IsTrue(sendResult.SuccessIds.Count == 1);
             Assert.IsTrue(postReq.Queries.Count == 1);
             Assert.AreEqual(@"https://somewhere.com/com.snowplowanalytics.snowplow/tp2", postReq.Queries[0].Uri);
 
@@ -209,31 +254,36 @@ namespace Snowplow.Tracker.Tests.Endpoints
         [TestMethod]
         public void testPostHttpNoResponse()
         {
-            var postReq = new MockPost() { Response = null };
+            var postReq = new MockPost() { StatusCode = 404 };
             var endpoint = new SnowplowHttpCollectorEndpoint("somewhere.com", HttpProtocol.HTTPS, method: HttpMethod.POST, postMethod: new PostDelegate(postReq.HttpPost));
             var payload = new Payload();
 
             payload.Add("foo", "bar");
 
-            var resp = endpoint.Send(payload);
+            var sendList = new List<Tuple<string, Payload>>();
+            sendList.Add(Tuple.Create("0", payload));
 
-            Assert.IsFalse(resp);
-            Assert.IsTrue(postReq.Queries.Count == 1);
+            var sendResult = endpoint.Send(sendList);
+
+            Assert.AreEqual(1, sendResult.FailureIds.Count);
+            Assert.AreEqual(1, postReq.Queries.Count);
         }
 
 
         [TestMethod]
         public void testPostHttpNon200Response()
         {
-            var postReq = new MockPost() { Response = 404 };
+            var postReq = new MockPost() { StatusCode = 404 };
             var endpoint = new SnowplowHttpCollectorEndpoint("somewhere.com", HttpProtocol.HTTPS, method: HttpMethod.POST, postMethod: new PostDelegate(postReq.HttpPost));
             var payload = new Payload();
-
             payload.Add("foo", "bar");
 
-            var resp = endpoint.Send(payload);
+            var sendList = new List<Tuple<string, Payload>>();
+            sendList.Add(Tuple.Create("0", payload));
 
-            Assert.IsFalse(resp);
+            var sendResult = endpoint.Send(sendList);
+
+            Assert.IsTrue(sendResult.FailureIds.Count == 1);
             Assert.IsTrue(postReq.Queries.Count == 1);
         }
 
@@ -246,14 +296,14 @@ namespace Snowplow.Tracker.Tests.Endpoints
             string returns403 = "http://snowplowanalytics.com/nothere/ok";
             string cannotConnect = "http://localhost:1231";
 
-            var resp = SnowplowHttpCollectorEndpoint.HttpPost(returns200, @"[{""foo"":""bar""}]");
-            Assert.AreEqual(200, resp);
+            var resp = SnowplowHttpCollectorEndpoint.HttpPost(returns200, @"[{""foo"":""bar""}]", false, new List<string> { "0" });
+            Assert.AreEqual(200, resp.StatusCodeTask.Result);
 
-            var bad = SnowplowHttpCollectorEndpoint.HttpPost(returns403, @"[{""foo"":""bar""}]");
-            Assert.AreEqual(403, bad);
+            var bad = SnowplowHttpCollectorEndpoint.HttpPost(returns403, @"[{""foo"":""bar""}]", false, new List<string> { "0" });
+            Assert.AreEqual(403, bad.StatusCodeTask.Result);
 
-            var nowhere = SnowplowHttpCollectorEndpoint.HttpPost(cannotConnect, @"[{""foo"":""bar""}]");
-            Assert.IsNull(nowhere);
+            var nowhere = SnowplowHttpCollectorEndpoint.HttpPost(cannotConnect, @"[{""foo"":""bar""}]", false, new List<string> { "0" });
+            Assert.AreEqual(-1, nowhere.StatusCodeTask.Result);
         }
 
         [TestMethod]
@@ -265,14 +315,14 @@ namespace Snowplow.Tracker.Tests.Endpoints
             string returns404 = "http://snowplowanalytics.com/nothere/ok";
             string cannotConnect = "http://localhost:1231";
 
-            var resp = SnowplowHttpCollectorEndpoint.HttpGet(returns200);
-            Assert.AreEqual(200, resp);
+            var resp = SnowplowHttpCollectorEndpoint.HttpGet(returns200, false, new List<string> { "0" });
+            Assert.AreEqual(200, resp.StatusCodeTask.Result);
 
-            var bad = SnowplowHttpCollectorEndpoint.HttpGet(returns404);
-            Assert.AreEqual(404, bad);
+            var bad = SnowplowHttpCollectorEndpoint.HttpGet(returns404, false, new List<string> { "0" });
+            Assert.AreEqual(404, bad.StatusCodeTask.Result);
 
-            var nowhere = SnowplowHttpCollectorEndpoint.HttpGet(cannotConnect);
-            Assert.IsNull(nowhere);
+            var nowhere = SnowplowHttpCollectorEndpoint.HttpGet(cannotConnect, false, new List<string> { "0" });
+            Assert.AreEqual(-1, nowhere.StatusCodeTask.Result);
         }
 
     }

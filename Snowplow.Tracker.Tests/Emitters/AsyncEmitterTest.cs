@@ -52,13 +52,35 @@ namespace Snowplow.Tracker.Tests.Emitters
     {
         class MockEndpoint : IEndpoint
         {
+            public SendResult Result { get; private set; }
             public bool Response { get; set; } = true;
             public int CallCount { get; private set; } = 0;
 
-            public bool Send(Payload p)
+            public SendResult Send(List<Tuple<string, Payload>> p)
             {
                 CallCount += 1;
-                return Response;
+
+                var successIds = new List<string>();
+                var failureIds = new List<string>();
+
+                foreach (var tup in p)
+                {
+                    if (Response)
+                    {
+                        successIds.Add(tup.Item1);
+                    }
+                    else
+                    {
+                        failureIds.Add(tup.Item1);
+                    }
+                }
+
+                Result = new SendResult()
+                {
+                    SuccessIds = successIds,
+                    FailureIds = failureIds
+                };
+                return Result;
             }
         }
 
@@ -132,15 +154,19 @@ namespace Snowplow.Tracker.Tests.Emitters
         {
             var q = new PersistentBlockingQueue(new MockStorage(), new PayloadToJsonString());
             AsyncEmitter e = new AsyncEmitter(new MockEndpoint() { Response = false }, q);
-            // no events will send, and so they should be in the end of the queue
+            // no events will send, and so they should be at the start of the queue
 
             e.Start();
+
             var p = new Payload();
             p.AddDict(new Dictionary<string, string>() { { "foo", "bar" } });
+
             e.Input(p);
             Thread.Sleep(100); // this could be done better with triggers of some kind
             e.Stop();
-            var inQueue = q.Dequeue();
+
+            var inQueue = q.Peek(1);
+
             Assert.AreEqual(1, inQueue.Count);
         }
 
@@ -166,9 +192,9 @@ namespace Snowplow.Tracker.Tests.Emitters
         public void testFlush()
         {
             var storage = new MockStorage();
-            var q = new PersistentBlockingQueue(storage, new PayloadToJsonString());
+            var queue = new PersistentBlockingQueue(storage, new PayloadToJsonString());
             var mockEndpoint = new MockEndpoint() { Response = true };
-            AsyncEmitter e = new AsyncEmitter(mockEndpoint, q);
+            AsyncEmitter e = new AsyncEmitter(mockEndpoint, queue, sendLimit: 1);
 
             for (int i = 0; i < 100; i++)
             {
@@ -190,9 +216,9 @@ namespace Snowplow.Tracker.Tests.Emitters
         public void testFlushStopsAfterFirstFailure()
         {
             var storage = new MockStorage();
-            var q = new PersistentBlockingQueue(storage, new PayloadToJsonString());
+            var queue = new PersistentBlockingQueue(storage, new PayloadToJsonString());
             var mockEndpoint = new MockEndpoint() { Response = false };
-            AsyncEmitter e = new AsyncEmitter(mockEndpoint, q);
+            AsyncEmitter e = new AsyncEmitter(mockEndpoint, queue, sendLimit: 1);
 
             for (int i = 0; i < 100; i++)
             {
@@ -201,13 +227,16 @@ namespace Snowplow.Tracker.Tests.Emitters
                 e.Input(p);
             }
 
-            Assert.IsFalse(e.Running);
-            e.Flush(true);
+            Assert.AreEqual(100, storage.TotalItems);
             Assert.IsFalse(e.Running);
 
+            e.Flush(true);
+
+            Assert.IsFalse(e.Running);
             Assert.AreEqual(1, mockEndpoint.CallCount);
+            Assert.AreEqual(0, mockEndpoint.Result.SuccessIds.Count);
+            Assert.AreEqual(1, mockEndpoint.Result.FailureIds.Count);
             Assert.AreEqual(100, storage.TotalItems);
         }
-
     }
 }

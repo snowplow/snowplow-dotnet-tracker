@@ -20,31 +20,32 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
-using Newtonsoft.Json;
 using System.Net.Http;
 using System.Text;
 using Snowplow.Tracker.Logging;
 using Snowplow.Tracker.Models;
+using System.Threading.Tasks;
 
 namespace Snowplow.Tracker.Endpoints
 {
     public class SnowplowHttpCollectorEndpoint : IEndpoint
     {
-        public delegate int? PostDelegate(string uri, string postData);
-        public delegate int? GetDelegate(string uri);
+        public delegate RequestResult PostDelegate(string uri, string postData, bool oversize, List<string> itemIds);
+        public delegate RequestResult GetDelegate(string uri, bool oversize, List<string> itemIds);
 
         private readonly PostDelegate DefaultPostMethod = new PostDelegate(SnowplowHttpCollectorEndpoint.HttpPost);
         private readonly GetDelegate DefaultGetMethod = new GetDelegate(SnowplowHttpCollectorEndpoint.HttpGet);
 
+        private readonly int POST_WRAPPER_BYTES = 88; // "schema":"iglu:com.snowplowanalytics.snowplow/payload_data/jsonschema/1-0-4","data":[]
+        private readonly int POST_STM_BYTES = 22;     // "stm":"1443452851000",
 
         private readonly string _collectorUri;
-        private readonly Snowplow.Tracker.Endpoints.HttpMethod _method;
-
+        private readonly HttpMethod _method;
         private GetDelegate _getMethod;
         private PostDelegate _postMethod;
-
+        private int _byteLimitGet;
+        private int _byteLimitPost;
         private ILogger _logger;
-
 
         /// <summary>
         /// Create a connection to a Snowplow collector
@@ -54,17 +55,13 @@ namespace Snowplow.Tracker.Endpoints
         /// <param name="method">The request method to use. GET or POST</param>
         /// <param name="postMethod">Internal use</param>
         /// <param name="getMethod">Internal use</param>
+        /// <param name="byteLimitPost">The maximum amount of bytes we can expect to work</param>
+        /// <param name="byteLimitGet">The maximum amount of bytes we can expect to work</param>
         /// <param name="l">Send log messages using this logger</param>
         /// </summary>
-        public SnowplowHttpCollectorEndpoint(string host,
-                                             HttpProtocol protocol = HttpProtocol.HTTP,
-                                             int? port = null,
-                                             Snowplow.Tracker.Endpoints.HttpMethod method = Snowplow.Tracker.Endpoints.HttpMethod.GET,
-                                             PostDelegate postMethod = null,
-                                             GetDelegate getMethod = null,
-                                             ILogger l = null)
+        public SnowplowHttpCollectorEndpoint(string host, HttpProtocol protocol = HttpProtocol.HTTP, int? port = null, HttpMethod method = HttpMethod.GET, 
+            PostDelegate postMethod = null, GetDelegate getMethod = null, int byteLimitPost = 40000, int byteLimitGet = 40000, ILogger l = null)
         {
-
             if (Uri.IsWellFormedUriString(host, UriKind.Absolute))
             {
                 var uri = new Uri(host);
@@ -79,6 +76,8 @@ namespace Snowplow.Tracker.Endpoints
             _method = method;
             _postMethod = postMethod ?? DefaultPostMethod;
             _getMethod = getMethod ?? DefaultGetMethod;
+            _byteLimitPost = byteLimitPost;
+            _byteLimitGet = byteLimitGet;
             _logger = l ?? new NoLogging();
         }
 
@@ -86,41 +85,146 @@ namespace Snowplow.Tracker.Endpoints
         /// Send a request to the endpoint using the current settings
         /// </summary>
         /// <param name="p">The paylaod to send</param>
-        /// <returns>true if successful (200), otherwise false</returns>
-        public bool Send(Payload p)
+        /// <returns>a list of successfully sent and failed events, success is determined by a 200 response code</returns>
+        public SendResult Send(List<Tuple<string, Payload>> itemList)
         {
-            p.Add(Constants.SENT_TIMESTAMP, Utils.GetTimestamp().ToString());
+            List<RequestResult> requestResultList;
 
-            if (_method == Snowplow.Tracker.Endpoints.HttpMethod.GET)
+            if (_method == HttpMethod.GET)
             {
-                var uri = _collectorUri + ToQueryString(p.Payload);
-                _logger.Info(String.Format("Endpoint GET {0}", uri));
-                var response = _getMethod(uri);
-                var message = (response.HasValue) ? response.Value.ToString() : "(timed out)";
-                _logger.Info(String.Format("Endpoint GET {0} responded with {1}", uri, message));
-                return isGoodResponse(response);
+                requestResultList = SendGetAsync(itemList);
             }
-            else if (_method == Snowplow.Tracker.Endpoints.HttpMethod.POST)
+            else if (_method == HttpMethod.POST)
             {
-                var data = new Dictionary<string, object>()
-                {
-                    { Constants.SCHEMA, Constants.SCHEMA_PAYLOAD_DATA },
-                    { Constants.DATA, new List<object> {  p.Payload } }
-                };
-
-                _logger.Info(String.Format("Endpoint POST {0}", _collectorUri));
-                var response = _postMethod(_collectorUri, JsonConvert.SerializeObject(data));
-                var message = (response.HasValue) ? response.Value.ToString() : "(timed out)";
-                _logger.Info(String.Format("Endpoint POST {0} responded with {1}", _collectorUri, message));
-                return isGoodResponse(response);
+                requestResultList = SendPostAsync(itemList);
             }
             else
             {
-                throw new NotSupportedException("Only post and get supported");
+                throw new NotSupportedException("Only POST and GET supported");
             }
 
+            var successIds = new List<string>();
+            var failureIds = new List<string>();
+
+            foreach (var requestResult in requestResultList)
+            {
+                int statusCode;
+                try
+                {
+                    statusCode = requestResult.StatusCodeTask.Result;
+                }
+                catch
+                {
+                    statusCode = -1;
+                }
+
+                if (requestResult.IsOversize)
+                {
+                    successIds.AddRange(requestResult.ItemIds);
+                }
+                else if (isGoodResponse(statusCode))
+                {
+                    successIds.AddRange(requestResult.ItemIds);
+                }
+                else
+                {
+                    failureIds.AddRange(requestResult.ItemIds);
+                }
+            }
+
+            return new SendResult()
+            {
+                SuccessIds = successIds,
+                FailureIds = failureIds
+            };
         }
 
+        /// <summary>
+        /// Sends each item as an individual GET request
+        /// 
+        /// Note: If an individual event is greater than the byteLimit we assume success
+        /// </summary>
+        /// <param name="itemList">The list of items to send</param>
+        /// <returns>The list of send results</returns>
+        private List<RequestResult> SendGetAsync(List<Tuple<string, Payload>> itemList)
+        {
+            var requestResultList = new List<RequestResult>();
+
+            foreach (var item in itemList)
+            {
+                var payload = item.Item2;
+                payload.Add(Constants.SENT_TIMESTAMP, Utils.GetTimestamp().ToString());
+
+                var uri = _collectorUri + ToQueryString(payload.Payload);
+                var byteSize = Utils.GetUTF8Length(uri);
+
+                _logger.Info(String.Format("Endpoint GET {0}", uri));
+
+                requestResultList.Add(_getMethod(uri, byteSize > _byteLimitGet, new List<string> { item.Item1 }));
+            }
+
+            return requestResultList;
+        }
+
+        /// <summary>
+        /// Batches and sends POST requests containing many events
+        /// 
+        /// Note: If an individual event is greater than the byteLimit we assume success
+        /// </summary>
+        /// <param name="itemList">The list of items to send</param>
+        /// <returns>The list of send results</returns>
+        private List<RequestResult> SendPostAsync(List<Tuple<string, Payload>> itemList)
+        {
+            var requestResultList = new List<RequestResult>();
+
+            var itemIds = new List<string>();
+            var itemPayloads = new List<Dictionary<string, object>>();
+            long totalByteSize = 0;
+
+            foreach (var item in itemList)
+            {
+                var payload = item.Item2;
+                var byteSize = payload.GetByteSize() + POST_STM_BYTES;
+
+                if ((byteSize + POST_WRAPPER_BYTES) > _byteLimitPost)
+                {
+                    var singleEventPost = AddSendTimestamp(new List<Dictionary<string, object>> { payload.Payload });
+                    var singleEventIds = new List<string> { item.Item1 };
+                    requestResultList.Add(_postMethod(_collectorUri, ToPostDataString(singleEventPost), true, singleEventIds));
+                }
+                else if ((totalByteSize + byteSize + POST_WRAPPER_BYTES + (itemPayloads.Count - 1)) > _byteLimitPost)
+                {
+                    itemPayloads = AddSendTimestamp(itemPayloads);
+                    requestResultList.Add(_postMethod(_collectorUri, ToPostDataString(itemPayloads), false, itemIds));
+
+                    itemPayloads = new List<Dictionary<string, object>> { payload.Payload };
+                    itemIds = new List<string> { item.Item1 };
+                    totalByteSize = byteSize;
+                }
+                else
+                {
+                    itemPayloads.Add(payload.Payload);
+                    itemIds.Add(item.Item1);
+                    totalByteSize += byteSize;
+                }
+            }
+
+            if (itemPayloads.Count > 0)
+            {
+                itemPayloads = AddSendTimestamp(itemPayloads);
+                requestResultList.Add(_postMethod(_collectorUri, ToPostDataString(itemPayloads), false, itemIds));
+            }
+
+            return requestResultList;
+        }
+
+        // --- Helpers
+
+        /// <summary>
+        /// Checks whether the response is a 200
+        /// </summary>
+        /// <param name="response">The response to parse</param>
+        /// <returns></returns>
         private bool isGoodResponse(int? response)
         {
             if (response != null)
@@ -134,11 +238,19 @@ namespace Snowplow.Tracker.Endpoints
             }
         }
 
+        /// <summary>
+        /// Builds and returns the collector URI string
+        /// </summary>
+        /// <param name="endpoint">The endpoint</param>
+        /// <param name="protocol">The protocol</param>
+        /// <param name="port">The port</param>
+        /// <param name="method">The method to use</param>
+        /// <returns></returns>
         private static string getCollectorUri(string endpoint, HttpProtocol protocol, int? port, Snowplow.Tracker.Endpoints.HttpMethod method)
         {
             string path;
             string requestProtocol = (protocol == HttpProtocol.HTTP) ? "http" : "https";
-            if (method == Snowplow.Tracker.Endpoints.HttpMethod.GET)
+            if (method == HttpMethod.GET)
             {
                 path = Constants.GET_URI_SUFFIX;
             }
@@ -156,13 +268,31 @@ namespace Snowplow.Tracker.Endpoints
             }
         }
 
+        // --- Event builders
+
+        /// <summary>
+        /// Appends the sent timestamp to a list of outbound events.
+        /// </summary>
+        /// <param name="payloadList">The list of events to append</param>
+        /// <returns>The updated event list</returns>
+        private List<Dictionary<string, object>> AddSendTimestamp(List<Dictionary<string, object>> payloadList)
+        {
+            var timestamp = Utils.GetTimestamp().ToString();
+            var newPayloadList = new List<Dictionary<string, object>>();
+            foreach(var payload in payloadList)
+            {
+                payload.Add(Constants.SENT_TIMESTAMP, timestamp);
+                newPayloadList.Add(payload);
+            }
+            return newPayloadList;
+        }
 
         /// <summary>
         /// Converts an event from a dictionary to a querystring
         /// </summary>
         /// <param name="payload">The event to convert</param>
         /// <returns>Querystring of the form "?e=pv&tna=cf&..."</returns>
-        private static string ToQueryString(Dictionary<string, object> payload)
+        private string ToQueryString(Dictionary<string, object> payload)
         {
             var array = (from key in payload.Keys
                          select string.Format("{0}={1}", WebUtility.UrlEncode(key), WebUtility.UrlEncode((string)payload[key])))
@@ -170,50 +300,84 @@ namespace Snowplow.Tracker.Endpoints
             return String.Format("?{0}", String.Join("&", array));
         }
 
+        /// <summary>
+        /// Converts a list of events to a post-data string
+        /// </summary>
+        /// <param name="payloadList">The events to convert</param>
+        /// <returns>PayloadData SelfDescribingJson string</returns>
+        private string ToPostDataString(List<Dictionary<string, object>> payloadList)
+        {
+            return new SelfDescribingJson(Constants.SCHEMA_PAYLOAD_DATA, payloadList).ToString();
+        }
+
+        // --- Default Event Senders
 
         /// <summary>
         /// Make a POST request with the given data. Content type application/json
         /// </summary>
         /// <param name="collectorUri">The URI to POST to</param>
         /// <param name="postData">JSON string of POST data</param>
+        /// <param name="oversize">If the request is oversized</param>
+        /// <param name="itemIds">The ids of the events being sent</param>
         /// <returns>The HTTP return code, or null if couldn't connect</returns>
-        public static int? HttpPost(string collectorUri, string postData)
+        public static RequestResult HttpPost(string collectorUri, string postData, bool oversize, List<string> itemIds)
         {
-            try
-            {
+            var postContent = new StringContent(postData, Encoding.UTF8, Constants.POST_CONTENT_TYPE);
+            var statusCodeTask = Task.Factory.StartNew(() => {
                 using (HttpClient c = new HttpClient())
                 {
-                    var postContent = new StringContent(postData, Encoding.UTF8, Constants.POST_CONTENT_TYPE);
-                    var response = c.PostAsync(collectorUri, postContent).Result;
-                    return (int)response.StatusCode;
+                    return ProcessRequestTask(c.PostAsync(collectorUri, postContent));
                 }
-            }
-            catch
+            });
+
+            return new RequestResult()
             {
-                return null;
-            }
+                IsOversize = oversize,
+                StatusCodeTask = statusCodeTask,
+                ItemIds = itemIds
+            };
         }
 
         /// <summary>
         /// Make a GET request
         /// </summary>
         /// <param name="uri">The URI to GET</param>
+        /// <param name="oversize">If the request is oversized</param>
+        /// <param name="itemIds">The ids of the events being sent</param>
         /// <returns>The HTTP return code, or null if couldn't connect</returns>
-        public static int? HttpGet(string uri)
+        public static RequestResult HttpGet(string uri, bool oversize, List<string> itemIds)
+        {
+            var statusCodeTask = Task.Factory.StartNew(() => {
+                using (HttpClient c = new HttpClient())
+                {
+                    return ProcessRequestTask(c.GetAsync(uri));
+                } 
+            });
+
+            return new RequestResult()
+            {
+                IsOversize = oversize,
+                StatusCodeTask = statusCodeTask,
+                ItemIds = itemIds
+            };
+        }
+
+        /// <summary>
+        /// Wraps the request task and returns either the status code
+        /// or -1 if it cannot get the code
+        /// </summary>
+        /// <param name="requestTask"></param>
+        /// <returns></returns>
+        private static int ProcessRequestTask(Task<HttpResponseMessage> requestTask)
         {
             try
             {
-                using (HttpClient c = new HttpClient())
-                {
-                    var result = c.GetAsync(uri).Result;
-                    return (int)result.StatusCode;
-                }
+                return (int) requestTask.Result.StatusCode;
             }
             catch
             {
-                return null;
+                return -1;
             }
-
         }
     }
 }

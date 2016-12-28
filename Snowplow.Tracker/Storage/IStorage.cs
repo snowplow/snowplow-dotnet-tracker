@@ -16,10 +16,17 @@
  * License: Apache License Version 2.0
  */
 
+using LiteDB;
 using System.Collections.Generic;
 
 namespace Snowplow.Tracker.Storage
 {
+    public class StorageRecord
+    {
+        public string Id { get; set; }
+        public string Item { get; set; }
+    }
+
     public interface IStorage
     {
         int TotalItems
@@ -28,6 +35,7 @@ namespace Snowplow.Tracker.Storage
         }
 
         void Put(string item);
-        List<string> TakeLast(int n);
+        List<StorageRecord> TakeLast(int n);
+        bool Delete(List<string> idList);
     }
 }

@@ -29,8 +29,7 @@ namespace Snowplow.Tracker.Tests.Queues
 
     class MockStorage : IStorage
     {
-
-        private List<string> _items = new List<string>();
+        private List<StorageRecord> _items = new List<StorageRecord>();
 
         public int TotalItems
         {
@@ -40,20 +39,31 @@ namespace Snowplow.Tracker.Tests.Queues
             }
         }
 
-        public List<string> TakeLast(int n)
+        public void Put(string item)
+        {
+            _items.Insert(0, new StorageRecord()
+            {
+                Id = "0",
+                Item = item
+            });
+        }
+
+        public List<StorageRecord> TakeLast(int n)
         {
             if (TotalItems - n < 0)
             {
-                throw new ArgumentException("insufficient number of records");
+                return _items.GetRange(0, TotalItems);
             }
-            var items = _items.GetRange(TotalItems - n, n);
-            _items.RemoveRange(TotalItems - n, n);
-            return items;
+            else
+            {
+                return _items.GetRange(TotalItems - n, n);
+            }
         }
 
-        public void Put(string item)
+        public bool Delete(List<string> idList)
         {
-            _items.Insert(0, item);
+            _items.RemoveRange(TotalItems - idList.Count, idList.Count);
+            return true;
         }
     }
 
@@ -66,11 +76,20 @@ namespace Snowplow.Tracker.Tests.Queues
             var s = new MockStorage();
 
             Assert.AreEqual(s.TotalItems, 0);
+
             s.Put("hello world");
+
             Assert.AreEqual(1, s.TotalItems);
+
             var i = s.TakeLast(1);
+
             Assert.AreEqual(1, i.Count);
-            Assert.AreEqual("hello world", i[0]);
+            Assert.AreEqual("hello world", i[0].Item);
+            Assert.AreEqual(1, s.TotalItems);
+
+            var del = s.Delete(new List<string> { "0" });
+
+            Assert.IsTrue(del);
             Assert.AreEqual(0, s.TotalItems);
         }
 
@@ -80,15 +99,24 @@ namespace Snowplow.Tracker.Tests.Queues
             var s = new MockStorage();
 
             Assert.AreEqual(s.TotalItems, 0);
+
             s.Put("hello world");
             s.Put("hello world 2");
             s.Put("hello world 3");
+
             Assert.AreEqual(3, s.TotalItems);
+
             var i = s.TakeLast(3);
+
             Assert.AreEqual(3, i.Count);
-            Assert.AreEqual("hello world", i[2]);
-            Assert.AreEqual("hello world 2", i[1]);
-            Assert.AreEqual("hello world 3", i[0]);
+            Assert.AreEqual("hello world", i[2].Item);
+            Assert.AreEqual("hello world 2", i[1].Item);
+            Assert.AreEqual("hello world 3", i[0].Item);
+            Assert.AreEqual(3, s.TotalItems);
+
+            var del = s.Delete(new List<string> { "0", "1", "2" });
+
+            Assert.IsTrue(del);
             Assert.AreEqual(0, s.TotalItems);
         }
 
@@ -107,10 +135,10 @@ namespace Snowplow.Tracker.Tests.Queues
             payload.Add(samplePayload);
 
             queue.Enqueue(payload);
-            var actualPayload = queue.Dequeue();
+            var actualPayload = queue.Peek(1);
 
             Assert.AreEqual(1, actualPayload.Count);
-            CollectionAssert.AreEqual(samplePayload.Payload, actualPayload[0].Payload);
+            CollectionAssert.AreEqual(samplePayload.Payload, actualPayload[0].Item2.Payload);
         }
 
         class MockConsumer
@@ -138,10 +166,10 @@ namespace Snowplow.Tracker.Tests.Queues
 
                 for (int i = 0; i < _count; i++)
                 {
-                    var items = _q.Dequeue(_timeout);
+                    var items = _q.Peek(1, _timeout);
                     foreach (var item in items)
                     {
-                        Consumed.Add(item);
+                        Consumed.Add(item.Item2);
                     }
                 }
             }

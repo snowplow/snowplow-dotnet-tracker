@@ -16,12 +16,28 @@
  * License: Apache License Version 2.0
  */
 
+using System;
+using System.Collections.Generic;
+using System.Threading.Tasks;
 using Snowplow.Tracker.Models;
 
 namespace Snowplow.Tracker.Endpoints
 {
+    public class SendResult
+    {
+        public List<string> SuccessIds { get; set; } = new List<string>();
+        public List<string> FailureIds { get; set; } = new List<string>();
+    }
+
+    public class RequestResult
+    {
+        public bool IsOversize { get; set; } = false;
+        public Task<int> StatusCodeTask { get; set; } = null;
+        public List<string> ItemIds { get; set; }
+    }
+
     public interface IEndpoint
     {
-        bool Send(Payload p);
+        SendResult Send(List<Tuple<string, Payload>> p);
     }
 }
