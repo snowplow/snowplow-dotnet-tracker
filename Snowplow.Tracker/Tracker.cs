@@ -184,7 +184,7 @@ namespace Snowplow.Tracker
             }
         }
 
-        // Setter methods which call the relevant setter methods on the subject
+        // --- Thread-safe Subject setter methods
 
         public Tracker SetPlatform(Platform value)
         {
@@ -256,51 +256,92 @@ namespace Snowplow.Tracker
             return this;
         }
 
+        // --- Event Tracking
+
         /// <summary>
-        /// Inputs an event into each emitter
+        /// Tracks an event; will throw an exception if the 
+        /// Track has not yet been started
         /// </summary>
-        /// <param name="pb">The event payload</param>
-        private void Track(Payload pb)
+        /// <param name="newEvent"></param>
+        public void Track(IEvent newEvent)
         {
             if (!_running)
             {
                 throw new InvalidOperationException("Cannot track anything - not started");
             }
-            _emitter.Input(pb);
+            ProcessEvent(newEvent);
         }
 
         /// <summary>
-        /// Called by all tracking events to add the standard name-value pairs, the
-        /// subject name-value pairs, the timestamp, and any context to the Payload
+        /// Figures out what kind of event is being tracked and
+        /// then processes it accordingly.
         /// </summary>
-        /// <param name="pb">Payload to complete</param>
-        /// <param name="context">Custom context</param>
-        /// <param name="tstamp">User-provided true-timestamp</param>
-        private void CompletePayload(Payload pb, List<IContext> contexts, Int64? tstamp)
+        /// <param name="newEvent"></param>
+		private void ProcessEvent(IEvent newEvent)
         {
-            var eid = Utils.GetGUID();
+            List<IContext> contexts = newEvent.GetContexts();
+            string eventId = newEvent.GetEventId();
+            Type eType = newEvent.GetType();
 
-            pb.Add(Constants.TIMESTAMP, Utils.GetTimestamp().ToString());
-            if (tstamp != null)
+            if (eType == typeof(PageView) || eType == typeof(Structured))
             {
-                pb.Add(Constants.TRUE_TIMESTAMP, tstamp.ToString());
+                CompleteAndTrackPayload((Payload)newEvent.GetPayload(), contexts, eventId);
             }
-            pb.Add(Constants.EID, eid);
+            else if (eType == typeof(EcommerceTransaction))
+            {
+                CompleteAndTrackPayload((Payload)newEvent.GetPayload(), contexts, eventId);
+                EcommerceTransaction ecommerceTransaction = (EcommerceTransaction)newEvent;
+                foreach (EcommerceTransactionItem item in ecommerceTransaction.GetItems())
+                {
+                    item.SetItemId(ecommerceTransaction.GetOrderId());
+                    item.SetCurrency(ecommerceTransaction.GetCurrency());
+                    item.SetDeviceCreatedTimestamp(ecommerceTransaction.GetDeviceCreatedTimestamp());
+                    item.SetTrueTimestamp(ecommerceTransaction.GetTrueTimestamp());
+                    CompleteAndTrackPayload((Payload)item.GetPayload(), item.GetContexts(), item.GetEventId());
+                }
+            }
+            else if (eType == typeof(SelfDescribing))
+            {
+                SelfDescribing selfDescribing = (SelfDescribing)newEvent;
+                selfDescribing.SetBase64Encode(_encodeBase64);
+                CompleteAndTrackPayload((Payload)selfDescribing.GetPayload(), contexts, eventId);
+            }
+            else if (eType == typeof(ScreenView))
+            {
+                ProcessEvent(new SelfDescribing()
+                           .SetEventData((SelfDescribingJson)newEvent.GetPayload())
+                           .SetCustomContext(newEvent.GetContexts())
+                           .SetDeviceCreatedTimestamp(newEvent.GetDeviceCreatedTimestamp())
+                           .SetTrueTimestamp(newEvent.GetTrueTimestamp())
+                           .SetEventId(newEvent.GetEventId())
+                           .Build());
+            }
+        }
 
+        /// <summary>
+        /// Adds the standard NV Pairs to the payload and stitches any available
+        /// contexts to the final payload.
+        /// </summary>
+        /// <param name="payload">The basee event payload</param>
+        /// <param name="contexts">The contexts array</param>
+        /// <param name="eventId">The event ID</param>
+        private void CompleteAndTrackPayload(Payload payload, List<IContext> contexts, string eventId)
+        {
+            payload.AddDict(_standardNvPairs);
+
+            // Add the subject data if available
+            if (_subject != null)
+            {
+                payload.AddDict(_subject.nvPairs);
+            }
+
+            // Add the session context if available
             if (_clientSession != null)
             {
-                var sessionContext = _clientSession.GetSessionContext(eid);
-
-                if (contexts != null)
-                {
-                    contexts.Add(sessionContext);
-                }
-                else
-                {
-                    contexts = new List<IContext> { sessionContext };
-                }
+                contexts.Add(_clientSession.GetSessionContext(eventId));
             }
 
+            // Build the final context and it to the payload
             if (contexts != null && contexts.Any())
             {
                 var contextArray = new List<Dictionary<string, object>>();
@@ -309,14 +350,14 @@ namespace Snowplow.Tracker
                     contextArray.Add(context.GetJson().Payload);
                 }
                 var contextEnvelope = new SelfDescribingJson(Constants.SCHEMA_CONTEXTS, contextArray);
-                pb.AddJson(contextEnvelope.Payload, _encodeBase64, Constants.CONTEXT_ENCODED, Constants.CONTEXT);
+                payload.AddJson(contextEnvelope.Payload, _encodeBase64, Constants.CONTEXT_ENCODED, Constants.CONTEXT);
             }
 
-            pb.AddDict(_standardNvPairs);
-            pb.AddDict(_subject.nvPairs);
-
-            Track(pb);
+            // Send the payload to the emitter
+            _emitter.Input(payload);
         }
+
+        // --- Controls
 
         private void ensureTrackerStarted()
         {
@@ -324,198 +365,6 @@ namespace Snowplow.Tracker
             {
                 throw new NotSupportedException("Cannot track - tracker is not started. Please use Tracker.Start prior to use.");
             }
-        }
-
-        /// <summary>
-        /// Track a Snowplow page view event
-        /// </summary>
-        /// <param name="pageUrl">Page URL</param>
-        /// <param name="pageTitle">Page title</param>
-        /// <param name="referrer">Page referrer</param>
-        /// <param name="context">List of custom contexts for the event</param>
-        /// <param name="tstamp">User-provided true-timestamp for the event</param>
-        /// <returns>this</returns>
-        public Tracker TrackPageView(string pageUrl, string pageTitle = null, string referrer = null, List<IContext> contexts = null, Int64? tstamp = null)
-        {
-            lock (_lock)
-            {
-                ensureTrackerStarted();
-
-                Payload pb = new Payload();
-                pb.Add(Constants.EVENT, Constants.EVENT_PAGE_VIEW);
-                pb.Add(Constants.PAGE_URL, pageUrl);
-                pb.Add(Constants.PAGE_TITLE, pageTitle);
-                pb.Add(Constants.PAGE_REFR, referrer);
-                CompletePayload(pb, contexts, tstamp);
-            }
-            return this;
-        }
-
-        /// <summary>
-        /// Send an event corresponding to a single item in a transaction
-        /// </summary>
-        /// <param name="orderId">Unique ID for the whole order</param>
-        /// <param name="currency">Currency for the order</param>
-        /// <param name="item">TransactionItem object containing data about the item</param>
-        /// <param name="context">List of custom contexts for the event</param>
-        /// <param name="tstamp">User-provided true-timestamp for the event</param>
-        private void TrackEcommerceTransactionItem(string orderId, string currency, TransactionItem item, Int64? tstamp)
-        {
-            lock (_lock)
-            {
-                ensureTrackerStarted();
-
-                Payload pb = new Payload();
-                pb.Add(Constants.EVENT, Constants.EVENT_ECOMM_ITEM);
-                pb.Add(Constants.TI_ITEM_ID, orderId);
-                pb.Add(Constants.TI_ITEM_CURRENCY, currency);
-                pb.Add(Constants.TI_ITEM_SKU, item.sku);
-                pb.Add(Constants.TI_ITEM_PRICE, string.Format("{0:0.00}", item.price));
-                pb.Add(Constants.TI_ITEM_QUANTITY, item.quantity.ToString());
-                pb.Add(Constants.TI_ITEM_NAME, item.name);
-                pb.Add(Constants.TI_ITEM_CATEGORY, item.category);
-                CompletePayload(pb, item.contexts, tstamp);
-            }
-        }
-
-        /// <summary>
-        /// Track a Snowplow ecommerce transaction event
-        /// Fires one event for the whole transaction and one for each item in the transaction
-        /// </summary>
-        /// <param name="orderId">Unique ID for the whole order</param>
-        /// <param name="totalValue">Total transaction value</param>
-        /// <param name="affiliation">Transaction affiliation</param>
-        /// <param name="taxValue">Transaction tax value</param>
-        /// <param name="shipping">Delivery charge</param>
-        /// <param name="city">Delivery address city</param>
-        /// <param name="state">Delivery address state or province</param>
-        /// <param name="country">Delivery address country</param>
-        /// <param name="currency">Currency for the order</param>
-        /// <param name="items">List of items in the transaction</param>
-        /// <param name="context">List of custom contexts for the event</param>
-        /// <param name="tstamp">User-provided true-timestamp for the event</param>
-        /// <returns>this</returns>
-        public Tracker TrackEcommerceTransaction(string orderId, double totalValue, string affiliation = null, double? taxValue = null, double? shipping = null, string city = null, string state = null, string country = null, string currency = null, List<TransactionItem> items = null, List<IContext> contexts = null, Int64? tstamp = null)
-        {
-            lock (_lock)
-            {
-                ensureTrackerStarted();
-
-                Payload pb = new Payload();
-                pb.Add(Constants.EVENT, Constants.EVENT_ECOMM);
-                pb.Add(Constants.TR_ID, orderId);
-                pb.Add(Constants.TR_TOTAL, string.Format("{0:0.00}", totalValue));
-                pb.Add(Constants.TR_AFFILIATION, affiliation);
-                pb.Add(Constants.TR_TAX, taxValue != null ? string.Format("{0:0.00}", taxValue) : null);
-                pb.Add(Constants.TR_SHIPPING, shipping != null ? string.Format("{0:0.00}", shipping) : null);
-                pb.Add(Constants.TR_CITY, city);
-                pb.Add(Constants.TR_STATE, state);
-                pb.Add(Constants.TR_COUNTRY, country);
-                pb.Add(Constants.TR_CURRENCY, currency);
-                CompletePayload(pb, contexts, tstamp);
-
-                if (items != null)
-                {
-                    foreach (TransactionItem item in items)
-                    {
-                        TrackEcommerceTransactionItem(orderId, currency, item, tstamp);
-                    }
-                }
-            }
-            return this;
-        }
-
-        /// <summary>
-        /// Track a Snowplow structured event
-        /// </summary>
-        /// <param name="category">Event category</param>
-        /// <param name="action">The event itself</param>
-        /// <param name="label">The object upon which the action is performed</param>
-        /// <param name="property">Property associated with the action or its object</param>
-        /// <param name="value">Value associated with the action or its object</param>
-        /// <param name="context">List of custom contexts for the event</param>
-        /// <param name="tstamp">User-provided true-timestamp for the event</param>
-        /// <returns>this</returns>
-        public Tracker TrackStructEvent(string category, string action, string label = null, string property = null, double? value = null, List<IContext> contexts = null, Int64? tstamp = null)
-        {
-            lock (_lock)
-            {
-                ensureTrackerStarted();
-
-                Payload pb = new Payload();
-                pb.Add(Constants.EVENT, Constants.EVENT_STRUCTURED);
-                pb.Add(Constants.SE_CATEGORY, category);
-                pb.Add(Constants.SE_ACTION, action);
-                pb.Add(Constants.SE_LABEL, label);
-                pb.Add(Constants.SE_PROPERTY, property);
-                pb.Add(Constants.SE_VALUE, value != null ? value.ToString() : null);
-                CompletePayload(pb, contexts, tstamp);
-            }
-
-            return this;
-        }
-
-        /// <summary>
-        /// Track a Snowplow self describing event
-        /// </summary>
-        /// <param name="eventJson">Self-describing JSON for the event</param>
-        /// <param name="context">List of custom contexts for the event</param>
-        /// <param name="tstamp">User-provided true-timestamp for the event</param>
-        /// <returns>this</returns>
-        public Tracker TrackSelfDescribingEvent(SelfDescribingJson eventJson, List<IContext> contexts = null, Int64? tstamp = null)
-        {
-            lock (_lock)
-            {
-                ensureTrackerStarted();
-
-                var envelope = new SelfDescribingJson(Constants.SCHEMA_UNSTRUCT_EVENT, eventJson);
-
-                Payload pb = new Payload();
-                pb.Add(Constants.EVENT, Constants.EVENT_UNSTRUCTURED);
-                pb.AddJson(envelope.Payload, _encodeBase64, Constants.UNSTRUCTURED_ENCODED, Constants.UNSTRUCTURED);
-                CompletePayload(pb, contexts, tstamp);
-            }
-
-            return this;
-    
-        }
-
-        /// <summary>
-        /// Track a Snowplow custom unstructured event. Desupported in favour of TrackSelfDescribingEvent (a more fitting name)
-        /// </summary>
-        /// <param name="eventJson">Self-describing JSON for the event</param>
-        /// <param name="context">List of custom contexts for the event</param>
-        /// <param name="tstamp">User-provided true-timestamp for the event</param>
-        /// <returns>this</returns>
-        [Obsolete("TrackSelfDescribingEvent is the new name for this")]
-        public Tracker TrackUnstructEvent(SelfDescribingJson eventJson, List<IContext> contexts = null, Int64? tstamp = null)
-        {
-            return TrackSelfDescribingEvent(eventJson, contexts, tstamp);
-        }
-
-        /// <summary>
-        /// Track a Snowplow screen view event
-        /// </summary>
-        /// <param name="name">Name of the screen</param>
-        /// <param name="id">Unique ID of the screen</param>
-        /// <param name="context">List of custom contexts for the event</param>
-        /// <param name="tstamp">User-provided true-timestamp for the event</param>
-        /// <returns>this</returns>
-        public Tracker TrackScreenView(string name = null, string id = null, List<IContext> contexts = null, Int64? tstamp = null)
-        {
-            var screenViewProperties = new Dictionary<string, string>();
-            if (name != null)
-            {
-                screenViewProperties[Constants.SV_NAME] = name;
-            }
-            if (id != null)
-            {
-                screenViewProperties[Constants.SV_ID] = id;
-            }
-
-            var envelope = new SelfDescribingJson(Constants.SCHEMA_SCREEN_VIEW, screenViewProperties);
-            TrackSelfDescribingEvent(envelope, contexts, tstamp);
-            return this;
         }
 
         /// <summary>
@@ -532,6 +381,8 @@ namespace Snowplow.Tracker
             }
             return this;
         }
+
+        // --- Setters
 
         /// <summary>
         /// Set the subject of the events fired by the tracker

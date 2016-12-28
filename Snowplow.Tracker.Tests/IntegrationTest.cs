@@ -138,10 +138,14 @@ namespace Snowplow.Tracker.Tests
 
         private bool ensurePageViewsWorkGet(Tracker t, MockGet g)
         {
-            t.TrackPageView("http://www.example.com", "title page", "http://www.referrer.com");
+            t.Track(new PageView()
+                .SetPageUrl("http://www.example.com")
+                .SetReferrer("http://www.referrer.com")
+                .SetPageTitle("title page")
+                .Build());
             t.Flush();
 
-            var expectedRegex = new Regex(String.Format(@"http://snowplowanalytics.com/i\?e=pv&url={0}&page={1}&refr={2}&dtm=[^&]+&eid=[^&]+&tv=[^&]+&tna=testNamespace&aid=testAppId&p=pc",
+            var expectedRegex = new Regex(String.Format(@"http://snowplowanalytics.com/i\?e=pv&url={0}&page={1}&refr={2}&eid=[^&]+&dtm=[^&]+&tv=[^&]+&tna=testNamespace&aid=testAppId&p=pc",
                                                           Regex.Escape(WebUtility.UrlEncode("http://www.example.com")),
                                                           Regex.Escape(WebUtility.UrlEncode("title page")),
                                                           Regex.Escape(WebUtility.UrlEncode("http://www.referrer.com"))));
@@ -157,10 +161,16 @@ namespace Snowplow.Tracker.Tests
 
         private bool ensureStructEventsWorkGet(Tracker t, MockGet g)
         {
-            t.TrackStructEvent("myCategory", "myAction", "myLabel", "myProperty", 17);
+            t.Track(new Structured()
+                .SetCategory("myCategory")
+                .SetAction("myAction")
+                .SetLabel("myLabel")
+                .SetProperty("myProperty")
+                .SetValue(17)
+                .Build());
             t.Flush();
 
-            var expectedRegex = new Regex(String.Format(@"http://snowplowanalytics.com/i\?e=se&se_ca={0}&se_ac={1}&se_la={2}&se_pr={3}&se_va={4}&dtm=[^&]+&eid=[^&]+&tv=[^&]+&tna=testNamespace&aid=testAppId&p=pc",
+            var expectedRegex = new Regex(String.Format(@"http://snowplowanalytics.com/i\?e=se&se_ca={0}&se_ac={1}&se_la={2}&se_pr={3}&se_va={4}&eid=[^&]+&dtm=[^&]+&tv=[^&]+&tna=testNamespace&aid=testAppId&p=pc",
                                               Regex.Escape(WebUtility.UrlEncode("myCategory")),
                                               Regex.Escape(WebUtility.UrlEncode("myAction")),
                                               Regex.Escape(WebUtility.UrlEncode("myLabel")),
@@ -177,11 +187,22 @@ namespace Snowplow.Tracker.Tests
         private bool ensureEcommerceTransactionWorksGet(Tracker t, MockGet g)
         {
 
-            var hat = new TransactionItem("pbz0026", 20, 1);
-            var shirt = new TransactionItem("pbz0038", 15, 1, "shirt", "clothing");
-            var items = new List<TransactionItem> { hat, shirt };
+            var hat = new EcommerceTransactionItem().SetSku("pbz0026").SetPrice(20).SetQuantity(1).Build();
+            var shirt = new EcommerceTransactionItem().SetSku("pbz0038").SetPrice(15).SetQuantity(1).SetName("shirt").SetCategory("clothing").Build();
+            var items = new List<EcommerceTransactionItem> { hat, shirt };
 
-            t.TrackEcommerceTransaction("6a8078be", 35, "affiliation", 3, 0, "Phoenix", "Arizona", "US", "USD", items);
+            t.Track(new EcommerceTransaction()
+                .SetOrderId("6a8078be")
+                .SetTotalValue(35)
+                .SetAffiliation("affiliation")
+                .SetTaxValue(3)
+                .SetShipping(0)
+                .SetCity("Phoenix")
+                .SetState("Arizona")
+                .SetCountry("US")
+                .SetCurrency("USD")
+                .SetItems(items)
+                .Build());
             t.Flush();
 
             var transactionActual = g.Queries[2];
@@ -203,7 +224,7 @@ namespace Snowplow.Tracker.Tests
                             };
 
             var opening = @"http://snowplowanalytics.com/i\?";
-            var trailing = @"&dtm=[^&]+&eid=[^&]+&tv=[^&]+&tna=testNamespace&aid=testAppId&p=pc";
+            var trailing = @"&eid=[^&]+&dtm=[^&]+&tv=[^&]+&tna=testNamespace&aid=testAppId&p=pc&stm=[0-9]{13}";
 
             var transactionQuery = flattenToQ(expectedTransaction);
 
@@ -215,10 +236,10 @@ namespace Snowplow.Tracker.Tests
                             {
                                 {"e", "ti"},
                                 {"ti_id", "6a8078be"},
-                                {"ti_cu", "USD"},
                                 {"ti_sk", "pbz0026"},
                                 {"ti_pr", "20.00"},
-                                {"ti_qu", "1"}
+                                {"ti_qu", "1"},
+                                {"ti_cu", "USD"}
                             };
 
             var hatQuery = flattenToQ(expectedHat);
@@ -231,12 +252,12 @@ namespace Snowplow.Tracker.Tests
                             {
                                 {"e", "ti"},
                                 {"ti_id", "6a8078be"},
-                                {"ti_cu", "USD"},
                                 {"ti_sk", "pbz0038"},
+                                {"ti_nm", "shirt"},
+                                {"ti_ca", "clothing"},
                                 {"ti_pr", "15.00"},
                                 {"ti_qu", "1"},
-                                {"ti_nm", "shirt"},
-                                {"ti_ca", "clothing"}
+                                {"ti_cu", "USD"},
                             };
 
             var shirtQuery = flattenToQ(expectedShirt);
@@ -258,7 +279,7 @@ namespace Snowplow.Tracker.Tests
                 }
             );
 
-            t.TrackSelfDescribingEvent(eventJson);
+            t.Track(new SelfDescribing().SetEventData(eventJson).Build());
             t.Flush();
 
             var actual = g.Queries[0];
@@ -281,7 +302,7 @@ namespace Snowplow.Tracker.Tests
             }
 
             var opening = @"http://snowplowanalytics.com/i\?";
-            var trailing = @"&dtm=[^&]+&eid=[^&]+&tv=[^&]+&tna=testNamespace&aid=testAppId&p=pc";
+            var trailing = @"&eid=[^&]+&dtm=[^&]+&tv=[^&]+&tna=testNamespace&aid=testAppId&p=pc&stm=[0-9]{13}";
 
             var unstructQuery = flattenToQ(expected);
 
@@ -299,7 +320,7 @@ namespace Snowplow.Tracker.Tests
                 Assert.Fail("non b64 mode not supported");
             }
 
-            t.TrackScreenView("entry screen", "0001");
+            t.Track(new ScreenView().SetName("entry screen").SetId("0001").Build());
             t.Flush();
 
             var actual = g.Queries[0];
@@ -314,7 +335,7 @@ namespace Snowplow.Tracker.Tests
                             };
 
             var opening = @"http://snowplowanalytics.com/i\?";
-            var trailing = @"&dtm=[^&]+&eid=[^&]+&tv=[^&]+&tna=testNamespace&aid=testAppId&p=pc";
+            var trailing = @"&eid=[^&]+&dtm=[^&]+&tv=[^&]+&tna=testNamespace&aid=testAppId&p=pc&stm=[0-9]{13}";
 
             var svQ = flattenToQ(expected);
 
@@ -347,8 +368,7 @@ namespace Snowplow.Tracker.Tests
                                 userContext
                             };
 
-
-            t.TrackPageView("http://www.example.com", null, null, contexts);
+            t.Track(new PageView().SetPageUrl("http://www.example.com").SetCustomContext(contexts).Build());
             t.Flush();
 
             var actual = g.Queries[0];
@@ -387,7 +407,12 @@ namespace Snowplow.Tracker.Tests
             t.SetTimezone("Europe London");
             t.SetLang("en");
 
-            t.TrackPageView("http://www.example.com", "title page", "http://www.referrer.com", null, 1000000000000);
+            t.Track(new PageView()
+                .SetPageUrl("http://www.example.com")
+                .SetPageTitle("title page")
+                .SetReferrer("http://www.referrer.com")
+                .SetTrueTimestamp(1000000000000)
+                .Build());
             t.Flush();
 
             var actual = g.Queries[0];
