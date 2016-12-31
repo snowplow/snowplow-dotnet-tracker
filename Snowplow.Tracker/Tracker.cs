@@ -28,6 +28,7 @@ using Snowplow.Tracker.Models;
 using Snowplow.Tracker.Models.Contexts;
 using Snowplow.Tracker.Models.Events;
 using Snowplow.Tracker.Models.Adapters;
+using System.Threading.Tasks;
 
 namespace Snowplow.Tracker
 {
@@ -38,6 +39,7 @@ namespace Snowplow.Tracker
 
         private readonly object _lock = new object();
         private volatile bool _running = false;
+        private bool _synchronous = true;
 
         private Subject _subject;
         private IEmitter _emitter;
@@ -99,7 +101,7 @@ namespace Snowplow.Tracker
         /// <param name="encodeBase64">Base64 encode collector parameters</param>
         /// <param name="l">A logger to emit an activity stream to</param>
         public void Start(string endpoint, string dbPath, HttpMethod method = HttpMethod.POST, Subject subject = null, ClientSession clientSession = null, 
-            string trackerNamespace = null, string appId = null, bool encodeBase64 = true, ILogger l = null)
+            string trackerNamespace = null, string appId = null, bool encodeBase64 = true, bool synchronous = true, ILogger l = null)
         {
             AsyncEmitter emitter;
             lock (_lock)
@@ -110,7 +112,7 @@ namespace Snowplow.Tracker
                 var queue = new PersistentBlockingQueue(storage, new PayloadToJsonString());
                 emitter = new AsyncEmitter(dest, queue, l: l);
             }
-            Start(emitter, subject, clientSession, trackerNamespace, appId, encodeBase64, l);
+            Start(emitter, subject, clientSession, trackerNamespace, appId, synchronous, encodeBase64, l);
         }
 
         /// <summary>
@@ -124,7 +126,7 @@ namespace Snowplow.Tracker
         /// <param name="encodeBase64">Base64 encode collector parameters</param>
         /// <param name="l">A logger to emit an activity stream to</param>
         public void Start(IEmitter emitter, Subject subject = null, ClientSession clientSession = null, string trackerNamespace = null, string appId = null, 
-            bool encodeBase64 = true, ILogger l = null)
+            bool encodeBase64 = true, bool synchronous = true, ILogger l = null)
         {
             lock (_lock)
             {
@@ -153,6 +155,7 @@ namespace Snowplow.Tracker
                     { Constants.APP_ID, appId }
                 };
 
+                _synchronous = synchronous;
                 _running = true;
                 _logger.Info("Tracker started");
             }
@@ -342,10 +345,7 @@ namespace Snowplow.Tracker
         /// <param name="newEvent"></param>
         public void Track(IEvent newEvent)
         {
-            if (!_running)
-            {
-                throw new InvalidOperationException("Cannot track anything - not started");
-            }
+            ensureTrackerStarted();
             ProcessEvent(newEvent);
         }
 
@@ -354,7 +354,7 @@ namespace Snowplow.Tracker
         /// then processes it accordingly.
         /// </summary>
         /// <param name="newEvent"></param>
-		private void ProcessEvent(IEvent newEvent)
+        private void ProcessEvent(IEvent newEvent)
         {
             List<IContext> contexts = newEvent.GetContexts();
             string eventId = newEvent.GetEventId();
@@ -431,7 +431,12 @@ namespace Snowplow.Tracker
             }
 
             // Send the payload to the emitter
-            _emitter.Input(payload);
+            if (_synchronous) {
+                _emitter.Input(payload);
+            }
+            else {
+                Task.Factory.StartNew(() => _emitter.Input(payload));
+            }
         }
 
         // --- Setters
