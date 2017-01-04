@@ -41,13 +41,19 @@ namespace Snowplow.Tracker
         private volatile bool _running = false;
         private bool _synchronous = true;
 
+        public delegate DesktopContext DesktopContextDelegate();
+        public delegate MobileContext MobileContextDelegate();
+        public delegate GeoLocationContext GeoLocationContextDelegate();
+
         private Subject _subject;
         private IEmitter _emitter;
         private bool _encodeBase64;
         private IDisposable _storage;
         private ClientSession _clientSession;
         private Dictionary<string, string> _standardNvPairs;
-
+        private DesktopContextDelegate _desktopContextDelegate;
+        private MobileContextDelegate _mobileContextDelegate;
+        private GeoLocationContextDelegate _geoLocationDelegate;
         private ILogger _logger;
 
         private Tracker() { }
@@ -99,9 +105,14 @@ namespace Snowplow.Tracker
         /// <param name="trackerNamespace">Namespace of tracker</param>
         /// <param name="appId">Application ID of tracker</param>
         /// <param name="encodeBase64">Base64 encode collector parameters</param>
+        /// <param name="synchronous">Whether to do I/O synchronously</param>
+        /// <param name="desktopContextDelegate">Delegate for fetching the desktop context</param>
+        /// <param name="mobileContextDelegate">Delegate for fetching the mobile context</param>
+        /// <param name="geoLocationContextDelegate">Delegate for fetching the geo-location context</param>
         /// <param name="l">A logger to emit an activity stream to</param>
         public void Start(string endpoint, string dbPath, HttpMethod method = HttpMethod.POST, Subject subject = null, ClientSession clientSession = null, 
-            string trackerNamespace = null, string appId = null, bool encodeBase64 = true, bool synchronous = true, ILogger l = null)
+            string trackerNamespace = null, string appId = null, bool encodeBase64 = true, bool synchronous = true, DesktopContextDelegate desktopContextDelegate = null,
+            MobileContextDelegate mobileContextDelegate = null, GeoLocationContextDelegate geoLocationContextDelegate = null, ILogger l = null)
         {
             AsyncEmitter emitter;
             lock (_lock)
@@ -112,7 +123,7 @@ namespace Snowplow.Tracker
                 var queue = new PersistentBlockingQueue(storage, new PayloadToJsonString());
                 emitter = new AsyncEmitter(dest, queue, l: l);
             }
-            Start(emitter, subject, clientSession, trackerNamespace, appId, synchronous, encodeBase64, l);
+            Start(emitter, subject, clientSession, trackerNamespace, appId, synchronous, encodeBase64, desktopContextDelegate, mobileContextDelegate, geoLocationContextDelegate, l);
         }
 
         /// <summary>
@@ -124,9 +135,14 @@ namespace Snowplow.Tracker
         /// <param name="trackerNamespace">Namespace of tracker</param>
         /// <param name="appId">Application ID of tracker</param>
         /// <param name="encodeBase64">Base64 encode collector parameters</param>
+        /// <param name="synchronous">Whether to do I/O synchronously</param>
+        /// <param name="desktopContextDelegate">Delegate for fetching the desktop context</param>
+        /// <param name="mobileContextDelegate">Delegate for fetching the mobile context</param>
+        /// <param name="geoLocationContextDelegate">Delegate for fetching the geo-location context</param>
         /// <param name="l">A logger to emit an activity stream to</param>
         public void Start(IEmitter emitter, Subject subject = null, ClientSession clientSession = null, string trackerNamespace = null, string appId = null, 
-            bool encodeBase64 = true, bool synchronous = true, ILogger l = null)
+            bool encodeBase64 = true, bool synchronous = true, DesktopContextDelegate desktopContextDelegate = null, MobileContextDelegate mobileContextDelegate = null, 
+            GeoLocationContextDelegate geoLocationContextDelegate = null, ILogger l = null)
         {
             lock (_lock)
             {
@@ -156,6 +172,9 @@ namespace Snowplow.Tracker
                 };
 
                 _synchronous = synchronous;
+                _desktopContextDelegate = desktopContextDelegate;
+                _mobileContextDelegate = mobileContextDelegate;
+                _geoLocationDelegate = geoLocationContextDelegate;
                 _running = true;
                 _logger.Info("Tracker started");
             }
@@ -416,6 +435,36 @@ namespace Snowplow.Tracker
             if (_clientSession != null)
             {
                 contexts.Add(_clientSession.GetSessionContext(eventId));
+            }
+
+            // Add the desktop context if available
+            if (_desktopContextDelegate != null)
+            {
+                DesktopContext desktopContext = _desktopContextDelegate.Invoke();
+                if (desktopContext != null)
+                {
+                    contexts.Add(desktopContext);
+                }
+            }
+
+            // Add the mobile context if available
+            if (_mobileContextDelegate != null)
+            {
+                MobileContext mobileContext = _mobileContextDelegate.Invoke();
+                if (mobileContext != null)
+                {
+                    contexts.Add(mobileContext);
+                }
+            }
+
+            // Add the geo-location context if available
+            if (_geoLocationDelegate != null)
+            {
+                GeoLocationContext geoLocationContext = _geoLocationDelegate.Invoke();
+                if (geoLocationContext != null)
+                {
+                    contexts.Add(geoLocationContext);
+                }
             }
 
             // Build the final context and it to the payload
