@@ -29,6 +29,7 @@ namespace Snowplow.Tracker.Emitters
     public class AsyncEmitter : IEmitter, IDisposable
     {
         public delegate void SendSuccessDelegate(int successCount, int failureCount);
+        public delegate bool DeviceOnlineDelegate();
 
         private readonly object _startStopLock = new object();
         private readonly object _backOffLock = new object();
@@ -42,6 +43,7 @@ namespace Snowplow.Tracker.Emitters
         private int _stopPollIntervalMs;
         private ILogger _logger;
         private SendSuccessDelegate _sendSuccessMethod;
+        private DeviceOnlineDelegate _deviceOnlineMethod;
 
         private readonly int _backOffIntervalMinMs = 5000;
         private readonly int _backOffIntervalMaxMs = 30000;
@@ -68,19 +70,17 @@ namespace Snowplow.Tracker.Emitters
         /// <param name="sendLimit"></param>
         /// <param name="stopPollIntervalMs"></param>
         /// <param name="sendSuccessMethod"></param>
+        /// <param name="deviceOnlineMethod"></param>
         /// <param name="l"></param>
-        public AsyncEmitter(IEndpoint endpoint,
-                            IPersistentBlockingQueue queue,
-                            int sendLimit = 100,
-                            int stopPollIntervalMs = 300,
-                            SendSuccessDelegate sendSuccessMethod = null,
-                            ILogger l = null)
+        public AsyncEmitter(IEndpoint endpoint, IPersistentBlockingQueue queue, int sendLimit = 100, int stopPollIntervalMs = 300, 
+            SendSuccessDelegate sendSuccessMethod = null, DeviceOnlineDelegate deviceOnlineMethod = null, ILogger l = null)
         {
             _queue = queue;
             _endpoint = endpoint;
             _sendLimit = sendLimit;
             _stopPollIntervalMs = stopPollIntervalMs;
             _sendSuccessMethod = sendSuccessMethod;
+            _deviceOnlineMethod = deviceOnlineMethod;
             _logger = l ?? new NoLogging();
         }
 
@@ -120,17 +120,18 @@ namespace Snowplow.Tracker.Emitters
 
                 if (run)
                 {
-                    var eventList = _queue.Peek(_sendLimit, _stopPollIntervalMs);
-
-                    _logger.Info(String.Format("Emitter found {0} events", eventList.Count));
-
-                    if (eventList.Count > 0)
+                    // If device is offline wait and loop
+                    if (_deviceOnlineMethod != null && !_deviceOnlineMethod.Invoke())
                     {
+                        EmitterLoopBackoff();
+                    }
+                    else
+                    {
+                        var eventList = _queue.Peek(_sendLimit, _stopPollIntervalMs);
+                        _logger.Info(String.Format("Emitter found {0} events", eventList.Count));
+
                         var sendResult = _endpoint.Send(eventList);
-
-                        // TODO: How should we handle a failure to delete the successfully sent event range?
-                        var deleteResult = _queue.Remove(sendResult.SuccessIds);
-
+                        _queue.Remove(sendResult.SuccessIds);
                         var successCount = sendResult.SuccessIds.Count;
                         var failureCount = sendResult.FailureIds.Count;
 
@@ -144,19 +145,7 @@ namespace Snowplow.Tracker.Emitters
                         // NB this can be interrupted by Flush
                         if (successCount == 0 && failureCount > 0)
                         {
-                            lock (_backOffLock)
-                            {
-                                if (!_denyBackOff)
-                                {
-                                    var interval = new Random().Next(_backOffIntervalMinMs, _backOffIntervalMaxMs);
-                                    _logger.Info(String.Format("Emitter waiting {0}ms after error", interval));
-                                    Monitor.Wait(_backOffLock, interval);
-                                }
-                                else
-                                {
-                                    _logger.Info("Emitter not waiting for back-off period");
-                                }
-                            }
+                            EmitterLoopBackoff();
                         }
                     }
                 }
@@ -164,6 +153,28 @@ namespace Snowplow.Tracker.Emitters
                 {
                     _logger.Info("Emitter thread finished processing");
                     break;
+                }
+            }
+        }
+
+        /// <summary>
+        /// Emitter backoff logic for handling:
+        /// 1. offline mode
+        /// 2. 100% event failure
+        /// </summary>
+        private void EmitterLoopBackoff()
+        {
+            lock (_backOffLock)
+            {
+                if (!_denyBackOff)
+                {
+                    var interval = new Random().Next(_backOffIntervalMinMs, _backOffIntervalMaxMs);
+                    _logger.Info(String.Format("Emitter waiting {0}ms after error", interval));
+                    Monitor.Wait(_backOffLock, interval);
+                }
+                else
+                {
+                    _logger.Info("Emitter not waiting for back-off period");
                 }
             }
         }
@@ -233,9 +244,7 @@ namespace Snowplow.Tracker.Emitters
                 totalCount += items.Count;
                 var sendResult = _endpoint.Send(items);
                 failureCount += sendResult.FailureIds.Count;
-
-                // TODO: handle delete failure
-                var deleteResult = _queue.Remove(sendResult.SuccessIds);
+                _queue.Remove(sendResult.SuccessIds);
 
                 // Exit eagerly on any failures
                 if (failureCount > 0 )
