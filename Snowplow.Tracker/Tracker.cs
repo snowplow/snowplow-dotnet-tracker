@@ -56,6 +56,8 @@ namespace Snowplow.Tracker
         private GeoLocationContextDelegate _geoLocationDelegate;
         private ILogger _logger;
 
+        public bool IsBackground { get; private set; } = false;
+
         private Tracker() { }
 
         // --- Static Instance
@@ -241,6 +243,23 @@ namespace Snowplow.Tracker
                 _emitter.Flush();
             }
             return this;
+        }
+
+        // --- Thread-safe ClientSession setter methods
+
+        public void SetBackground(bool isBackground)
+        {
+            lock (_lock)
+            {
+                ensureTrackerStarted();
+
+                if (_clientSession != null)
+                {
+                    _clientSession.SetBackground(isBackground);
+                }
+
+                IsBackground = isBackground;
+            }
         }
 
         // --- Thread-safe Subject setter methods
@@ -503,6 +522,5 @@ namespace Snowplow.Tracker
             }
             return this;
         }
-
     }
 }
