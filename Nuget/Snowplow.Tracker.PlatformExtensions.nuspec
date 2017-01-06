@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="utf-8"?>
+<package xmlns="http://schemas.microsoft.com/packaging/2010/07/nuspec.xsd">
+    <metadata minClientVersion="2.8.3">
+        <id>Snowplow.Tracker.PlatformExtensions</id>
+        <copyright>Copyright 2017</copyright>
+        <version>1.0.0</version>
+        <title>Snowplow.Tracker.PlatformExtensions</title>
+        <authors>Joshua Beemster</authors>
+        <owners>snowplow</owners>
+        <licenseUrl>http://www.apache.org/licenses/LICENSE-2.0.html</licenseUrl>
+        <projectUrl>https://github.com/snowplow/snowplow-dotnet-tracker</projectUrl>
+        <requireLicenseAcceptance>false</requireLicenseAcceptance>
+        <description>Add Snowplow Tracking to your Desktop/Server, Xamarin.Droid or Xamarin.iOS applications.</description>
+        <summary>Snowplow Tracking Plugin for Xamarin</summary>
+        <tags>xamarin, pcl, xam.pcl, plugin, plugin for xamarin, android, xamarin.forms, ios, snowplow, tracking, analytics, events</tags>
+        <dependencies>
+            <group targetFramework="netstandard1.4">
+                <dependency id="NETStandard.Library" version="1.6.1" />
+                <dependency id="Snowplow.Tracker" version="1.0.0" />
+            </group>
+        </dependencies>
+    </metadata>
+    <files>
+        <!--Core-->
+        <file src="..\Snowplow.Tracker.PlatformExtensions\Snowplow.Tracker.PlatformExtensions\bin\Release\Snowplow.Tracker.PlatformExtensions.dll" target="lib\portable-net45+wp80+win8+wpa81\Snowplow.Tracker.PlatformExtensions.dll" />
+        <file src="..\Snowplow.Tracker.PlatformExtensions\Snowplow.Tracker.PlatformExtensions\bin\Release\Snowplow.Tracker.PlatformExtensions.xml" target="lib\portable-net45+wp80+win8+wpa81\Snowplow.Tracker.PlatformExtensions.xml" />
+        <file src="..\Snowplow.Tracker.PlatformExtensions\Snowplow.Tracker.PlatformExtensions\bin\Release\Snowplow.Tracker.PlatformExtensions.pdb" target="lib\portable-net45+wp80+win8+wpa81\Snowplow.Tracker.PlatformExtensions.pdb" />
+        <file src="..\Snowplow.Tracker.PlatformExtensions\Snowplow.Tracker.PlatformExtensions.Abstractions\bin\Release\Snowplow.Tracker.PlatformExtensions.Abstractions.dll" target="lib\portable-net45+wp80+win8+wpa81\Snowplow.Tracker.PlatformExtensions.Abstractions.dll" />
+        <file src="..\Snowplow.Tracker.PlatformExtensions\Snowplow.Tracker.PlatformExtensions.Abstractions\bin\Release\Snowplow.Tracker.PlatformExtensions.Abstractions.xml" target="lib\portable-net45+wp80+win8+wpa81\Snowplow.Tracker.PlatformExtensions.Abstractions.xml" />
+        <file src="..\Snowplow.Tracker.PlatformExtensions\Snowplow.Tracker.PlatformExtensions.Abstractions\bin\Release\Snowplow.Tracker.PlatformExtensions.Abstractions.pdb" target="lib\portable-net45+wp80+win8+wpa81\Snowplow.Tracker.PlatformExtensions.Abstractions.pdb" />
+
+        <!--dotnet-->
+        <file src="..\Snowplow.Tracker.PlatformExtensions\Snowplow.Tracker.PlatformExtensions\bin\Release\Snowplow.Tracker.PlatformExtensions.dll" target="lib\dotnet\Snowplow.Tracker.PlatformExtensions.dll" />
+        <file src="..\Snowplow.Tracker.PlatformExtensions\Snowplow.Tracker.PlatformExtensions\bin\Release\Snowplow.Tracker.PlatformExtensions.xml" target="lib\dotnet\Snowplow.Tracker.PlatformExtensions.xml" />
+        <file src="..\Snowplow.Tracker.PlatformExtensions\Snowplow.Tracker.PlatformExtensions\bin\Release\Snowplow.Tracker.PlatformExtensions.pdb" target="lib\dotnet\Snowplow.Tracker.PlatformExtensions.pdb" />
+        <file src="..\Snowplow.Tracker.PlatformExtensions\Snowplow.Tracker.PlatformExtensions.Abstractions\bin\Release\Snowplow.Tracker.PlatformExtensions.Abstractions.dll" target="lib\dotnet\Snowplow.Tracker.PlatformExtensions.Abstractions.dll" />
+        <file src="..\Snowplow.Tracker.PlatformExtensions\Snowplow.Tracker.PlatformExtensions.Abstractions\bin\Release\Snowplow.Tracker.PlatformExtensions.Abstractions.xml" target="lib\dotnet\Snowplow.Tracker.PlatformExtensions.Abstractions.xml" />
+        <file src="..\Snowplow.Tracker.PlatformExtensions\Snowplow.Tracker.PlatformExtensions.Abstractions\bin\Release\Snowplow.Tracker.PlatformExtensions.Abstractions.pdb" target="lib\dotnet\Snowplow.Tracker.PlatformExtensions.Abstractions.pdb" />
+
+        <!--dotnet 4.6.1+-->
+        <file src="..\Snowplow.Tracker.PlatformExtensions\Snowplow.Tracker.PlatformExtensions.Dotnet461\bin\Release\Snowplow.Tracker.PlatformExtensions.dll" target="lib\net461\Snowplow.Tracker.PlatformExtensions.dll" />
+        <file src="..\Snowplow.Tracker.PlatformExtensions\Snowplow.Tracker.PlatformExtensions.Dotnet461\bin\Release\Snowplow.Tracker.PlatformExtensions.xml" target="lib\net461\Snowplow.Tracker.PlatformExtensions.xml" />
+        <file src="..\Snowplow.Tracker.PlatformExtensions\Snowplow.Tracker.PlatformExtensions.Dotnet461\bin\Release\Snowplow.Tracker.PlatformExtensions.pdb" target="lib\net461\Snowplow.Tracker.PlatformExtensions.pdb" />
+        <file src="..\Snowplow.Tracker.PlatformExtensions\Snowplow.Tracker.PlatformExtensions.Abstractions\bin\Release\Snowplow.Tracker.PlatformExtensions.Abstractions.dll" target="lib\net461\Snowplow.Tracker.PlatformExtensions.Abstractions.dll" />
+        <file src="..\Snowplow.Tracker.PlatformExtensions\Snowplow.Tracker.PlatformExtensions.Abstractions\bin\Release\Snowplow.Tracker.PlatformExtensions.Abstractions.xml" target="lib\net461\Snowplow.Tracker.PlatformExtensions.Abstractions.xml" />
+        <file src="..\Snowplow.Tracker.PlatformExtensions\Snowplow.Tracker.PlatformExtensions.Abstractions\bin\Release\Snowplow.Tracker.PlatformExtensions.Abstractions.pdb" target="lib\net461\Snowplow.Tracker.PlatformExtensions.Abstractions.pdb" />
+
+        <!--Xamarin.Droid-->
+        <file src="..\Snowplow.Tracker.PlatformExtensions\Snowplow.Tracker.PlatformExtensions.Droid\bin\Release\Snowplow.Tracker.PlatformExtensions.dll" target="lib\MonoAndroid10\Snowplow.Tracker.PlatformExtensions.dll" />
+        <file src="..\Snowplow.Tracker.PlatformExtensions\Snowplow.Tracker.PlatformExtensions.Droid\bin\Release\Snowplow.Tracker.PlatformExtensions.xml" target="lib\MonoAndroid10\Snowplow.Tracker.PlatformExtensions.xml" />
+        <file src="..\Snowplow.Tracker.PlatformExtensions\Snowplow.Tracker.PlatformExtensions.Droid\bin\Release\Snowplow.Tracker.PlatformExtensions.pdb" target="lib\MonoAndroid10\Snowplow.Tracker.PlatformExtensions.pdb" />
+        <file src="..\Snowplow.Tracker.PlatformExtensions\Snowplow.Tracker.PlatformExtensions.Abstractions\bin\Release\Snowplow.Tracker.PlatformExtensions.Abstractions.dll" target="lib\MonoAndroid10\Snowplow.Tracker.PlatformExtensions.Abstractions.dll" />
+        <file src="..\Snowplow.Tracker.PlatformExtensions\Snowplow.Tracker.PlatformExtensions.Abstractions\bin\Release\Snowplow.Tracker.PlatformExtensions.Abstractions.xml" target="lib\MonoAndroid10\Snowplow.Tracker.PlatformExtensions.Abstractions.xml" />
+        <file src="..\Snowplow.Tracker.PlatformExtensions\Snowplow.Tracker.PlatformExtensions.Abstractions\bin\Release\Snowplow.Tracker.PlatformExtensions.Abstractions.pdb" target="lib\MonoAndroid10\Snowplow.Tracker.PlatformExtensions.Abstractions.pdb" />
+
+        <!--Xamarin.iOS-->
+        <file src="..\Snowplow.Tracker.PlatformExtensions\Snowplow.Tracker.PlatformExtensions.iOS\bin\iPhone\Release\Snowplow.Tracker.PlatformExtensions.dll" target="lib\Xamarin.iOS10\Snowplow.Tracker.PlatformExtensions.dll" />
+        <file src="..\Snowplow.Tracker.PlatformExtensions\Snowplow.Tracker.PlatformExtensions.iOS\bin\iPhone\Release\Snowplow.Tracker.PlatformExtensions.xml" target="lib\Xamarin.iOS10\Snowplow.Tracker.PlatformExtensions.xml" />
+        <file src="..\Snowplow.Tracker.PlatformExtensions\Snowplow.Tracker.PlatformExtensions.Abstractions\bin\Release\Snowplow.Tracker.PlatformExtensions.Abstractions.dll" target="lib\Xamarin.iOS10\Snowplow.Tracker.PlatformExtensions.Abstractions.dll" />
+        <file src="..\Snowplow.Tracker.PlatformExtensions\Snowplow.Tracker.PlatformExtensions.Abstractions\bin\Release\Snowplow.Tracker.PlatformExtensions.Abstractions.xml" target="lib\Xamarin.iOS10\Snowplow.Tracker.PlatformExtensions.Abstractions.xml" />
+    </files>
+</package>
