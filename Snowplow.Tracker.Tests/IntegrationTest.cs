@@ -407,10 +407,8 @@ namespace Snowplow.Tracker.Tests
                                 {"cd", "24"},
                                 {"tz", "Europe London"},
                                 {"lang", "en"},
-                                {"dtm", "1000000000000"}
+                                {"ttm", "1000000000000"}
                             };
-
-
 
             foreach (var k in expected.Keys)
             {

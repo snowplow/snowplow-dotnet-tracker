@@ -89,7 +89,7 @@ namespace Snowplow.Tracker.Endpoints
         /// <returns>true if successful (200), otherwise false</returns>
         public bool Send(Payload p)
         {
-            p.Add(Constants.SENT_TIMESTAMP, Utils.GetTimestamp(null).ToString());
+            p.Add(Constants.SENT_TIMESTAMP, Utils.GetTimestamp().ToString());
 
             if (_method == Snowplow.Tracker.Endpoints.HttpMethod.GET)
             {

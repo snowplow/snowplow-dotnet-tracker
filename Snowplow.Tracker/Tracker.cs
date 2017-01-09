@@ -275,11 +275,16 @@ namespace Snowplow.Tracker
         /// </summary>
         /// <param name="pb">Payload to complete</param>
         /// <param name="context">Custom context</param>
-        /// <param name="tstamp">User-provided timestamp</param>
+        /// <param name="tstamp">User-provided true-timestamp</param>
         private void CompletePayload(Payload pb, List<IContext> contexts, Int64? tstamp)
         {
             var eid = Utils.GetGUID();
-            pb.Add(Constants.TIMESTAMP, Utils.GetTimestamp(tstamp).ToString());
+
+            pb.Add(Constants.TIMESTAMP, Utils.GetTimestamp().ToString());
+            if (tstamp != null)
+            {
+                pb.Add(Constants.TRUE_TIMESTAMP, tstamp.ToString());
+            }
             pb.Add(Constants.EID, eid);
 
             if (_clientSession != null)
@@ -328,7 +333,7 @@ namespace Snowplow.Tracker
         /// <param name="pageTitle">Page title</param>
         /// <param name="referrer">Page referrer</param>
         /// <param name="context">List of custom contexts for the event</param>
-        /// <param name="tstamp">User-provided timestamp for the event</param>
+        /// <param name="tstamp">User-provided true-timestamp for the event</param>
         /// <returns>this</returns>
         public Tracker TrackPageView(string pageUrl, string pageTitle = null, string referrer = null, List<IContext> contexts = null, Int64? tstamp = null)
         {
@@ -353,7 +358,7 @@ namespace Snowplow.Tracker
         /// <param name="currency">Currency for the order</param>
         /// <param name="item">TransactionItem object containing data about the item</param>
         /// <param name="context">List of custom contexts for the event</param>
-        /// <param name="tstamp">User-provided timestamp for the event</param>
+        /// <param name="tstamp">User-provided true-timestamp for the event</param>
         private void TrackEcommerceTransactionItem(string orderId, string currency, TransactionItem item, Int64? tstamp)
         {
             lock (_lock)
@@ -388,7 +393,7 @@ namespace Snowplow.Tracker
         /// <param name="currency">Currency for the order</param>
         /// <param name="items">List of items in the transaction</param>
         /// <param name="context">List of custom contexts for the event</param>
-        /// <param name="tstamp">User-provided timestamp for the event</param>
+        /// <param name="tstamp">User-provided true-timestamp for the event</param>
         /// <returns>this</returns>
         public Tracker TrackEcommerceTransaction(string orderId, double totalValue, string affiliation = null, double? taxValue = null, double? shipping = null, string city = null, string state = null, string country = null, string currency = null, List<TransactionItem> items = null, List<IContext> contexts = null, Int64? tstamp = null)
         {
@@ -429,7 +434,7 @@ namespace Snowplow.Tracker
         /// <param name="property">Property associated with the action or its object</param>
         /// <param name="value">Value associated with the action or its object</param>
         /// <param name="context">List of custom contexts for the event</param>
-        /// <param name="tstamp">User-provided timestamp for the event</param>
+        /// <param name="tstamp">User-provided true-timestamp for the event</param>
         /// <returns>this</returns>
         public Tracker TrackStructEvent(string category, string action, string label = null, string property = null, double? value = null, List<IContext> contexts = null, Int64? tstamp = null)
         {
@@ -455,7 +460,7 @@ namespace Snowplow.Tracker
         /// </summary>
         /// <param name="eventJson">Self-describing JSON for the event</param>
         /// <param name="context">List of custom contexts for the event</param>
-        /// <param name="tstamp">User-provided timestamp for the event</param>
+        /// <param name="tstamp">User-provided true-timestamp for the event</param>
         /// <returns>this</returns>
         public Tracker TrackSelfDescribingEvent(SelfDescribingJson eventJson, List<IContext> contexts = null, Int64? tstamp = null)
         {
@@ -480,7 +485,7 @@ namespace Snowplow.Tracker
         /// </summary>
         /// <param name="eventJson">Self-describing JSON for the event</param>
         /// <param name="context">List of custom contexts for the event</param>
-        /// <param name="tstamp">User-provided timestamp for the event</param>
+        /// <param name="tstamp">User-provided true-timestamp for the event</param>
         /// <returns>this</returns>
         [Obsolete("TrackSelfDescribingEvent is the new name for this")]
         public Tracker TrackUnstructEvent(SelfDescribingJson eventJson, List<IContext> contexts = null, Int64? tstamp = null)
@@ -494,7 +499,7 @@ namespace Snowplow.Tracker
         /// <param name="name">Name of the screen</param>
         /// <param name="id">Unique ID of the screen</param>
         /// <param name="context">List of custom contexts for the event</param>
-        /// <param name="tstamp">User-provided timestamp for the event</param>
+        /// <param name="tstamp">User-provided true-timestamp for the event</param>
         /// <returns>this</returns>
         public Tracker TrackScreenView(string name = null, string id = null, List<IContext> contexts = null, Int64? tstamp = null)
         {
