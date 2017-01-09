@@ -1,5 +1,7 @@
 ﻿/*
- * Copyright (c) 2016 Snowplow Analytics Ltd. All rights reserved.
+ * PersistentBlockingQueueTest.cs
+ * 
+ * Copyright (c) 2014-2017 Snowplow Analytics Ltd. All rights reserved.
  * This program is licensed to you under the Apache License Version 2.0,
  * and you may not use this file except in compliance with the Apache License
  * Version 2.0. You may obtain a copy of the Apache License Version 2.0 at
@@ -9,8 +11,8 @@
  * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
  * express or implied. See the Apache License Version 2.0 for the specific
  * language governing permissions and limitations there under.
- * Authors: Ed Lewis
- * Copyright: Copyright (c) 2016 Snowplow Analytics Ltd
+ * Authors: Fred Blundun, Ed Lewis, Joshua Beemster
+ * Copyright: Copyright (c) 2014-2017 Snowplow Analytics Ltd
  * License: Apache License Version 2.0
  */
 
@@ -19,14 +21,12 @@ using Snowplow.Tracker.Models;
 using Snowplow.Tracker.Models.Adapters;
 using Snowplow.Tracker.Queues;
 using Snowplow.Tracker.Storage;
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 
 namespace Snowplow.Tracker.Tests.Queues
 {
-
     class MockStorage : IStorage
     {
         private List<StorageRecord> _items = new List<StorageRecord>();
@@ -177,7 +177,6 @@ namespace Snowplow.Tracker.Tests.Queues
 
         class MockProducer
         {
-
             private IPersistentBlockingQueue _q;
             private int _count;
 
@@ -202,7 +201,6 @@ namespace Snowplow.Tracker.Tests.Queues
                     _q.Enqueue(payload);
                 }
             }
-
         }
 
         [TestMethod]
@@ -283,6 +281,5 @@ namespace Snowplow.Tracker.Tests.Queues
 
             Assert.AreEqual(0, consumer.Consumed.Count);
         }
-
     }
 }

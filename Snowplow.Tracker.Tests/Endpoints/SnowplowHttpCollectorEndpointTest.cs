@@ -1,5 +1,7 @@
 ﻿/*
- * Copyright (c) 2016 Snowplow Analytics Ltd. All rights reserved.
+ * SnowplowHttpCollectorEndpointTest.cs
+ * 
+ * Copyright (c) 2014-2017 Snowplow Analytics Ltd. All rights reserved.
  * This program is licensed to you under the Apache License Version 2.0,
  * and you may not use this file except in compliance with the Apache License
  * Version 2.0. You may obtain a copy of the Apache License Version 2.0 at
@@ -9,8 +11,8 @@
  * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
  * express or implied. See the Apache License Version 2.0 for the specific
  * language governing permissions and limitations there under.
- * Authors: Ed Lewis
- * Copyright: Copyright (c) 2016 Snowplow Analytics Ltd
+ * Authors: Fred Blundun, Ed Lewis, Joshua Beemster
+ * Copyright: Copyright (c) 2014-2017 Snowplow Analytics Ltd
  * License: Apache License Version 2.0
  */
 
@@ -28,7 +30,6 @@ namespace Snowplow.Tracker.Tests.Endpoints
     [TestClass]
     public class SnowplowHttpCollectorEndpointTest
     {
-
         class MockGet
         {
             public List<string> Queries { get; private set; } = new List<string>();
@@ -98,7 +99,6 @@ namespace Snowplow.Tracker.Tests.Endpoints
             var expectedRegex = new Regex("http://somewhere\\.com/i\\?hello=world&stm=[0-9]{13}");
             Assert.IsTrue(expectedRegex.Match(actual).Success, String.Format("{0} doesn't match {1}", actual, expectedRegex.ToString()));
         }
-
 
         [TestMethod]
         public void testSendGetRequestGoodHttps()
@@ -269,7 +269,6 @@ namespace Snowplow.Tracker.Tests.Endpoints
             Assert.AreEqual(1, postReq.Queries.Count);
         }
 
-
         [TestMethod]
         public void testPostHttpNon200Response()
         {
@@ -324,6 +323,5 @@ namespace Snowplow.Tracker.Tests.Endpoints
             var nowhere = SnowplowHttpCollectorEndpoint.HttpGet(cannotConnect, false, new List<string> { "0" });
             Assert.AreEqual(-1, nowhere.StatusCodeTask.Result);
         }
-
     }
 }
