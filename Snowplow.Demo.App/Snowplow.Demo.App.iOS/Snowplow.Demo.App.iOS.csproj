@@ -119,7 +119,9 @@
     <None Include="Entitlements.plist" />
     <None Include="Info.plist" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <None Include="packages.config" />
+    <None Include="packages.config">
+      <SubType>Designer</SubType>
+    </None>
     <None Include="Properties\app.manifest" />
   </ItemGroup>
   <ItemGroup>
@@ -127,7 +129,7 @@
   </ItemGroup>
   <ItemGroup>
     <Reference Include="LiteDB, Version=3.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\..\packages\LiteDB.3.0.0-beta3\lib\netstandard1.4\LiteDB.dll</HintPath>
+      <HintPath>..\..\packages\LiteDB.3.0.0\lib\netstandard1.4\LiteDB.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="Microsoft.Extensions.PlatformAbstractions, Version=1.0.0.0, Culture=neutral, PublicKeyToken=adb9793829ddae60, processorArchitecture=MSIL">
@@ -139,15 +141,15 @@
       <Private>True</Private>
     </Reference>
     <Reference Include="Snowplow.Tracker, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\..\packages\Snowplow.Tracker.1.0.0-beta3\lib\netstandard1.4\Snowplow.Tracker.dll</HintPath>
+      <HintPath>..\..\packages\Snowplow.Tracker.1.0.0\lib\netstandard1.4\Snowplow.Tracker.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="Snowplow.Tracker.PlatformExtensions, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\..\packages\Snowplow.Tracker.PlatformExtensions.1.0.0-beta2\lib\Xamarin.iOS10\Snowplow.Tracker.PlatformExtensions.dll</HintPath>
+      <HintPath>..\..\packages\Snowplow.Tracker.PlatformExtensions.1.0.0\lib\Xamarin.iOS10\Snowplow.Tracker.PlatformExtensions.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="Snowplow.Tracker.PlatformExtensions.Abstractions, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\..\packages\Snowplow.Tracker.PlatformExtensions.1.0.0-beta2\lib\Xamarin.iOS10\Snowplow.Tracker.PlatformExtensions.Abstractions.dll</HintPath>
+      <HintPath>..\..\packages\Snowplow.Tracker.PlatformExtensions.1.0.0\lib\Xamarin.iOS10\Snowplow.Tracker.PlatformExtensions.Abstractions.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="System" />
