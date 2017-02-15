@@ -2,9 +2,9 @@
 
 ## Overview
 
-Add analytics to your .NET apps with the [Snowplow] [snowplow] C# event tracker.
+Add analytics to your .NET apps with the **[Snowplow] [snowplow]** C# event tracker.
 
-With this tracker you can collect event data from your [.NET][dotnet] desktop and web applications.
+With this tracker you can collect event data from your **[.NET][dotnet]** desktop and web applications.
 
 ## Find out more
 

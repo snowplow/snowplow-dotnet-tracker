@@ -1,7 +1,7 @@
-﻿/*
+/*
  * Version.cs
  * 
- * Copyright (c) 2014 Snowplow Analytics Ltd. All rights reserved.
+ * Copyright (c) 2014-2017 Snowplow Analytics Ltd. All rights reserved.
  * This program is licensed to you under the Apache License Version 2.0,
  * and you may not use this file except in compliance with the Apache License
  * Version 2.0. You may obtain a copy of the Apache License Version 2.0 at
@@ -11,21 +11,15 @@
  * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
  * express or implied. See the Apache License Version 2.0 for the specific
  * language governing permissions and limitations there under.
- * Authors: Fred Blundun
- * Copyright: Copyright (c) 2014 Snowplow Analytics Ltd
+ * Authors: Fred Blundun, Ed Lewis, Joshua Beemster
+ * Copyright: Copyright (c) 2014-2017 Snowplow Analytics Ltd
  * License: Apache License Version 2.0
  */
-
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Snowplow.Tracker
 {
     public class Version
     {
-        public static string VERSION = "cs-0.1.2";
+        public static string VERSION = "cs-1.0.0";
     }
 }
