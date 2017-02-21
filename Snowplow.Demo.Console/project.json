@@ -7,9 +7,9 @@
 
   "dependencies": {
     "System.Console": "4.3.0",
+    "Snowplow.Tracker": "1.0.1",
     "Microsoft.NETCore.Runtime.CoreCLR": "1.0.2",
-    "Microsoft.NETCore.DotNetHostPolicy": "1.0.1",
-    "Snowplow.Tracker": "*"
+    "Microsoft.NETCore.DotNetHostPolicy": "1.0.1"
   },
 
   "frameworks": {
