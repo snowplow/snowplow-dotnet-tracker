@@ -1,3 +1,7 @@
+Version 1.0.1 (2017-02-22)
+--------------------------
+Update LiteDB dependency to 3.0.1 (#67)
+
 Version 1.0.0 (2017-02-15)
 --------------------------
 Add Xamarin demo application (#60) 

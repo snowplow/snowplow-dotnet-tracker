@@ -73,8 +73,8 @@
       <HintPath>..\..\packages\Xamarin.Forms.2.3.3.180\lib\MonoAndroid10\FormsViewGroup.dll</HintPath>
       <Private>True</Private>
     </Reference>
-    <Reference Include="LiteDB, Version=3.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\..\packages\LiteDB.3.0.0\lib\netstandard1.4\LiteDB.dll</HintPath>
+    <Reference Include="LiteDB">
+      <HintPath>..\..\packages\LiteDB.3.0.1\lib\netstandard1.4\LiteDB.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="Microsoft.Extensions.PlatformAbstractions, Version=1.0.0.0, Culture=neutral, PublicKeyToken=adb9793829ddae60, processorArchitecture=MSIL">
@@ -87,16 +87,16 @@
       <HintPath>..\..\packages\Newtonsoft.Json.9.0.1\lib\portable-net45+wp80+win8+wpa81\Newtonsoft.Json.dll</HintPath>
       <Private>True</Private>
     </Reference>
-    <Reference Include="Snowplow.Tracker, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\..\packages\Snowplow.Tracker.1.0.0\lib\netstandard1.4\Snowplow.Tracker.dll</HintPath>
+    <Reference Include="Snowplow.Tracker">
+      <HintPath>..\..\packages\Snowplow.Tracker.1.0.1\lib\netstandard1.4\Snowplow.Tracker.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="Snowplow.Tracker.PlatformExtensions, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\..\packages\Snowplow.Tracker.PlatformExtensions.1.0.0\lib\MonoAndroid10\Snowplow.Tracker.PlatformExtensions.dll</HintPath>
+      <HintPath>..\..\packages\Snowplow.Tracker.PlatformExtensions.1.0.1\lib\MonoAndroid10\Snowplow.Tracker.PlatformExtensions.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="Snowplow.Tracker.PlatformExtensions.Abstractions, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\..\packages\Snowplow.Tracker.PlatformExtensions.1.0.0\lib\MonoAndroid10\Snowplow.Tracker.PlatformExtensions.Abstractions.dll</HintPath>
+      <HintPath>..\..\packages\Snowplow.Tracker.PlatformExtensions.1.0.1\lib\MonoAndroid10\Snowplow.Tracker.PlatformExtensions.Abstractions.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="System" />

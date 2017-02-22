@@ -12,7 +12,7 @@
  * express or implied. See the Apache License Version 2.0 for the specific
  * language governing permissions and limitations there under.
  * Authors: Ed Lewis, Joshua Beemster
- * Copyright: Copyright (c) 2014-2016 Snowplow Analytics Ltd
+ * Copyright: Copyright (c) 2014-2017 Snowplow Analytics Ltd
  * License: Apache License Version 2.0
  */
 

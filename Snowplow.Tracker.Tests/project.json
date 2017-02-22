@@ -2,7 +2,7 @@
   "dependencies": {
     "dotnet-test-mstest": "1.1.2-preview",
     "MSTest.TestFramework": "1.0.7-preview",
-    "Snowplow.Tracker": "1.0.0-*"
+    "Snowplow.Tracker": "1.0.1"
   },
   "frameworks": {
     "netcoreapp1.0": {
