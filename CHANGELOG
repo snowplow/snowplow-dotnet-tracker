@@ -1,3 +1,13 @@
+Version 1.0.2 (2017-04-24)
+--------------------------
+Update LiteDB dependency to 3.1.0 (#75)
+Add 'port' parameter to Tracker.Start (#74)
+Upgrade Snowplow.Tracker.PlatformExtensions to vs2017 project (#73)
+Upgrade Snowplow.Tracker to vs2017 project (#72)
+Upgrade Snowplow.Demo.App to vs2017 project (#71)
+Upgrade Snowplow.Demo.Console to vs2017 project (#70)
+Fix "duplicate _id" bug where IDs become non-unique (#69)
+
 Version 1.0.1 (2017-02-22)
 --------------------------
 Update LiteDB dependency to 3.0.1 (#67)

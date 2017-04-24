@@ -5,8 +5,6 @@ VisualStudioVersion = 15.0.26403.7
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Snowplow.Demo.Console", "Snowplow.Demo.Console\Snowplow.Demo.Console.csproj", "{18E64E32-6BA1-4A64-A195-828BF35CDED6}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Snowplow.Tracker", "Snowplow.Tracker\Snowplow.Tracker.csproj", "{BB56F67D-0071-4B4C-885B-B74254C93745}"
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -17,10 +15,6 @@ Global
 		{18E64E32-6BA1-4A64-A195-828BF35CDED6}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{18E64E32-6BA1-4A64-A195-828BF35CDED6}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{18E64E32-6BA1-4A64-A195-828BF35CDED6}.Release|Any CPU.Build.0 = Release|Any CPU
-		{BB56F67D-0071-4B4C-885B-B74254C93745}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{BB56F67D-0071-4B4C-885B-B74254C93745}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{BB56F67D-0071-4B4C-885B-B74254C93745}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{BB56F67D-0071-4B4C-885B-B74254C93745}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

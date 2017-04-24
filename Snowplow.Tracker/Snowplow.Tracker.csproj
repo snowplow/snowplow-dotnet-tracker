@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <Description>The Snowplow .NET Tracker lets you track your users' behaviour on your .NET desktop applications and websites. Define your own custom events to suit your needs. Store your data in a scalable event data warehouse under your own control.</Description>
-    <Copyright>Copyright 2014-2016</Copyright>
+    <Copyright>Copyright 2014-2017</Copyright>
     <AssemblyTitle>Snowplow.Tracker</AssemblyTitle>
     <VersionPrefix>1.0.1</VersionPrefix>
     <Authors>Fred Blundun, Joshua Beemster, Ed Lewis</Authors>
@@ -16,6 +16,7 @@
     <GenerateAssemblyConfigurationAttribute>false</GenerateAssemblyConfigurationAttribute>
     <GenerateAssemblyCompanyAttribute>false</GenerateAssemblyCompanyAttribute>
     <GenerateAssemblyProductAttribute>false</GenerateAssemblyProductAttribute>
+    <Version>1.0.2</Version>
   </PropertyGroup>
 
   <ItemGroup>
