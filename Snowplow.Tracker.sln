@@ -1,16 +1,13 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 14
-VisualStudioVersion = 14.0.25420.1
+# Visual Studio 15
+VisualStudioVersion = 15.0.26403.7
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{8BB2217D-0F2D-49D1-97BC-3654ED321F3B}") = "Snowplow.Tracker", "Snowplow.Tracker\Snowplow.Tracker.xproj", "{BBAA3739-B066-4C37-A215-1502638C64BE}"
-EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{2B9519FE-8E9C-4AAF-A502-823C71ACD028}"
-	ProjectSection(SolutionItems) = preProject
-		global.json = global.json
-	EndProjectSection
 EndProject
-Project("{8BB2217D-0F2D-49D1-97BC-3654ED321F3B}") = "Snowplow.Tracker.Tests", "Snowplow.Tracker.Tests\Snowplow.Tracker.Tests.xproj", "{43FFD47A-0B44-4A73-9F95-3223FF236799}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Snowplow.Tracker", "Snowplow.Tracker\Snowplow.Tracker.csproj", "{BBAA3739-B066-4C37-A215-1502638C64BE}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Snowplow.Tracker.Tests", "Snowplow.Tracker.Tests\Snowplow.Tracker.Tests.csproj", "{43FFD47A-0B44-4A73-9F95-3223FF236799}"
 	ProjectSection(ProjectDependencies) = postProject
 		{BBAA3739-B066-4C37-A215-1502638C64BE} = {BBAA3739-B066-4C37-A215-1502638C64BE}
 	EndProjectSection
