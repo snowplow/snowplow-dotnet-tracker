@@ -20,6 +20,7 @@ using LiteDB;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Numerics;
 
 namespace Snowplow.Tracker.Storage
 {
@@ -32,6 +33,9 @@ namespace Snowplow.Tracker.Storage
         private LiteDatabase _db;
         private const string COLLECTION_NAME = "storage";
 
+        private object _dbAccess = new object();
+        private IdGenerator _keyGen;
+
         /// <summary>
         /// Create a new Storage wrappper using LiteDB
         /// </summary>
@@ -41,7 +45,7 @@ namespace Snowplow.Tracker.Storage
             BsonMapper.Global.RegisterAutoId<string>
             (
                 isEmpty: (value) => value == null || value.Trim() == "",
-                newId: (db, col) => ""+db.Count(col, null)
+                newId: (db, col) => _keyGen.GetAndAdd(1).ToString()
             );
 
             _db = new LiteDatabase(path);
@@ -52,6 +56,20 @@ namespace Snowplow.Tracker.Storage
             else
             {
                 TotalItems = 0;
+            }
+
+            var highestId = _db.GetCollection<StorageRecord>(COLLECTION_NAME).FindAll()
+                               .OrderByDescending(i => { return BigInteger.Parse(i.Id); })
+                               .Take(1)
+                               .ToList<StorageRecord>();
+
+            if (highestId.Count == 1)
+            {
+                _keyGen = new IdGenerator(BigInteger.Parse(highestId[0].Id));
+            }
+            else
+            {
+                _keyGen = new IdGenerator(BigInteger.Zero);
             }
         }
 
@@ -66,10 +84,13 @@ namespace Snowplow.Tracker.Storage
                 Item = item
             };
 
-            var recs = _db.GetCollection<StorageRecord>(COLLECTION_NAME);
+            lock (_dbAccess)
+            {
+                var recs = _db.GetCollection<StorageRecord>(COLLECTION_NAME);
 
-            recs.Insert(r);
-            TotalItems += 1;
+                recs.Insert(r);
+                TotalItems += 1;
+            }
         }
 
         /// <summary>
@@ -79,12 +100,15 @@ namespace Snowplow.Tracker.Storage
         /// <returns>A list of items retrieved from the database</returns>
         public List<StorageRecord> TakeLast(int n)
         {
-            var recs = _db.GetCollection<StorageRecord>(COLLECTION_NAME);
+            lock (_dbAccess)
+            {
+                var recs = _db.GetCollection<StorageRecord>(COLLECTION_NAME);
 
-            return recs.FindAll()
-                .OrderByDescending(i => { return int.Parse(i.Id); })
-                .Take(n)
-                .ToList<StorageRecord>();
+                return recs.FindAll()
+                    .OrderByDescending(i => { return int.Parse(i.Id); })
+                    .Take(n)
+                    .ToList<StorageRecord>();
+            }
         }
 
         /// <summary>
@@ -93,22 +117,25 @@ namespace Snowplow.Tracker.Storage
         /// <param name="idList"></param>
         public bool Delete(List<string> idList)
         {
-            var recs = _db.GetCollection<StorageRecord>(COLLECTION_NAME);
-            int failedDeletions = 0;
-
-            foreach (var id in idList)
+            lock (_dbAccess)
             {
-                if (recs.Delete(id))
-                {
-                    TotalItems -= 1;
-                }
-                else
-                {
-                    failedDeletions++;
-                }
-            }
+                var recs = _db.GetCollection<StorageRecord>(COLLECTION_NAME);
+                int failedDeletions = 0;
 
-            return failedDeletions == 0;
+                foreach (var id in idList)
+                {
+                    if (recs.Delete(id))
+                    {
+                        TotalItems -= 1;
+                    }
+                    else
+                    {
+                        failedDeletions++;
+                    }
+                }
+
+                return failedDeletions == 0;
+            }
         }
 
         /// <summary>
