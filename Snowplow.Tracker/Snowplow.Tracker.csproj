@@ -19,7 +19,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="LiteDB" Version="3.0.1" />
+    <PackageReference Include="LiteDB" Version="3.1.0" />
     <PackageReference Include="Microsoft.Extensions.PlatformAbstractions" Version="1.0.0" />
     <PackageReference Include="Newtonsoft.Json" Version="9.0.1" />
     <PackageReference Include="System.Diagnostics.Process" Version="4.1.0" />
