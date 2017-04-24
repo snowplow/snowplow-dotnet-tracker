@@ -2,7 +2,7 @@
 
 ## Overview
 
-Add analytics to your .NET apps with the **[Snowplow] [snowplow]** C# event tracker.
+Add analytics to your .NET apps with the **[Snowplow][snowplow]** C# event tracker.
 
 With this tracker you can collect event data from your **[.NET][dotnet]** desktop and web applications.
 
@@ -10,14 +10,14 @@ With this tracker you can collect event data from your **[.NET][dotnet]** deskto
 
 | Technical Docs                  | Setup Guide               | Roadmap                 | Contributing                      |
 |---------------------------------|---------------------------|-------------------------|-----------------------------------|
-| ![i1] [techdocs-image]          | ![i2] [setup-image]       | ![i3] [roadmap-image]   | ![i4] [contributing-image]        |
-| **[Technical Docs] [techdocs]** | **[Setup Guide] [setup]** | **[Roadmap] [roadmap]** | **[Contributing] [contributing]** |
+| ![i1][techdocs-image]           | ![i2][setup-image]       | ![i3][roadmap-image]   | ![i4][contributing-image]        |
+| **[Technical Docs][techdocs]** | **[Setup Guide][setup]** | **[Roadmap][roadmap]** | **[Contributing][contributing]** |
 
 ## Copyright and license
 
 The Snowplow .NET Tracker is copyright 2017 Snowplow Analytics Ltd.
 
-Licensed under the **[Apache License, Version 2.0] [license]** (the "License");
+Licensed under the **[Apache License, Version 2.0][license]** (the "License");
 you may not use this software except in compliance with the License.
 
 Unless required by applicable law or agreed to in writing, software
