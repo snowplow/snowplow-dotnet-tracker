@@ -114,12 +114,12 @@ namespace Snowplow.Tracker
         /// <param name="l">A logger to emit an activity stream to</param>
         public void Start(string endpoint, string dbPath, HttpMethod method = HttpMethod.POST, Subject subject = null, ClientSession clientSession = null, 
             string trackerNamespace = null, string appId = null, bool encodeBase64 = true, bool synchronous = true, DesktopContextDelegate desktopContextDelegate = null,
-            MobileContextDelegate mobileContextDelegate = null, GeoLocationContextDelegate geoLocationContextDelegate = null, ILogger l = null)
+            MobileContextDelegate mobileContextDelegate = null, GeoLocationContextDelegate geoLocationContextDelegate = null, ILogger l = null, int? endpointPort = null)
         {
             AsyncEmitter emitter;
             lock (_lock)
             {
-                var dest = new SnowplowHttpCollectorEndpoint(endpoint, method: method, l: l);
+                var dest = new SnowplowHttpCollectorEndpoint(endpoint, method: method, l: l, port: endpointPort);
                 var storage = new LiteDBStorage(dbPath);
                 _storage = storage;
                 var queue = new PersistentBlockingQueue(storage, new PayloadToJsonString());

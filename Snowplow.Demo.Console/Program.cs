@@ -33,6 +33,8 @@ namespace Snowplow.Demo.Console
         public static void Main(string[] args)
         {
             string collectorHostname = "<invalid>";
+            int port = 80;
+
             int count = 100;
 
             switch (args.Count())
@@ -48,11 +50,25 @@ namespace Snowplow.Demo.Console
                     return;
             }
 
-            System.Console.WriteLine("Demo app started");
+            // help the user out a bit with ports
+            if (Uri.IsWellFormedUriString(collectorHostname, UriKind.Absolute))
+            {
+                Uri tmp;
+                if (Uri.TryCreate(collectorHostname, UriKind.Absolute, out tmp))
+                {
+                    if (tmp.Scheme == "http" || tmp.Scheme == "https")
+                    {
+                        collectorHostname = tmp.Host;
+                        port = tmp.Port;
+                    }
+                }
+            }
+
+            System.Console.WriteLine("Demo app started - sending " + count + " events to " + collectorHostname + " port " + port);
 
             var logger = new ConsoleLogger();
 
-            Tracker.Tracker.Instance.Start(collectorHostname, "snowplow-demo-app.db", l: logger);
+            Tracker.Tracker.Instance.Start(collectorHostname, "snowplow-demo-app.db", l: logger, endpointPort: port);
 
             for (int i = 0; i < count; i++)
             {
