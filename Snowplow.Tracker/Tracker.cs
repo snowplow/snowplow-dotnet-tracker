@@ -522,5 +522,20 @@ namespace Snowplow.Tracker
             }
             return this;
         }
+
+        /// <summary>
+        /// Set the appid of the events fired by the tracker
+        /// </summary>
+        /// <param name="appid">AppId to track</param>
+        /// <returns>this</returns>
+        public Tracker SetAppId(string appId)
+        {
+            lock (_lock)
+            {
+                _standardNvPairs[Constants.APP_ID] = appId;
+            }
+            return this;
+        }
+
     }
 }
