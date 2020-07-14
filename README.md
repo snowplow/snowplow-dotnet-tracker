@@ -43,7 +43,7 @@ limitations under the License.
 [contributing]: https://github.com/snowplow/snowplow/wiki/.NET-Tracker-Contributing
 
 [release-image]: https://img.shields.io/badge/release-1.0.2-orange.svg?style=flat
-[releases]: https://github.com/snowplow/snowplow/releases
+[releases]: https://github.com/snowplow/snowplow-dotnet-tracker/releases
 
 [license-image]: https://img.shields.io/badge/license-Apache--2-blue.svg?style=flat
 [license]: https://www.apache.org/licenses/LICENSE-2.0
