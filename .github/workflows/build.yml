@@ -1,0 +1,26 @@
+name: Build
+
+on:
+  push:
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v1
+      with:
+        dotnet-version: 5.0.x
+
+    - name: Restore Snowplow.Tracker dependencies
+      run: dotnet restore Snowplow.Tracker.sln
+
+    - name: Build Snowplow.Tracker
+      run: dotnet build Snowplow.Tracker.sln --no-restore
+
+    - name: Test Snowplow.Tracker
+      run: dotnet test Snowplow.Tracker.Tests/Snowplow.Tracker.Tests.csproj --no-build --verbosity normal
