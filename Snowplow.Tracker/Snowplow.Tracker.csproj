@@ -10,8 +10,8 @@
     <AssemblyName>Snowplow.Tracker</AssemblyName>
     <PackageId>Snowplow.Tracker</PackageId>
     <PackageTags>snowplow;analytics;events;tracking</PackageTags>
-    <PackageProjectUrl>https://github.com/snowplow/snowplow-dotnet-tracker</PackageProjectUrl>
-    <PackageLicenseUrl>http://www.apache.org/licenses/LICENSE-2.0.html</PackageLicenseUrl>
+    <PackageProject>https://github.com/snowplow/snowplow-dotnet-tracker</PackageProject>
+    <PackageLicense>http://www.apache.org/licenses/LICENSE-2.0.html</PackageLicense>
     <NetStandardImplicitPackageVersion>1.6.1</NetStandardImplicitPackageVersion>
     <GenerateAssemblyConfigurationAttribute>false</GenerateAssemblyConfigurationAttribute>
     <GenerateAssemblyCompanyAttribute>false</GenerateAssemblyCompanyAttribute>
@@ -33,7 +33,7 @@
 
   <Target Name="PostcompileScript" AfterTargets="Build">
     <Exec Command="dotnet pack --no-build --configuration $(Configuration)" />
-    <Exec Command="xcopy &quot;bin\$(Configuration)\Snowplow.Tracker.$(Version).nupkg&quot; &quot;..\Nuget&quot; /F /Y" />
+    <!--<Exec Command="xcopy &quot;bin\$(Configuration)\Snowplow.Tracker.$(Version).nupkg&quot; &quot;..\Nuget&quot; /F /Y" />-->
   </Target>
 
 </Project>
