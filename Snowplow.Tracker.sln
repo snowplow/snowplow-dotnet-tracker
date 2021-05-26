@@ -5,12 +5,9 @@ VisualStudioVersion = 15.0.26403.7
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{2B9519FE-8E9C-4AAF-A502-823C71ACD028}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Snowplow.Tracker", "Snowplow.Tracker\Snowplow.Tracker.csproj", "{BBAA3739-B066-4C37-A215-1502638C64BE}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Snowplow.Tracker", "Snowplow.Tracker\Snowplow.Tracker.csproj", "{BBAA3739-B066-4C37-A215-1502638C64BE}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Snowplow.Tracker.Tests", "Snowplow.Tracker.Tests\Snowplow.Tracker.Tests.csproj", "{43FFD47A-0B44-4A73-9F95-3223FF236799}"
-	ProjectSection(ProjectDependencies) = postProject
-		{BBAA3739-B066-4C37-A215-1502638C64BE} = {BBAA3739-B066-4C37-A215-1502638C64BE}
-	EndProjectSection
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Snowplow.Tracker.Tests", "Snowplow.Tracker.Tests\Snowplow.Tracker.Tests.csproj", "{43FFD47A-0B44-4A73-9F95-3223FF236799}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
