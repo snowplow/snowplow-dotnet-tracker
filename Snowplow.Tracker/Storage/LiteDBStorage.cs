@@ -34,7 +34,6 @@ namespace Snowplow.Tracker.Storage
         private const string COLLECTION_NAME = "storage";
 
         private object _dbAccess = new object();
-        private IdGenerator _keyGen;
 
         /// <summary>
         /// Create a new Storage wrappper using LiteDB
@@ -42,12 +41,6 @@ namespace Snowplow.Tracker.Storage
         /// <param name="path">Filename of database file (doesn't need to exist)</param>
         public LiteDBStorage(string path)
         {
-            BsonMapper.Global.RegisterAutoId<string>
-            (
-                isEmpty: (value) => value == null || value.Trim() == "",
-                newId: (db, col) => _keyGen.GetAndAdd(1).ToString()
-            );
-
             _db = new LiteDatabase(path);
             if (_db.CollectionExists(COLLECTION_NAME))
             {
@@ -59,18 +52,9 @@ namespace Snowplow.Tracker.Storage
             }
 
             var highestId = _db.GetCollection<StorageRecord>(COLLECTION_NAME).FindAll()
-                               .OrderByDescending(i => { return BigInteger.Parse(i.Id); })
+                               .OrderByDescending(i => { return i.Id; })
                                .Take(1)
                                .ToList<StorageRecord>();
-
-            if (highestId.Count == 1)
-            {
-                _keyGen = new IdGenerator(BigInteger.Parse(highestId[0].Id));
-            }
-            else
-            {
-                _keyGen = new IdGenerator(BigInteger.Zero);
-            }
         }
 
         /// <summary>
@@ -105,7 +89,7 @@ namespace Snowplow.Tracker.Storage
                 var recs = _db.GetCollection<StorageRecord>(COLLECTION_NAME);
 
                 return recs.FindAll()
-                    .OrderByDescending(i => { return int.Parse(i.Id); })
+                    .OrderByDescending(i => { return i.Id; })
                     .Take(n)
                     .ToList<StorageRecord>();
             }
@@ -115,7 +99,7 @@ namespace Snowplow.Tracker.Storage
         /// Attempts to delete a list of events.
         /// </summary>
         /// <param name="idList"></param>
-        public bool Delete(List<string> idList)
+        public bool Delete(List<long> idList)
         {
             lock (_dbAccess)
             {

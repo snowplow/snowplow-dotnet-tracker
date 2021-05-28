@@ -72,7 +72,7 @@ namespace Snowplow.Tracker.Queues
         /// <param name="count">Maximum amount of items to dequeue</param>
         /// <param name="maxWait">Maximum number of milliseconds to block</param>
         /// <returns>A list of items taken from the queue</returns>
-        public List<Tuple<string, Payload>> Peek(int count, int maxWait = 300)
+        public List<Tuple<long, Payload>> Peek(int count, int maxWait = 300)
         {
             lock (_queueLock)
             {
@@ -80,12 +80,12 @@ namespace Snowplow.Tracker.Queues
                 {
                     if (!Monitor.Wait(_queueLock, maxWait))
                     {
-                        return new List<Tuple<string, Payload>>();
+                        return new List<Tuple<long, Payload>>();
                     }
                 }
 
                 var records = _storage.TakeLast(count);
-                var deserializedRecords = new List<Tuple<string, Payload>>();
+                var deserializedRecords = new List<Tuple<long, Payload>>();
 
                 foreach (StorageRecord record in records)
                 {
@@ -103,7 +103,7 @@ namespace Snowplow.Tracker.Queues
         /// </summary>
         /// <param name="idList"></param>
         /// <returns></returns>
-        public bool Remove(List<string> idList)
+        public bool Remove(List<long> idList)
         {
             lock (_queueLock)
             {
