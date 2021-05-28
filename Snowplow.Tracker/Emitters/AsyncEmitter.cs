@@ -235,7 +235,7 @@ namespace Snowplow.Tracker.Emitters
 
             _logger.Info("Emitter flushing queue");
 
-            List<Tuple<string, Payload>> items;
+            List<Tuple<long, Payload>> items;
             var totalCount = 0;
             var failureCount = 0;
 

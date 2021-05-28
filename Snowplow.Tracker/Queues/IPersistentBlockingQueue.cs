@@ -25,7 +25,7 @@ namespace Snowplow.Tracker.Queues
     public interface IPersistentBlockingQueue
     {
         void Enqueue(List<Payload> items);
-        List<Tuple<string, Payload>> Peek(int count, int maxWait);
-        bool Remove(List<string> idList);
+        List<Tuple<long, Payload>> Peek(int count, int maxWait);
+        bool Remove(List<long> idList);
     }
 }
