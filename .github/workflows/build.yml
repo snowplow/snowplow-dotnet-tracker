@@ -4,9 +4,9 @@ on:
   push:
 
 jobs:
-  build:
+  build_tracker:
 
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
 
     steps:
     - uses: actions/checkout@v2
@@ -20,7 +20,34 @@ jobs:
       run: dotnet restore Snowplow.Tracker.sln
 
     - name: Build Snowplow.Tracker
-      run: dotnet build Snowplow.Tracker.sln --no-restore
+      run: dotnet build Snowplow.Tracker.sln --no-restore -c Release
 
     - name: Test Snowplow.Tracker
-      run: dotnet test Snowplow.Tracker.Tests/Snowplow.Tracker.Tests.csproj --no-build --verbosity normal
+      run: dotnet test Snowplow.Tracker.Tests/Snowplow.Tracker.Tests.csproj --no-build --verbosity normal -c Release
+
+  build_extensions:
+
+    runs-on: windows-2019
+
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Setup msbuild
+      uses: microsoft/setup-msbuild@v1.0.2
+
+    - name: Setup nuget
+      uses: nuget/setup-nuget@v1
+      with:
+        nuget-version: '5.x'
+
+    - name: Enable MSMQ
+      run: Enable-WindowsOptionalFeature -Online -FeatureName MSMQ-Server -All     
+
+    - name: NuGet Restore
+      run: nuget restore Snowplow.Tracker.PlatformExtensions.sln
+
+    - name: Build Snowplow.Tracker.PlatformExtensions
+      run: msbuild Snowplow.Tracker.PlatformExtensions.sln /property:Configuration=Release
+
+    - name: Test Snowplow.Tracker.PlatformExtensions
+      run: '& "$(vswhere -property installationPath)\Common7\IDE\MSTest.exe" /testcontainer:Snowplow.Tracker.PlatformExtensions\DotnetTests\bin\Release\DotnetTests.dll'

@@ -1,0 +1,62 @@
+name: Deploy Package Extensions
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'The release tag'
+        required: true
+
+jobs:
+  deploy:
+
+    runs-on: windows-2019
+
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Setup msbuild
+      uses: microsoft/setup-msbuild@v1.0.2
+
+    - name: Setup nuget
+      uses: nuget/setup-nuget@v1
+      with:
+        nuget-version: '5.x'
+
+    - name: NuGet Restore
+      run: nuget restore Snowplow.Tracker.PlatformExtensions.sln
+
+    - name: Build Snowplow.Tracker.PlatformExtensions
+      run: msbuild Snowplow.Tracker.PlatformExtensions.sln /property:Configuration=Release
+
+    - name: Pack Snowplow.Tracker.PlatformExtensions
+      run: nuget pack .\NuGet\Snowplow.Tracker.PlatformExtensions.nuspec -Symbols -SymbolPackageFormat snupkg
+
+    - name: Check nupkg version
+      uses: andstor/file-existence-action@v1
+      with:
+        files: "Snowplow.Tracker.PlatformExtensions.${{ github.event.inputs.version }}.nupkg, Snowplow.Tracker.PlatformExtensions.${{ github.event.inputs.version }}.snupkg"
+        allow_failure: true
+
+    - name: Publish Snowplow.Tracker.PlatformExtensions
+      run: nuget push *.nupkg -Source https://api.nuget.org/v3/index.json -ApiKey ${{secrets.NUGET_API_KEY}}
+
+    - name: Setup git
+      uses: oleksiyrudenko/gha-git-credentials@v2.1
+      with:
+        token: '${{ secrets.GITHUB_TOKEN }}'
+        name: github-actions[bot]
+        email: 41898282+github-actions[bot]@users.noreply.github.com
+        
+    - name: Tag release
+      run: |
+        git tag -a Snowplow.Tracker.PlatformExtensions/${{ github.event.inputs.version }} -m "Snowplow.Tracker.PlatformExtensions Version ${{ github.event.inputs.version }}"
+        git push --tags
+
+    - name: Publish Release
+      uses: softprops/action-gh-release@v1
+      with:
+        name: Snowplow.Tracker.PlatformExtensions Version ${{ github.event.inputs.version }}
+        tag_name: Snowplow.Tracker.PlatformExtensions/${{ github.event.inputs.version }}
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
