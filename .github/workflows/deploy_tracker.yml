@@ -1,0 +1,62 @@
+name: Deploy Tracker
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'The release tag'
+        required: true
+
+jobs:
+  deploy:
+
+    runs-on: ubuntu-20.04
+
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v1
+      with:
+        dotnet-version: 5.0.x
+
+    - name: Restore Snowplow.Tracker dependencies
+      run: dotnet restore Snowplow.Tracker.sln
+
+    - name: Build Snowplow.Tracker
+      run: dotnet build Snowplow.Tracker.sln --no-restore -c Release
+
+    - name: Test Snowplow.Tracker
+      run: dotnet test Snowplow.Tracker.Tests/Snowplow.Tracker.Tests.csproj --no-build -c Release
+
+    - name: Pack Snowplow.Tracker
+      run: dotnet pack Snowplow.Tracker/Snowplow.Tracker.csproj --no-restore --no-build -c Release --include-symbols -p:SymbolPackageFormat=snupkg -o .
+
+    - name: Check nupkg version
+      uses: andstor/file-existence-action@v1
+      with:
+        files: "Snowplow.Tracker.${{ github.event.inputs.version }}.nupkg, Snowplow.Tracker.${{ github.event.inputs.version }}.snupkg"
+        allow_failure: true
+
+    - name: Publish Snowplow.Tracker
+      run: dotnet nuget push *.nupkg -s https://api.nuget.org/v3/index.json -k ${{secrets.NUGET_API_KEY}}
+
+    - name: Setup git
+      uses: oleksiyrudenko/gha-git-credentials@v2.1
+      with:
+        token: '${{ secrets.GITHUB_TOKEN }}'
+        name: github-actions[bot]
+        email: 41898282+github-actions[bot]@users.noreply.github.com
+        
+    - name: Tag release
+      run: |
+        git tag -a Snowplow.Tracker/${{ github.event.inputs.version }} -m "Snowplow.Tracker Version ${{ github.event.inputs.version }}"
+        git push --tags
+
+    - name: Publish Release
+      uses: softprops/action-gh-release@v1
+      with:
+        name: Snowplow.Tracker Version ${{ github.event.inputs.version }}
+        tag_name: Snowplow.Tracker/${{ github.event.inputs.version }}
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
