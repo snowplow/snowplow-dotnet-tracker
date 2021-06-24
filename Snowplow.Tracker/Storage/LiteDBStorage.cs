@@ -20,7 +20,6 @@ using LiteDB;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Numerics;
 
 namespace Snowplow.Tracker.Storage
 {
@@ -50,11 +49,6 @@ namespace Snowplow.Tracker.Storage
             {
                 TotalItems = 0;
             }
-
-            var highestId = _db.GetCollection<StorageRecord>(COLLECTION_NAME).FindAll()
-                               .OrderByDescending(i => { return i.Id; })
-                               .Take(1)
-                               .ToList<StorageRecord>();
         }
 
         /// <summary>
