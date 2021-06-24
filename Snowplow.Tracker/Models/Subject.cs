@@ -22,14 +22,14 @@ namespace Snowplow.Tracker.Models
 {
     public class Subject
     {
-        public Payload _payload { get; private set; }
+        public Payload Payload { get; private set; }
 
         /// <summary>
         /// Create a subject representing a user
         /// </summary>
         public Subject()
         {
-            _payload = new Payload();
+            Payload = new Payload();
             SetPlatform(Platform.Pc);
         }
 
@@ -40,7 +40,7 @@ namespace Snowplow.Tracker.Models
         /// <returns>this</returns>
         public Subject SetPlatform(Platform value)
         {
-            _payload.Add(Constants.PLATFORM, value.ToString().ToLower());
+            Payload.Add(Constants.PLATFORM, value.ToString().ToLower());
             return this;
         }
 
@@ -51,7 +51,7 @@ namespace Snowplow.Tracker.Models
         /// <returns>this</returns>
         public Subject SetUserId(string id)
         {
-            _payload.Add(Constants.UID, id);
+            Payload.Add(Constants.UID, id);
             return this;
         }
 
@@ -63,7 +63,7 @@ namespace Snowplow.Tracker.Models
         /// <returns>this</returns>
         public Subject SetScreenResolution(int width, int height)
         {
-            _payload.Add(Constants.RESOLUTION, String.Format("{0}x{1}", width.ToString(), height.ToString()));
+            Payload.Add(Constants.RESOLUTION, String.Format("{0}x{1}", width.ToString(), height.ToString()));
             return this;
         }
 
@@ -75,7 +75,7 @@ namespace Snowplow.Tracker.Models
         /// <returns>this</returns>
         public Subject SetViewport(int width, int height)
         {
-            _payload.Add(Constants.VIEWPORT, String.Format("{0}x{1}", width.ToString(), height.ToString()));
+            Payload.Add(Constants.VIEWPORT, String.Format("{0}x{1}", width.ToString(), height.ToString()));
             return this;
         }
 
@@ -86,7 +86,7 @@ namespace Snowplow.Tracker.Models
         /// <returns>this</returns>
         public Subject SetColorDepth(int depth)
         {
-            _payload.Add(Constants.COLOR_DEPTH, depth.ToString());
+            Payload.Add(Constants.COLOR_DEPTH, depth.ToString());
             return this;
         }
 
@@ -97,7 +97,7 @@ namespace Snowplow.Tracker.Models
         /// <returns>this</returns>
         public Subject SetTimezone(string timezone)
         {
-            _payload.Add(Constants.TIMEZONE, timezone);
+            Payload.Add(Constants.TIMEZONE, timezone);
             return this;
         }
 
@@ -108,7 +108,7 @@ namespace Snowplow.Tracker.Models
         /// <returns>this</returns>
         public Subject SetLang(string lang)
         {
-            _payload.Add(Constants.LANGUAGE, lang);
+            Payload.Add(Constants.LANGUAGE, lang);
             return this;
         }
 
@@ -118,7 +118,7 @@ namespace Snowplow.Tracker.Models
         /// <param name="ipAddress">Ip address.</param>
         public Subject SetIpAddress(String ipAddress)
         {
-            _payload.Add(Constants.IP_ADDRESS, ipAddress);
+            Payload.Add(Constants.IP_ADDRESS, ipAddress);
             return this;
         }
 
@@ -128,7 +128,7 @@ namespace Snowplow.Tracker.Models
         /// <param name="useragent">Useragent.</param>
         public Subject SetUseragent(String useragent)
         {
-            _payload.Add(Constants.USERAGENT, useragent);
+            Payload.Add(Constants.USERAGENT, useragent);
             return this;
         }
 
@@ -138,7 +138,7 @@ namespace Snowplow.Tracker.Models
         /// <param name="domainUserId">Domain user identifier.</param>
         public Subject SetDomainUserId(String domainUserId)
         {
-            _payload.Add(Constants.DOMAIN_UID, domainUserId);
+            Payload.Add(Constants.DOMAIN_UID, domainUserId);
             return this;
         }
 
@@ -148,7 +148,7 @@ namespace Snowplow.Tracker.Models
         /// <param name="networkUserId">Network user identifier.</param>
         public Subject SetNetworkUserId(String networkUserId)
         {
-            _payload.Add(Constants.NETWORK_UID, networkUserId);
+            Payload.Add(Constants.NETWORK_UID, networkUserId);
             return this;
         }
     }

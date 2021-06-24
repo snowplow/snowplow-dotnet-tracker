@@ -53,7 +53,7 @@ namespace Snowplow.Tracker.Models
         public SelfDescribingJson SetSchema(string schema)
         {
             Utils.CheckArgument(!string.IsNullOrEmpty(schema), "Schema cannot be null or empty.");
-            payload[Constants.SCHEMA] = schema;
+            Payload[Constants.SCHEMA] = schema;
             return this;
         }
 
@@ -68,7 +68,7 @@ namespace Snowplow.Tracker.Models
             {
                 return this;
             }
-            payload[Constants.DATA] = data;
+            Payload[Constants.DATA] = data;
             return this;
         }
 
@@ -83,7 +83,7 @@ namespace Snowplow.Tracker.Models
             {
                 return this;
             }
-            payload[Constants.DATA] = data.Payload;
+            Payload[Constants.DATA] = data.Payload;
             return this;
         }
     }
