@@ -380,19 +380,21 @@ namespace Snowplow.Tracker
         /// Tracks an event; will throw an exception if the 
         /// Track has not yet been started
         /// </summary>
-        /// <param name="newEvent"></param>
-        public void Track(IEvent newEvent)
+        /// <param name="newEvent">The event which will be tracked</param>
+        /// <param name="eventSubject">An optional Subject for this specific event</param>
+        public void Track(IEvent newEvent, Subject eventSubject = null)
         {
             ensureTrackerStarted();
-            ProcessEvent(newEvent);
+            ProcessEvent(newEvent, eventSubject);
         }
 
         /// <summary>
         /// Figures out what kind of event is being tracked and
         /// then processes it accordingly.
         /// </summary>
-        /// <param name="newEvent"></param>
-        private void ProcessEvent(IEvent newEvent)
+        /// <param name="newEvent">The event which will be tracked</param>
+        /// <param name="eventSubject">An optional Subject for this specific event</param>
+        private void ProcessEvent(IEvent newEvent, Subject eventSubject)
         {
             List<IContext> contexts = newEvent.GetContexts();
             string eventId = newEvent.GetEventId();
@@ -400,11 +402,11 @@ namespace Snowplow.Tracker
 
             if (eType == typeof(PageView) || eType == typeof(Structured))
             {
-                CompleteAndTrackPayload((Payload)newEvent.GetPayload(), contexts, eventId);
+                CompleteAndTrackPayload((Payload)newEvent.GetPayload(), contexts, eventId, eventSubject);
             }
             else if (eType == typeof(EcommerceTransaction))
             {
-                CompleteAndTrackPayload((Payload)newEvent.GetPayload(), contexts, eventId);
+                CompleteAndTrackPayload((Payload)newEvent.GetPayload(), contexts, eventId, eventSubject);
                 EcommerceTransaction ecommerceTransaction = (EcommerceTransaction)newEvent;
                 foreach (EcommerceTransactionItem item in ecommerceTransaction.GetItems())
                 {
@@ -412,14 +414,14 @@ namespace Snowplow.Tracker
                     item.SetCurrency(ecommerceTransaction.GetCurrency());
                     item.SetDeviceCreatedTimestamp(ecommerceTransaction.GetDeviceCreatedTimestamp());
                     item.SetTrueTimestamp(ecommerceTransaction.GetTrueTimestamp());
-                    CompleteAndTrackPayload((Payload)item.GetPayload(), item.GetContexts(), item.GetEventId());
+                    CompleteAndTrackPayload((Payload)item.GetPayload(), item.GetContexts(), item.GetEventId(), eventSubject);
                 }
             }
             else if (eType == typeof(SelfDescribing))
             {
                 SelfDescribing selfDescribing = (SelfDescribing)newEvent;
                 selfDescribing.SetBase64Encode(_encodeBase64);
-                CompleteAndTrackPayload((Payload)selfDescribing.GetPayload(), contexts, eventId);
+                CompleteAndTrackPayload((Payload)selfDescribing.GetPayload(), contexts, eventId, eventSubject);
             }
             else if (eType == typeof(ScreenView) || eType == typeof(Timing))
             {
@@ -429,7 +431,7 @@ namespace Snowplow.Tracker
                            .SetDeviceCreatedTimestamp(newEvent.GetDeviceCreatedTimestamp())
                            .SetTrueTimestamp(newEvent.GetTrueTimestamp())
                            .SetEventId(newEvent.GetEventId())
-                           .Build());
+                           .Build(), eventSubject);
             }
         }
 
@@ -440,14 +442,19 @@ namespace Snowplow.Tracker
         /// <param name="payload">The basee event payload</param>
         /// <param name="contexts">The contexts array</param>
         /// <param name="eventId">The event ID</param>
-        private void CompleteAndTrackPayload(Payload payload, List<IContext> contexts, string eventId)
+        /// <param name="eventSubject">The Subject for this event</param>
+        private void CompleteAndTrackPayload(Payload payload, List<IContext> contexts, string eventId, Subject eventSubject)
         {
             payload.AddDict(_standardNvPairs);
 
             // Add the subject data if available
-            if (_subject != null)
+            if (eventSubject != null)
             {
-                payload.AddDict(_subject._payload.Payload);
+                payload.AddDict(eventSubject.Payload.Payload);
+            }
+            else if (_subject != null)
+            {
+                payload.AddDict(_subject.Payload.Payload);
             }
 
             // Add the session context if available

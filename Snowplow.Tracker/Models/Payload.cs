@@ -34,7 +34,7 @@ namespace Snowplow.Tracker.Models
             {
                 return;
             }
-            payload[key] = value;
+            Payload[key] = value;
         }
 
         /// <summary>

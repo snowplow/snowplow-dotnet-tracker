@@ -16,19 +16,22 @@
  * License: Apache License Version 2.0
  */
 
-using System;
 using System.Collections.Generic;
 
 namespace Snowplow.Tracker.Models {
     public abstract class AbstractPayload : IPayload {
 
-        protected Dictionary<string, object> payload;
+        /// <summary>
+        /// Gets the dictionary within the Payload
+        /// </summary>
+        /// <returns>The payload</returns>
+        public Dictionary<string, object> Payload { get; private set; }
 
         /// <summary>
         /// Creates a new Dictionary to store KV pairs in
         /// </summary>
         public AbstractPayload() {
-            payload = new Dictionary<string, object>();
+            Payload = new Dictionary<string, object>();
         }
 
         /// <summary>
@@ -44,19 +47,7 @@ namespace Snowplow.Tracker.Models {
         /// </summary>
         /// <returns>A JSON string representing the payload.</returns>
         public override string ToString() {
-            return Utils.DictToJSONString (payload);
-        }
-
-        /// <summary>
-        /// Gets the dictionary within the Payload
-        /// </summary>
-        /// <returns>The payload</returns>
-        public Dictionary<string, object> Payload
-        {
-            get
-            {
-                return payload;
-            }
+            return Utils.DictToJSONString(Payload);
         }
     }
 }
