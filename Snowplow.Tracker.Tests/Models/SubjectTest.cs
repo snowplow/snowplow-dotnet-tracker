@@ -29,7 +29,7 @@ namespace Snowplow.Tracker.Tests.Models
         public void testSubjectInitialization()
         {
             var subject = new Subject();
-            Assert.AreEqual(subject._payload.Payload["p"], "pc");
+            Assert.AreEqual(subject.Payload.Payload["p"], "pc");
         }
 
         [TestMethod]
@@ -65,7 +65,7 @@ namespace Snowplow.Tracker.Tests.Models
 
             foreach (string key in expected.Keys)
             {
-                Assert.AreEqual(subject._payload.Payload[key], expected[key]);
+                Assert.AreEqual(subject.Payload.Payload[key], expected[key]);
             }
         }
     }

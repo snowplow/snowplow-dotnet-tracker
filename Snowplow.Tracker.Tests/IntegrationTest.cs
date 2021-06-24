@@ -167,12 +167,12 @@ namespace Snowplow.Tracker.Tests
 
             foreach (string key in expectedOne.Keys)
             {
-                Assert.AreEqual(subjectOne._payload.Payload[key], expectedOne[key]);
+                Assert.AreEqual(subjectOne.Payload.Payload[key], expectedOne[key]);
             }
 
             foreach (string key in expectedTwo.Keys)
             {
-                Assert.AreEqual(subjectTwo._payload.Payload[key], expectedTwo[key]);
+                Assert.AreEqual(subjectTwo.Payload.Payload[key], expectedTwo[key]);
             }
 
             tracker.SetSubject(new Subject());
@@ -193,6 +193,31 @@ namespace Snowplow.Tracker.Tests
 
             var expectedRegex = new Regex(
                 String.Format(@"http://snowplowanalytics.com/i\?e=pv&url={0}&page={1}&refr={2}&eid=[^&]+&dtm=[^&]+&tv=[^&]+&tna=testNamespace&aid=testAppId&p=pc",
+                    Regex.Escape(WebUtility.UrlEncode("http://www.example.com")),
+                    Regex.Escape(WebUtility.UrlEncode("title page")),
+                    Regex.Escape(WebUtility.UrlEncode("http://www.referrer.com"))
+                )
+            );
+
+            var actual = g.Queries[0];
+
+            Assert.IsTrue(Uri.IsWellFormedUriString(actual, UriKind.Absolute));
+            Assert.IsTrue(expectedRegex.Match(actual).Success, String.Format("{0} doesn't match {1}", actual, expectedRegex.ToString()));
+
+            return true;
+        }
+
+        private bool ensurePageViewsWithEventSubjectWorkGet(Tracker t, MockGet g)
+        {
+            t.Track(new PageView()
+                .SetPageUrl("http://www.example.com")
+                .SetReferrer("http://www.referrer.com")
+                .SetPageTitle("title page")
+                .Build(), new Subject().SetUserId("event-level-subject"));
+            t.Flush();
+
+            var expectedRegex = new Regex(
+                String.Format(@"http://snowplowanalytics.com/i\?e=pv&url={0}&page={1}&refr={2}&eid=[^&]+&dtm=[^&]+&tv=[^&]+&tna=testNamespace&aid=testAppId&p=pc&uid=event-level-subject",
                     Regex.Escape(WebUtility.UrlEncode("http://www.example.com")),
                     Regex.Escape(WebUtility.UrlEncode("title page")),
                     Regex.Escape(WebUtility.UrlEncode("http://www.referrer.com"))
@@ -538,6 +563,7 @@ namespace Snowplow.Tracker.Tests
             Assert.IsTrue(tracker.Started);
             Assert.IsTrue(ensureSubjectSet(tracker));
             Assert.IsTrue(ensurePageViewsWorkGet(tracker, getRequestMock));
+            Assert.IsTrue(ensurePageViewsWithEventSubjectWorkGet(tracker, getRequestMock));
             Assert.IsTrue(ensureStructEventsWorkGet(tracker, getRequestMock));
             Assert.IsTrue(ensureEcommerceTransactionWorksGet(tracker, getRequestMock));
             Assert.IsTrue(ensureUnstructEventGet(tracker, getRequestMock));
