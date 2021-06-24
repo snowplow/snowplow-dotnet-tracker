@@ -1,0 +1,25 @@
+name: Snyk
+on:
+  push:
+    branches: [ master ]
+
+jobs:
+  security:
+    runs-on: ubuntu-20.04
+    steps:
+      - uses: actions/checkout@v2
+      - uses: snyk/actions/setup@master
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v1
+        with:
+          dotnet-version: 5.0.x
+
+      - name: Restore Snowplow.Tracker dependencies
+        run: dotnet restore Snowplow.Tracker.sln
+
+      - name: Run Snyk to check for vulnerabilities
+        run: snyk monitor --project-name=snowplow-dotnet-tracker
+        working-directory: ./Snowplow.Tracker
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
