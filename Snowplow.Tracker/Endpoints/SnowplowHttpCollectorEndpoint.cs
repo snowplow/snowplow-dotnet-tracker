@@ -30,8 +30,8 @@ namespace Snowplow.Tracker.Endpoints
 {
     public class SnowplowHttpCollectorEndpoint : IEndpoint
     {
-        public delegate RequestResult PostDelegate(string uri, string postData, bool oversize, List<long> itemIds);
-        public delegate RequestResult GetDelegate(string uri, bool oversize, List<long> itemIds);
+        public delegate RequestResult PostDelegate(string uri, string postData, bool oversize, List<string> itemIds);
+        public delegate RequestResult GetDelegate(string uri, bool oversize, List<string> itemIds);
 
         private readonly PostDelegate DefaultPostMethod = new PostDelegate(SnowplowHttpCollectorEndpoint.HttpPost);
         private readonly GetDelegate DefaultGetMethod = new GetDelegate(SnowplowHttpCollectorEndpoint.HttpGet);
@@ -86,7 +86,7 @@ namespace Snowplow.Tracker.Endpoints
         /// </summary>
         /// <param name="p">The paylaod to send</param>
         /// <returns>a list of successfully sent and failed events, success is determined by a 200 response code</returns>
-        public SendResult Send(List<Tuple<long, Payload>> itemList)
+        public SendResult Send(List<Tuple<string, Payload>> itemList)
         {
             List<RequestResult> requestResultList;
 
@@ -103,8 +103,8 @@ namespace Snowplow.Tracker.Endpoints
                 throw new NotSupportedException("Only POST and GET supported");
             }
 
-            var successIds = new List<long>();
-            var failureIds = new List<long>();
+            var successIds = new List<string>();
+            var failureIds = new List<string>();
 
             foreach (var requestResult in requestResultList)
             {
@@ -146,7 +146,7 @@ namespace Snowplow.Tracker.Endpoints
         /// </summary>
         /// <param name="itemList">The list of items to send</param>
         /// <returns>The list of send results</returns>
-        private List<RequestResult> SendGetAsync(List<Tuple<long, Payload>> itemList)
+        private List<RequestResult> SendGetAsync(List<Tuple<string, Payload>> itemList)
         {
             var requestResultList = new List<RequestResult>();
 
@@ -160,7 +160,7 @@ namespace Snowplow.Tracker.Endpoints
 
                 _logger.Info(String.Format("Endpoint GET {0}", uri));
 
-                requestResultList.Add(_getMethod(uri, byteSize > _byteLimitGet, new List<long> { item.Item1 }));
+                requestResultList.Add(_getMethod(uri, byteSize > _byteLimitGet, new List<string> { item.Item1 }));
             }
 
             return requestResultList;
@@ -173,11 +173,11 @@ namespace Snowplow.Tracker.Endpoints
         /// </summary>
         /// <param name="itemList">The list of items to send</param>
         /// <returns>The list of send results</returns>
-        private List<RequestResult> SendPostAsync(List<Tuple<long, Payload>> itemList)
+        private List<RequestResult> SendPostAsync(List<Tuple<string, Payload>> itemList)
         {
             var requestResultList = new List<RequestResult>();
 
-            var itemIds = new List<long>();
+            var itemIds = new List<string>();
             var itemPayloads = new List<Dictionary<string, object>>();
             long totalByteSize = 0;
 
@@ -189,7 +189,7 @@ namespace Snowplow.Tracker.Endpoints
                 if ((byteSize + POST_WRAPPER_BYTES) > _byteLimitPost)
                 {
                     var singleEventPost = AddSendTimestamp(new List<Dictionary<string, object>> { payload.Payload });
-                    var singleEventIds = new List<long> { item.Item1 };
+                    var singleEventIds = new List<string> { item.Item1 };
                     requestResultList.Add(_postMethod(_collectorUri, ToPostDataString(singleEventPost), true, singleEventIds));
                 }
                 else if ((totalByteSize + byteSize + POST_WRAPPER_BYTES + (itemPayloads.Count - 1)) > _byteLimitPost)
@@ -198,7 +198,7 @@ namespace Snowplow.Tracker.Endpoints
                     requestResultList.Add(_postMethod(_collectorUri, ToPostDataString(itemPayloads), false, itemIds));
 
                     itemPayloads = new List<Dictionary<string, object>> { payload.Payload };
-                    itemIds = new List<long> { item.Item1 };
+                    itemIds = new List<string> { item.Item1 };
                     totalByteSize = byteSize;
                 }
                 else
@@ -320,7 +320,7 @@ namespace Snowplow.Tracker.Endpoints
         /// <param name="oversize">If the request is oversized</param>
         /// <param name="itemIds">The ids of the events being sent</param>
         /// <returns>The HTTP return code, or null if couldn't connect</returns>
-        public static RequestResult HttpPost(string collectorUri, string postData, bool oversize, List<long> itemIds)
+        public static RequestResult HttpPost(string collectorUri, string postData, bool oversize, List<string> itemIds)
         {
             var postContent = new StringContent(postData, Encoding.UTF8, Constants.POST_CONTENT_TYPE);
             var statusCodeTask = Task.Factory.StartNew(() => {
@@ -345,7 +345,7 @@ namespace Snowplow.Tracker.Endpoints
         /// <param name="oversize">If the request is oversized</param>
         /// <param name="itemIds">The ids of the events being sent</param>
         /// <returns>The HTTP return code, or null if couldn't connect</returns>
-        public static RequestResult HttpGet(string uri, bool oversize, List<long> itemIds)
+        public static RequestResult HttpGet(string uri, bool oversize, List<string> itemIds)
         {
             var statusCodeTask = Task.Factory.StartNew(() => {
                 using (HttpClient c = new HttpClient())

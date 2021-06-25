@@ -25,12 +25,18 @@ namespace Snowplow.Tracker.Storage
 {
     public class LiteDBStorage : IStorage, IDisposable
     {
+        private class LiteDbStorageRecord
+        {
+            public ObjectId Id { get; set; }
+            public string Item { get; set; }
+        }
+
         /// <summary>
         /// The total number of items in the database currently
         /// </summary>
         public int TotalItems { get; private set; }
         private LiteDatabase _db;
-        private const string COLLECTION_NAME = "storage";
+        private const string COLLECTION_NAME = "storagev2";
 
         private object _dbAccess = new object();
 
@@ -43,7 +49,7 @@ namespace Snowplow.Tracker.Storage
             _db = new LiteDatabase(path);
             if (_db.CollectionExists(COLLECTION_NAME))
             {
-                TotalItems = _db.GetCollection<StorageRecord>(COLLECTION_NAME).Count();
+                TotalItems = _db.GetCollection<LiteDbStorageRecord>(COLLECTION_NAME).Count();
             }
             else
             {
@@ -57,16 +63,15 @@ namespace Snowplow.Tracker.Storage
         /// <param name="item">The item to put in the database</param>
         public void Put(string item)
         {
-            var r = new StorageRecord
-            {
-                Item = item
-            };
-
             lock (_dbAccess)
             {
-                var recs = _db.GetCollection<StorageRecord>(COLLECTION_NAME);
+                var recs = _db.GetCollection<LiteDbStorageRecord>(COLLECTION_NAME);
 
-                recs.Insert(r);
+                recs.Insert(new LiteDbStorageRecord
+                {
+                    Id = ObjectId.NewObjectId(),
+                    Item = item
+                });
                 TotalItems += 1;
             }
         }
@@ -80,12 +85,13 @@ namespace Snowplow.Tracker.Storage
         {
             lock (_dbAccess)
             {
-                var recs = _db.GetCollection<StorageRecord>(COLLECTION_NAME);
+                var recs = _db.GetCollection<LiteDbStorageRecord>(COLLECTION_NAME);
 
                 return recs.FindAll()
-                    .OrderByDescending(i => { return i.Id; })
+                    .OrderByDescending(i => { return i.Id.CreationTime; })
                     .Take(n)
-                    .ToList<StorageRecord>();
+                    .Select(r => new StorageRecord { Id = r.Id.ToString(), Item = r.Item })
+                    .ToList();
             }
         }
 
@@ -93,16 +99,16 @@ namespace Snowplow.Tracker.Storage
         /// Attempts to delete a list of events.
         /// </summary>
         /// <param name="idList"></param>
-        public bool Delete(List<long> idList)
+        public bool Delete(List<string> idList)
         {
             lock (_dbAccess)
             {
-                var recs = _db.GetCollection<StorageRecord>(COLLECTION_NAME);
+                var recs = _db.GetCollection<LiteDbStorageRecord>(COLLECTION_NAME);
                 int failedDeletions = 0;
 
                 foreach (var id in idList)
                 {
-                    if (recs.Delete(id))
+                    if (recs.Delete(new ObjectId(id)))
                     {
                         TotalItems -= 1;
                     }

@@ -35,7 +35,7 @@ namespace Snowplow.Tracker.Tests.Endpoints
             public List<string> Queries { get; private set; } = new List<string>();
             public int StatusCode { get; set; } = 200;
 
-            public RequestResult HttpGet(string uri, bool oversize, List<long> itemIds)
+            public RequestResult HttpGet(string uri, bool oversize, List<string> itemIds)
             {
                 Queries.Insert(0, uri);
 
@@ -62,7 +62,7 @@ namespace Snowplow.Tracker.Tests.Endpoints
             public List<PostRequest> Queries { get; private set; } = new List<PostRequest>();
             public int StatusCode { get; set; } = 200;
 
-            public RequestResult HttpPost(string uri, string postData, bool oversize, List<long> itemIds)
+            public RequestResult HttpPost(string uri, string postData, bool oversize, List<string> itemIds)
             {
                 var postRec = new PostRequest { Uri = uri, PostData = postData };
                 Queries.Insert(0, postRec);
@@ -87,8 +87,8 @@ namespace Snowplow.Tracker.Tests.Endpoints
             var payload = new Payload();
             payload.Add("hello", "world");
 
-            var sendList = new List<Tuple<long, Payload>>();
-            sendList.Add(Tuple.Create(0L, payload));
+            var sendList = new List<Tuple<string, Payload>>();
+            sendList.Add(Tuple.Create("0", payload));
 
             var sendResult = endpoint.Send(sendList);
 
@@ -109,8 +109,8 @@ namespace Snowplow.Tracker.Tests.Endpoints
             payload.Add("hello", "world");
             payload.Add("ts", "123");
 
-            var sendList = new List<Tuple<long, Payload>>();
-            sendList.Add(Tuple.Create(0L, payload));
+            var sendList = new List<Tuple<string, Payload>>();
+            sendList.Add(Tuple.Create("0", payload));
             
             var sendResult = endpoint.Send(sendList);
 
@@ -131,8 +131,8 @@ namespace Snowplow.Tracker.Tests.Endpoints
             payload.Add("hello", "world");
             payload.Add("ts", "123");
 
-            var sendList = new List<Tuple<long, Payload>>();
-            sendList.Add(Tuple.Create(0L, payload));
+            var sendList = new List<Tuple<string, Payload>>();
+            sendList.Add(Tuple.Create("0", payload));
 
             var sendResult = endpoint.Send(sendList);
 
@@ -153,8 +153,8 @@ namespace Snowplow.Tracker.Tests.Endpoints
             payload.Add("hello", "world");
             payload.Add("ts", "123");
 
-            var sendList = new List<Tuple<long, Payload>>();
-            sendList.Add(Tuple.Create(0L, payload));
+            var sendList = new List<Tuple<string, Payload>>();
+            sendList.Add(Tuple.Create("0", payload));
 
             var sendResult = endpoint.Send(sendList);
 
@@ -174,8 +174,8 @@ namespace Snowplow.Tracker.Tests.Endpoints
             var payload = new Payload();
             payload.Add("sample", "value");
 
-            var sendList = new List<Tuple<long, Payload>>();
-            sendList.Add(Tuple.Create(0L, payload));
+            var sendList = new List<Tuple<string, Payload>>();
+            sendList.Add(Tuple.Create("0", payload));
 
             var sendResult = endpoint.Send(sendList);
 
@@ -195,8 +195,8 @@ namespace Snowplow.Tracker.Tests.Endpoints
             var payload = new Payload();
             payload.Add("<", ">");
 
-            var sendList = new List<Tuple<long, Payload>>();
-            sendList.Add(Tuple.Create(0L, payload));
+            var sendList = new List<Tuple<string, Payload>>();
+            sendList.Add(Tuple.Create("0", payload));
 
             var sendResult = endpoint.Send(sendList);
 
@@ -216,8 +216,8 @@ namespace Snowplow.Tracker.Tests.Endpoints
             var payload = new Payload();
             payload.Add("foo", "bar");
 
-            var sendList = new List<Tuple<long, Payload>>();
-            sendList.Add(Tuple.Create(0L, payload));
+            var sendList = new List<Tuple<string, Payload>>();
+            sendList.Add(Tuple.Create("0", payload));
 
             var sendResult = endpoint.Send(sendList);
 
@@ -237,8 +237,8 @@ namespace Snowplow.Tracker.Tests.Endpoints
             var payload = new Payload();
             payload.Add("foo", "bar");
 
-            var sendList = new List<Tuple<long, Payload>>();
-            sendList.Add(Tuple.Create(0L, payload));
+            var sendList = new List<Tuple<string, Payload>>();
+            sendList.Add(Tuple.Create("0", payload));
 
             var sendResult = endpoint.Send(sendList);
 
@@ -260,8 +260,8 @@ namespace Snowplow.Tracker.Tests.Endpoints
 
             payload.Add("foo", "bar");
 
-            var sendList = new List<Tuple<long, Payload>>();
-            sendList.Add(Tuple.Create(0L, payload));
+            var sendList = new List<Tuple<string, Payload>>();
+            sendList.Add(Tuple.Create("0", payload));
 
             var sendResult = endpoint.Send(sendList);
 
@@ -277,8 +277,8 @@ namespace Snowplow.Tracker.Tests.Endpoints
             var payload = new Payload();
             payload.Add("foo", "bar");
 
-            var sendList = new List<Tuple<long, Payload>>();
-            sendList.Add(Tuple.Create(0L, payload));
+            var sendList = new List<Tuple<string, Payload>>();
+            sendList.Add(Tuple.Create("0", payload));
 
             var sendResult = endpoint.Send(sendList);
 
@@ -295,13 +295,13 @@ namespace Snowplow.Tracker.Tests.Endpoints
             string returns403 = "http://snowplowanalytics.com/nothere/ok";
             string cannotConnect = "http://localhost:1231";
 
-            var resp = SnowplowHttpCollectorEndpoint.HttpPost(returns200, @"[{""foo"":""bar""}]", false, new List<long> { 0 });
+            var resp = SnowplowHttpCollectorEndpoint.HttpPost(returns200, @"[{""foo"":""bar""}]", false, new List<string> { "0" });
             Assert.AreEqual(200, resp.StatusCodeTask.Result);
 
-            var bad = SnowplowHttpCollectorEndpoint.HttpPost(returns403, @"[{""foo"":""bar""}]", false, new List<long> { 0 });
+            var bad = SnowplowHttpCollectorEndpoint.HttpPost(returns403, @"[{""foo"":""bar""}]", false, new List<string> { "0" });
             Assert.AreEqual(403, bad.StatusCodeTask.Result);
 
-            var nowhere = SnowplowHttpCollectorEndpoint.HttpPost(cannotConnect, @"[{""foo"":""bar""}]", false, new List<long> { 0 });
+            var nowhere = SnowplowHttpCollectorEndpoint.HttpPost(cannotConnect, @"[{""foo"":""bar""}]", false, new List<string> { "0" });
             Assert.AreEqual(-1, nowhere.StatusCodeTask.Result);
         }
 
@@ -314,13 +314,13 @@ namespace Snowplow.Tracker.Tests.Endpoints
             string returns404 = "http://snowplowanalytics.com/nothere/ok";
             string cannotConnect = "http://localhost:1231";
 
-            var resp = SnowplowHttpCollectorEndpoint.HttpGet(returns200, false, new List<long> { 0 });
+            var resp = SnowplowHttpCollectorEndpoint.HttpGet(returns200, false, new List<string> { "0" });
             Assert.AreEqual(200, resp.StatusCodeTask.Result);
 
-            var bad = SnowplowHttpCollectorEndpoint.HttpGet(returns404, false, new List<long> { 0 });
+            var bad = SnowplowHttpCollectorEndpoint.HttpGet(returns404, false, new List<string> { "0" });
             Assert.AreEqual(404, bad.StatusCodeTask.Result);
 
-            var nowhere = SnowplowHttpCollectorEndpoint.HttpGet(cannotConnect, false, new List<long> { 0 });
+            var nowhere = SnowplowHttpCollectorEndpoint.HttpGet(cannotConnect, false, new List<string> { "0" });
             Assert.AreEqual(-1, nowhere.StatusCodeTask.Result);
         }
     }

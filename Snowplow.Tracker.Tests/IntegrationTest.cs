@@ -52,7 +52,7 @@ namespace Snowplow.Tracker.Tests
             public List<string> Queries { get; private set; } = new List<string>();
             public int StatusCode { get; set; } = 200;
 
-            public RequestResult HttpGet(string uri, bool oversize, List<long> itemIds)
+            public RequestResult HttpGet(string uri, bool oversize, List<string> itemIds)
             {
                 Queries.Insert(0, uri);
 
@@ -79,7 +79,7 @@ namespace Snowplow.Tracker.Tests
             public List<PostRequest> Queries { get; private set; } = new List<PostRequest>();
             public int StatusCode { get; set; } = 200;
 
-            public RequestResult HttpPost(string uri, string postData, bool oversize, List<long> itemIds)
+            public RequestResult HttpPost(string uri, string postData, bool oversize, List<string> itemIds)
             {
                 var postRec = new PostRequest { Uri = uri, PostData = postData };
                 Queries.Insert(0, postRec);

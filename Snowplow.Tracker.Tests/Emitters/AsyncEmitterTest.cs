@@ -58,12 +58,12 @@ namespace Snowplow.Tracker.Tests.Emitters
             public bool Response { get; set; } = true;
             public int CallCount { get; private set; } = 0;
 
-            public SendResult Send(List<Tuple<long, Payload>> p)
+            public SendResult Send(List<Tuple<string, Payload>> p)
             {
                 CallCount += 1;
 
-                var successIds = new List<long>();
-                var failureIds = new List<long>();
+                var successIds = new List<string>();
+                var failureIds = new List<string>();
 
                 foreach (var tup in p)
                 {
