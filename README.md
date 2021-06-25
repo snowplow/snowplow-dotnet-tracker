@@ -6,14 +6,14 @@
 
 Add analytics to your .NET apps with the **[Snowplow][snowplow]** C# event tracker.
 
-With this tracker you can collect event data from your **[.NET][dotnet]** desktop and web applications.
+With this tracker you can collect event data from your **[.NET][dotnet]** desktop, web, server and mobile applications.
 
 ## Find out more
 
 | Technical Docs                  | Setup Guide               | Roadmap                 | Contributing                      |
 |---------------------------------|---------------------------|-------------------------|-----------------------------------|
 | ![i1][techdocs-image]           | ![i2][setup-image]       | ![i3][roadmap-image]   | ![i4][contributing-image]        |
-| **[Technical Docs][techdocs]** | **[Setup Guide][setup]** | **[Roadmap][roadmap]** | **[Contributing][contributing]** |
+| **[Technical Docs][techdocs]** | **[Setup Guide][setup]** | **[Roadmap][roadmap]** | **[Contributing](Contributing.md)** |
 
 ## Copyright and license
 
@@ -37,10 +37,9 @@ limitations under the License.
 [roadmap-image]: https://d3i6fms1cm1j0i.cloudfront.net/github/images/roadmap.png
 [contributing-image]: https://d3i6fms1cm1j0i.cloudfront.net/github/images/contributing.png
 
-[techdocs]: https://github.com/snowplow/snowplow/wiki/.net-tracker
-[setup]: https://github.com/snowplow/snowplow/wiki/.net-tracker-setup
-[roadmap]: https://github.com/snowplow/snowplow/wiki/.NET-Tracker-Roadmap
-[contributing]: https://github.com/snowplow/snowplow/wiki/.NET-Tracker-Contributing
+[techdocs]: https://docs.snowplowanalytics.com/docs/collecting-data/collecting-from-own-applications/net-tracker/
+[setup]: https://docs.snowplowanalytics.com/docs/collecting-data/collecting-from-own-applications/net-tracker/setup/
+[roadmap]: https://github.com/snowplow/snowplow/projects/7
 
 [release-image]: https://img.shields.io/nuget/v/Snowplow.Tracker
 [releases]: https://www.nuget.org/packages/Snowplow.Tracker
