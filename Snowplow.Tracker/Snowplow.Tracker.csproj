@@ -10,8 +10,9 @@
     <AssemblyName>Snowplow.Tracker</AssemblyName>
     <PackageId>Snowplow.Tracker</PackageId>
     <PackageTags>snowplow;analytics;events;tracking</PackageTags>
-    <PackageProject>https://github.com/snowplow/snowplow-dotnet-tracker</PackageProject>
-    <PackageLicense>http://www.apache.org/licenses/LICENSE-2.0.html</PackageLicense>
+    <PackageProjectUrl>https://github.com/snowplow/snowplow-dotnet-tracker</PackageProjectUrl>
+    <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
+    <PublishRepositoryUrl>true</PublishRepositoryUrl> 
     <GenerateAssemblyConfigurationAttribute>false</GenerateAssemblyConfigurationAttribute>
     <GenerateAssemblyCompanyAttribute>false</GenerateAssemblyCompanyAttribute>
     <GenerateAssemblyProductAttribute>false</GenerateAssemblyProductAttribute>
