@@ -38,7 +38,7 @@ namespace Snowplow.Tracker.Tests.Queues
         {
             _items.Insert(0, new StorageRecord()
             {
-                Id = 0,
+                Id = "0",
                 Item = item
             });
         }
@@ -55,7 +55,7 @@ namespace Snowplow.Tracker.Tests.Queues
             }
         }
 
-        public bool Delete(List<long> idList)
+        public bool Delete(List<string> idList)
         {
             _items.RemoveRange(TotalItems - idList.Count, idList.Count);
             return true;
@@ -82,7 +82,7 @@ namespace Snowplow.Tracker.Tests.Queues
             Assert.AreEqual("hello world", i[0].Item);
             Assert.AreEqual(1, s.TotalItems);
 
-            var del = s.Delete(new List<long> { 0 });
+            var del = s.Delete(new List<string> { "0" });
 
             Assert.IsTrue(del);
             Assert.AreEqual(0, s.TotalItems);
@@ -109,7 +109,7 @@ namespace Snowplow.Tracker.Tests.Queues
             Assert.AreEqual("hello world 3", i[0].Item);
             Assert.AreEqual(3, s.TotalItems);
 
-            var del = s.Delete(new List<long> { 0, 1, 2 });
+            var del = s.Delete(new List<string> { "0", "1", "2" });
 
             Assert.IsTrue(del);
             Assert.AreEqual(0, s.TotalItems);

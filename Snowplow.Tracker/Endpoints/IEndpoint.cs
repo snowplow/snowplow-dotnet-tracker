@@ -20,19 +20,19 @@ namespace Snowplow.Tracker.Endpoints
 {
     public class SendResult
     {
-        public List<long> SuccessIds { get; set; } = new List<long>();
-        public List<long> FailureIds { get; set; } = new List<long>();
+        public List<string> SuccessIds { get; set; } = new List<string>();
+        public List<string> FailureIds { get; set; } = new List<string>();
     }
 
     public class RequestResult
     {
         public bool IsOversize { get; set; } = false;
         public Task<int> StatusCodeTask { get; set; } = null;
-        public List<long> ItemIds { get; set; }
+        public List<string> ItemIds { get; set; }
     }
 
     public interface IEndpoint
     {
-        SendResult Send(List<Tuple<long, Payload>> p);
+        SendResult Send(List<Tuple<string, Payload>> p);
     }
 }

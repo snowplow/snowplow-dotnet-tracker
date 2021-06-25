@@ -23,16 +23,14 @@ namespace Snowplow.Tracker.Queues
     {
         private readonly object _queueLock = new object();
 
-        private ConcurrentDictionary<long, Payload> _collection;
-        private ConcurrentDictionary<string, long> _nextIdDictionary;
+        private ConcurrentDictionary<Guid, Payload> _collection;
 
         /// <summary>
         /// Create an in memory blocking queue
         /// </summary>
         public InMemoryBlockingQueue()
         {
-             _collection = new ConcurrentDictionary<long, Payload>();
-            _nextIdDictionary = new ConcurrentDictionary<string, long>();
+             _collection = new ConcurrentDictionary<Guid, Payload>();
         }
 
         /// <summary>
@@ -45,7 +43,7 @@ namespace Snowplow.Tracker.Queues
             {
                 foreach (var item in items)
                 {
-                    _collection.TryAdd(getNextId(), item);
+                    _collection.TryAdd(Guid.NewGuid(), item);
                 }
 
                 Monitor.PulseAll(_queueLock);
@@ -58,9 +56,9 @@ namespace Snowplow.Tracker.Queues
         /// <param name="count">Maximum amount of items to dequeue</param>
         /// <param name="maxWait">Maximum number of milliseconds to block</param>
         /// <returns>A list of items taken from the queue</returns>
-        public List<Tuple<long, Payload>> Peek(int count, int maxWait = 300)
+        public List<Tuple<string, Payload>> Peek(int count, int maxWait = 300)
         {
-            var records = new List<Tuple<long, Payload>>();
+            var records = new List<Tuple<string, Payload>>();
 
             lock (_queueLock)
             {
@@ -74,7 +72,7 @@ namespace Snowplow.Tracker.Queues
 
                 foreach (var item in _collection)
                 {
-                    records.Add(Tuple.Create(item.Key, item.Value));
+                    records.Add(Tuple.Create(item.Key.ToString(), item.Value));
 
                     if (records.Count == count)
                     {
@@ -91,29 +89,14 @@ namespace Snowplow.Tracker.Queues
         /// </summary>
         /// <param name="idList"></param>
         /// <returns></returns>
-        public bool Remove(List<long> idList)
+        public bool Remove(List<string> idList)
         {
             foreach (var id in idList)
             {
-                _collection.TryRemove(id, out _);
+                _collection.TryRemove(Guid.Parse(id), out _);
             }
 
             return true;
-        }
-
-        private long getNextId()
-        {
-            return _nextIdDictionary.AddOrUpdate("key", 0, (key, value) =>
-            {
-                if (value == long.MaxValue)
-                {
-                    return 0;
-                }
-                else
-                {
-                    return 1;
-                }
-            });
         }
     }
 }
