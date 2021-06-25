@@ -7,7 +7,7 @@
         <title>Snowplow.Tracker.PlatformExtensions</title>
         <authors>Joshua Beemster</authors>
         <owners>snowplow</owners>
-        <licenseUrl>http://www.apache.org/licenses/LICENSE-2.0.html</licenseUrl>
+        <license type="expression">Apache-2.0</license>
         <projectUrl>https://github.com/snowplow/snowplow-dotnet-tracker</projectUrl>
         <requireLicenseAcceptance>false</requireLicenseAcceptance>
         <description>Add Snowplow Tracking to your Desktop/Server, Xamarin.Droid or Xamarin.iOS applications.</description>
