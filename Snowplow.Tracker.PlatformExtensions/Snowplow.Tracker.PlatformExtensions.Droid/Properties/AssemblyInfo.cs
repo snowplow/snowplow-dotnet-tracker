@@ -9,7 +9,7 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyTitle("Snowplow.Tracker.PlatformExtensions.Droid")]
 [assembly: AssemblyDescription("")]
 [assembly: AssemblyConfiguration("")]
-[assembly: AssemblyCompany("Snowplow Analytics LTD")]
+[assembly: AssemblyCompany("Snowplow Analytics Ltd")]
 [assembly: AssemblyProduct("Snowplow.Tracker.PlatformExtensions.Droid")]
 [assembly: AssemblyCopyright("Copyright © 2021")]
 [assembly: AssemblyTrademark("")]

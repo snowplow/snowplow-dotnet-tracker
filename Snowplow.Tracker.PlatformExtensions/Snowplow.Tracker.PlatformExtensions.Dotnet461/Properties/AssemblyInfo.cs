@@ -8,7 +8,7 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyTitle("Snowplow.Tracker.PlatformExtensions.Dotnet461")]
 [assembly: AssemblyDescription("")]
 [assembly: AssemblyConfiguration("")]
-[assembly: AssemblyCompany("")]
+[assembly: AssemblyCompany("Snowplow Analytics Ltd")]
 [assembly: AssemblyProduct("Snowplow.Tracker.PlatformExtensions.Dotnet461")]
 [assembly: AssemblyCopyright("Copyright ©  2021")]
 [assembly: AssemblyTrademark("")]
