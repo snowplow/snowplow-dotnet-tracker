@@ -67,7 +67,7 @@ namespace Snowplow.Tracker.Tests.Storage
 
                     Assert.AreEqual(1, storage.TotalItems);
 
-                    var delete = storage.Delete(new List<long> { actual[0].Id });
+                    var delete = storage.Delete(new List<string> { actual[0].Id });
 
                     Assert.IsTrue(delete);
                     Assert.AreEqual(expected, actual[0].Item);
@@ -96,14 +96,14 @@ namespace Snowplow.Tracker.Tests.Storage
                     {
                         var generated = String.Format("{0}", i);
                         storage.Put(generated);
-                        expected.Insert(0, generated);
+                        expected.Add(generated);
                     }
 
                     Assert.AreEqual(insertionCount, storage.TotalItems);
 
                     var eventRecords = storage.TakeLast(insertionCount);
 
-                    var eventIds = new List<long>();
+                    var eventIds = new List<string>();
                     var items = new List<string>();
 
                     foreach (var record in eventRecords)
@@ -147,7 +147,7 @@ namespace Snowplow.Tracker.Tests.Storage
                     Assert.AreEqual(1, reopenedStorage.TotalItems);
 
                     var actual = reopenedStorage.TakeLast(1);
-                    var delete = reopenedStorage.Delete(new List<long> { actual[0].Id });
+                    var delete = reopenedStorage.Delete(new List<string> { actual[0].Id });
 
                     Assert.IsTrue(delete);
                     Assert.AreEqual(0, reopenedStorage.TotalItems);
