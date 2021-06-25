@@ -5,7 +5,7 @@
         <copyright>Copyright 2021</copyright>
         <version>1.0.2</version>
         <title>Snowplow.Tracker.PlatformExtensions</title>
-        <authors>Joshua Beemster</authors>
+        <authors>Joshua Beemster, Paul Boocock</authors>
         <owners>snowplow</owners>
         <licenseUrl>http://www.apache.org/licenses/LICENSE-2.0.html</licenseUrl>
         <projectUrl>https://github.com/snowplow/snowplow-dotnet-tracker</projectUrl>
