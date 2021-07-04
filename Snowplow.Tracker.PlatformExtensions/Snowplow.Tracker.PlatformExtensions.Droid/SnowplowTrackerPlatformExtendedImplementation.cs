@@ -128,9 +128,14 @@ namespace Snowplow.Tracker.PlatformExtensions
         /// <returns></returns>
         public override string GetCarrier()
         {
-            using (var tm = (TelephonyManager)Android.App.Application.Context.GetSystemService(Android.Content.Context.TelephonyService))
+            try 
             {
+                var tm = (TelephonyManager)Android.App.Application.Context.GetSystemService(Android.Content.Context.TelephonyService);
                 return tm != null ? tm.NetworkOperatorName : "";
+            }
+            catch 
+            {
+                return "";
             }
         }
 
@@ -190,21 +195,15 @@ namespace Snowplow.Tracker.PlatformExtensions
         /// <returns>gets network info or null</returns>
         private NetworkInfo GetNetworkInfo()
         {
-            NetworkInfo ni = null;
-
             try
             {
-                using (var cm = (ConnectivityManager)Android.App.Application.Context.GetSystemService(Android.Content.Context.ConnectivityService))
-                {
-                    return cm.ActiveNetworkInfo;
-                }
+                var cm = (ConnectivityManager)Android.App.Application.Context.GetSystemService(Android.Content.Context.ConnectivityService);
+                return cm.ActiveNetworkInfo;
             }
             catch
             {
-                ni = null;
+                return null;
             }
-
-            return ni;
         }
     }
 }
