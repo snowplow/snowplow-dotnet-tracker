@@ -182,9 +182,9 @@ FakesAssemblies/
 .vs/
 
 integration_test.db
-integration_test-journal.db
+integration_test-log.db
 
 snowplow-demo-app.db
-snowplow-demo-app-journal.db
+snowplow-demo-app-log.db
 
 project.lock.json

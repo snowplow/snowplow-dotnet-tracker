@@ -36,9 +36,7 @@ namespace Snowplow.Tracker.Tests
     {
 
         private Tracker tracker = Tracker.Instance;
-
         private const string _testDbFilename = @"integration_test.db";
-        private const string _testDbJournalFilename = @"integration_test-journal.db";
 
         // --- Mocks
 
@@ -580,6 +578,8 @@ namespace Snowplow.Tracker.Tests
             tracker.Stop();
 
             Assert.IsFalse(tracker.Started);
+
+            storage.Dispose();
         }
 
         [TestInitialize]
@@ -588,11 +588,6 @@ namespace Snowplow.Tracker.Tests
             if (File.Exists(_testDbFilename))
             {
                 File.Delete(_testDbFilename);
-            }
-
-            if (File.Exists(_testDbJournalFilename))
-            {
-                File.Delete(_testDbJournalFilename);
             }
         }
 

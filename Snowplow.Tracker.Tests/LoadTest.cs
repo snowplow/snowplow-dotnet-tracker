@@ -33,7 +33,7 @@ namespace Snowplow.Tracker.Tests
         private const string _collectorHostUri = @"snowplow-snowplow-pmz0wkw27skf-1566534576.eu-west-1.elb.amazonaws.com";
 
         private const string _testDbFilename = @"load_test.db";
-        private const string _testDbJournalFilename = @"load_test-journal.db";
+        private const string _testDbLogFilename = @"load_test-log.db";
         private const string _testClientSessionFilename = @"load_test-session.xml";
 
         // --- Tests
@@ -116,9 +116,9 @@ namespace Snowplow.Tracker.Tests
                 File.Delete(_testDbFilename);
             }
 
-            if (File.Exists(_testDbJournalFilename))
+            if (File.Exists(_testDbLogFilename))
             {
-                File.Delete(_testDbJournalFilename);
+                File.Delete(_testDbLogFilename);
             }
 
             if (File.Exists(_testClientSessionFilename))
