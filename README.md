@@ -30,7 +30,7 @@ limitations under the License.
 
 [dotnet]: https://dotnet.microsoft.com/
 
-[snowplow]: https://snowplowanalytics.com
+[snowplow]: https://snowplow.io
 
 [techdocs-image]: https://d3i6fms1cm1j0i.cloudfront.net/github/images/techdocs.png
 [setup-image]: https://d3i6fms1cm1j0i.cloudfront.net/github/images/setup.png
