@@ -42,6 +42,8 @@ namespace Snowplow.Tracker.Tests.Models
             subject.SetUseragent("useragent");
             subject.SetDomainUserId("duid");
             subject.SetNetworkUserId("tnuid");
+            subject.SetDomainSessionId("97859dd8-5adc-4ac2-83d3-b29e05a2a35b");
+            subject.SetDomainSessionIndex(1);
 
             var expected = new Dictionary<string, string>
             {
@@ -55,7 +57,9 @@ namespace Snowplow.Tracker.Tests.Models
                 {"ip", "127.0.0.1"},
                 {"ua", "useragent"},
                 {"duid", "duid"},
-                {"tnuid", "tnuid"}
+                {"tnuid", "tnuid"},
+                {"sid", "97859dd8-5adc-4ac2-83d3-b29e05a2a35b"},
+                {"vid", "1"}
             };
 
             foreach (string key in expected.Keys)
