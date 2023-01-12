@@ -104,6 +104,8 @@ namespace Snowplow.Tracker
         public readonly static string USERAGENT = "ua";
         public readonly static string DOMAIN_UID = "duid";
         public readonly static string NETWORK_UID = "tnuid";
+        public readonly static string DOMAIN_SESSION_ID = "sid";
+        public readonly static string DOMAIN_SESSION_INDEX = "vid";
 
         // Page View
         public readonly static string PAGE_URL = "url";

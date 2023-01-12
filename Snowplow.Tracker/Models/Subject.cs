@@ -111,7 +111,7 @@ namespace Snowplow.Tracker.Models
         /// Sets the ip address.
         /// </summary>
         /// <param name="ipAddress">Ip address.</param>
-        public Subject SetIpAddress(String ipAddress)
+        public Subject SetIpAddress(string ipAddress)
         {
             Payload.Add(Constants.IP_ADDRESS, ipAddress);
             return this;
@@ -121,7 +121,7 @@ namespace Snowplow.Tracker.Models
         /// Sets the useragent.
         /// </summary>
         /// <param name="useragent">Useragent.</param>
-        public Subject SetUseragent(String useragent)
+        public Subject SetUseragent(string useragent)
         {
             Payload.Add(Constants.USERAGENT, useragent);
             return this;
@@ -131,7 +131,7 @@ namespace Snowplow.Tracker.Models
         /// Sets the domain user identifier.
         /// </summary>
         /// <param name="domainUserId">Domain user identifier.</param>
-        public Subject SetDomainUserId(String domainUserId)
+        public Subject SetDomainUserId(string domainUserId)
         {
             Payload.Add(Constants.DOMAIN_UID, domainUserId);
             return this;
@@ -141,9 +141,29 @@ namespace Snowplow.Tracker.Models
         /// Sets the network user identifier.
         /// </summary>
         /// <param name="networkUserId">Network user identifier.</param>
-        public Subject SetNetworkUserId(String networkUserId)
+        public Subject SetNetworkUserId(string networkUserId)
         {
             Payload.Add(Constants.NETWORK_UID, networkUserId);
+            return this;
+        }
+
+        /// <summary>
+        /// Sets the domain session id.
+        /// </summary>
+        /// <param name="domainSessionId">Domain session identifier.</param>
+        public Subject SetDomainSessionId(string domainSessionId)
+        {
+            Payload.Add(Constants.DOMAIN_SESSION_ID, domainSessionId);
+            return this;
+        }
+
+        /// <summary>
+        /// Sets the domain session index.
+        /// </summary>
+        /// <param name="domainSessionIndex">Domain session index.</param>
+        public Subject SetDomainSessionIndex(int domainSessionIndex)
+        {
+            Payload.Add(Constants.DOMAIN_SESSION_INDEX, domainSessionIndex.ToString());
             return this;
         }
     }
