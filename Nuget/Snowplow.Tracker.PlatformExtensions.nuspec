@@ -2,8 +2,8 @@
 <package xmlns="http://schemas.microsoft.com/packaging/2010/07/nuspec.xsd">
     <metadata minClientVersion="2.8.3">
         <id>Snowplow.Tracker.PlatformExtensions</id>
-        <copyright>Copyright 2021</copyright>
-        <version>1.1.0</version>
+        <copyright>Copyright 2023</copyright>
+        <version>1.2.0</version>
         <title>Snowplow.Tracker.PlatformExtensions</title>
         <authors>Joshua Beemster, Paul Boocock</authors>
         <owners>snowplow</owners>
@@ -16,7 +16,7 @@
         <dependencies>
             <group targetFramework="netstandard1.4">
                 <dependency id="NETStandard.Library" version="1.6.1" />
-                <dependency id="Snowplow.Tracker" version="1.1.0" />
+                <dependency id="Snowplow.Tracker" version="1.2.0" />
             </group>
         </dependencies>
     </metadata>
