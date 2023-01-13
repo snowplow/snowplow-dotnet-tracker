@@ -1,3 +1,7 @@
+Version 1.2.0 (2023-01-13)
+--------------------------
+Add support for domain session properties (#119)
+
 Version 1.1.0 (2021-07-05)
 --------------------------
 Bump LiteDB to 5.0.10 (#97)
