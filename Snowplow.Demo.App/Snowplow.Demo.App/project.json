@@ -3,7 +3,7 @@
   "dependencies": {
     "Microsoft.NETCore.Portable.Compatibility": "1.0.1",
     "NETStandard.Library": "2.0.3",
-    "Snowplow.Tracker.PlatformExtensions": "1.2.0",
+    "Snowplow.Tracker.PlatformExtensions": "1.2.1",
     "Xamarin.Forms": "5.0.0.2545"
   },
   "frameworks": {
