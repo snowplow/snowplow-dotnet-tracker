@@ -1,3 +1,12 @@
+Version 1.2.1 (2023-03-01)
+--------------------------
+Upgrade LiteDB to 5.0.15
+Upgrade Newtonsoft.Json to 13.0.2
+Upgrade Microsoft.NET.Test.Sdk to 17.5.0 and MSTest to 3.0.2 in test dependencies
+Upgrade LiteDB to 5.0.15, NETStandard.Library to 2.0.3 and Newtonsoft.Json to 13.0.1 in tracker platform extensions
+Upgrade iOS demo app dependencies
+Update copyright headers to 2023
+
 Version 1.2.0 (2023-01-13)
 --------------------------
 Add support for domain session properties (#119)
