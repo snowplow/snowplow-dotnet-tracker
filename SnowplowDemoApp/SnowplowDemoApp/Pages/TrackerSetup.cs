@@ -17,6 +17,8 @@ using Snowplow.Tracker;
 using Snowplow.Tracker.Endpoints;
 using Snowplow.Tracker.Models.Contexts;
 using Xamarin.Forms;
+using System.Threading.Tasks;
+using Xamarin.Essentials;
 
 namespace SnowplowDemoApp.Pages
 {
@@ -238,6 +240,11 @@ namespace SnowplowDemoApp.Pages
                     PropertyManager.SaveKeyValue(KEY_GEO_LOCATION_CONTEXT, _geoLocationContextSwitchCell.On);
 
                     await DisplayAlert("Success", "Tracker started successfully - time to send some events!", "OK");
+
+                    if (_mobileContextSwitchCell.On || _geoLocationContextSwitchCell.On)
+                    {
+                        await CheckAndRequestLocationPermission();
+                    }
                 }
                 catch (Exception ae)
                 {
@@ -277,6 +284,25 @@ namespace SnowplowDemoApp.Pages
         {
             base.OnDisappearing();
             GC.Collect();
+        }
+
+        // --- Permissions
+
+        public async Task<PermissionStatus> CheckAndRequestLocationPermission()
+        {
+            var status = await Permissions.CheckStatusAsync<Permissions.LocationWhenInUse>();
+
+            if (status == PermissionStatus.Granted)
+                return status;
+
+            if (status == PermissionStatus.Denied && DeviceInfo.Platform == DevicePlatform.iOS)
+            {
+                return status;
+            }
+
+            status = await Permissions.RequestAsync<Permissions.LocationWhenInUse>();
+
+            return status;
         }
     }
 }
