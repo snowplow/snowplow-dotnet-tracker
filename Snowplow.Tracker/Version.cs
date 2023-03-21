@@ -15,6 +15,6 @@ namespace Snowplow.Tracker
 {
     public class Version
     {
-        public static string VERSION = "cs-1.2.1";
+        public static string VERSION = "cs-1.2.2";
     }
 }
