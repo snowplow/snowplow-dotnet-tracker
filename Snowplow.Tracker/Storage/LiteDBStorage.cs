@@ -41,7 +41,10 @@ namespace Snowplow.Tracker.Storage
         /// <param name="path">Filename of database file (doesn't need to exist)</param>
         public LiteDBStorage(string path)
         {
-            _db = new LiteDatabase(path);
+            _db = new LiteDatabase(new ConnectionString(path)
+            {
+                Upgrade = true
+            });
             if (_db.CollectionExists(COLLECTION_NAME))
             {
                 TotalItems = _db.GetCollection<LiteDbStorageRecord>(COLLECTION_NAME).Count();
