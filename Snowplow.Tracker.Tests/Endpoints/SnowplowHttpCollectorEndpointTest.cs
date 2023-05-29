@@ -106,7 +106,7 @@ namespace Snowplow.Tracker.Tests.Endpoints
 
             var sendList = new List<Tuple<string, Payload>>();
             sendList.Add(Tuple.Create("0", payload));
-            
+
             var sendResult = endpoint.Send(sendList);
 
             Assert.IsTrue(sendResult.SuccessIds.Count == 1);
@@ -114,6 +114,30 @@ namespace Snowplow.Tracker.Tests.Endpoints
 
             var actual = getReq.Queries[0];
             var expectedRegex = new Regex("https://somewhere\\.com/i\\?hello=world&ts=123&stm=[0-9]{13}");
+            Assert.IsTrue(expectedRegex.Match(actual).Success, String.Format("{0} doesn't match {1}", actual, expectedRegex.ToString()));
+        }
+
+        [TestMethod]
+        public void testSendGetRequestCustomGetSuffix()
+        {
+            var getReq = new MockGet();
+            var endpoint = new SnowplowHttpCollectorEndpoint("somewhere.com", HttpProtocol.HTTPS, getMethod: new GetDelegate(getReq.HttpGet));
+            var customPath = "custom/path";
+            endpoint.CustomGetPath(customPath);
+            var payload = new Payload();
+            payload.Add("hello", "world");
+            payload.Add("ts", "123");
+
+            var sendList = new List<Tuple<string, Payload>>();
+            sendList.Add(Tuple.Create("0", payload));
+
+            var sendResult = endpoint.Send(sendList);
+
+            Assert.IsTrue(sendResult.SuccessIds.Count == 1);
+            Assert.IsTrue(getReq.Queries.Count == 1);
+
+            var actual = getReq.Queries[0];
+            var expectedRegex = new Regex("https://somewhere\\.com/custom/path\\?hello=world&ts=123&stm=[0-9]{13}");
             Assert.IsTrue(expectedRegex.Match(actual).Success, String.Format("{0} doesn't match {1}", actual, expectedRegex.ToString()));
         }
 
@@ -240,6 +264,30 @@ namespace Snowplow.Tracker.Tests.Endpoints
             Assert.IsTrue(sendResult.SuccessIds.Count == 1);
             Assert.IsTrue(postReq.Queries.Count == 1);
             Assert.AreEqual(@"https://somewhere.com/com.snowplowanalytics.snowplow/tp2", postReq.Queries[0].Uri);
+
+            var actual = postReq.Queries[0].PostData;
+            var expectedRegex = new Regex("{\\\"schema\\\":\\\"iglu:com\\.snowplowanalytics\\.snowplow/payload_data/jsonschema/1-0-4\\\",\\\"data\\\":\\[{\\\"foo\\\":\\\"bar\\\",\\\"stm\\\":\\\"[0-9]{13}\\\"}\\]}");
+            Assert.IsTrue(expectedRegex.Match(actual).Success, String.Format("{0} doesn't match {1}", actual, expectedRegex.ToString()));
+        }
+
+        [TestMethod]
+        public void testPostHttpCustomPath()
+        {
+            var postReq = new MockPost();
+            var endpoint = new SnowplowHttpCollectorEndpoint("somewhere.com", HttpProtocol.HTTPS, method: HttpMethod.POST, postMethod: new PostDelegate(postReq.HttpPost));
+            var customPath = "custom/path";
+            endpoint.CustomPostPath(customPath);
+            var payload = new Payload();
+            payload.Add("foo", "bar");
+
+            var sendList = new List<Tuple<string, Payload>>();
+            sendList.Add(Tuple.Create("0", payload));
+
+            var sendResult = endpoint.Send(sendList);
+
+            Assert.IsTrue(sendResult.SuccessIds.Count == 1);
+            Assert.IsTrue(postReq.Queries.Count == 1);
+            Assert.AreEqual(@"https://somewhere.com/custom/path", postReq.Queries[0].Uri);
 
             var actual = postReq.Queries[0].PostData;
             var expectedRegex = new Regex("{\\\"schema\\\":\\\"iglu:com\\.snowplowanalytics\\.snowplow/payload_data/jsonschema/1-0-4\\\",\\\"data\\\":\\[{\\\"foo\\\":\\\"bar\\\",\\\"stm\\\":\\\"[0-9]{13}\\\"}\\]}");

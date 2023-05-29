@@ -34,7 +34,7 @@ namespace Snowplow.Tracker.Endpoints
         private readonly int POST_WRAPPER_BYTES = 88; // "schema":"iglu:com.snowplowanalytics.snowplow/payload_data/jsonschema/1-0-4","data":[]
         private readonly int POST_STM_BYTES = 22;     // "stm":"1443452851000",
 
-        private readonly string _collectorUri;
+        private string _collectorUri;
         private readonly HttpMethod _method;
         private GetDelegate _getMethod;
         private PostDelegate _postMethod;
@@ -54,7 +54,7 @@ namespace Snowplow.Tracker.Endpoints
         /// <param name="byteLimitGet">The maximum amount of bytes we can expect to work</param>
         /// <param name="l">Send log messages using this logger</param>
         /// </summary>
-        public SnowplowHttpCollectorEndpoint(string host, HttpProtocol protocol = HttpProtocol.HTTP, int? port = null, HttpMethod method = HttpMethod.GET, 
+        public SnowplowHttpCollectorEndpoint(string host, HttpProtocol protocol = HttpProtocol.HTTP, int? port = null, HttpMethod method = HttpMethod.GET,
             PostDelegate postMethod = null, GetDelegate getMethod = null, int byteLimitPost = 40000, int byteLimitGet = 40000, ILogger l = null)
         {
             if (Uri.IsWellFormedUriString(host, UriKind.Absolute))
@@ -263,6 +263,28 @@ namespace Snowplow.Tracker.Endpoints
             }
         }
 
+        /// <summary>
+        /// Set the uri suffix for post requests.
+        /// </summary>
+        /// <param name="postPath">New uri suffix</param>
+        public void CustomPostPath(string postPath)
+        {
+            UriBuilder builder = new UriBuilder(_collectorUri);
+            builder.Path = postPath;
+            _collectorUri = builder.Uri.ToString();
+        }
+
+        /// <summary>
+        /// Set the uri suffix for get requests.
+        /// </summary>
+        /// <param name="getPath">New uri suffix</param>
+        public void CustomGetPath(string getPath)
+        {
+            UriBuilder builder = new UriBuilder(_collectorUri);
+            builder.Path = getPath;
+            _collectorUri = builder.Uri.ToString();
+        }
+
         // --- Event builders
 
         /// <summary>
@@ -346,7 +368,7 @@ namespace Snowplow.Tracker.Endpoints
                 using (HttpClient c = new HttpClient())
                 {
                     return ProcessRequestTask(c.GetAsync(uri));
-                } 
+                }
             });
 
             return new RequestResult()
