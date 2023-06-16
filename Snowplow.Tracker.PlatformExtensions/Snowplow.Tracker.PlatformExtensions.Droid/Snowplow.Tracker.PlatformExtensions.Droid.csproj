@@ -42,8 +42,8 @@
     </Reference>
     <Reference Include="Mono.Android" />
     <Reference Include="mscorlib" />
-    <Reference Include="Snowplow.Tracker, Version=1.2.1.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\..\packages\Snowplow.Tracker.1.2.1\lib\netstandard1.4\Snowplow.Tracker.dll</HintPath>
+    <Reference Include="Snowplow.Tracker, Version=1.2.2.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\..\packages\Snowplow.Tracker.1.2.2\lib\netstandard1.4\Snowplow.Tracker.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
