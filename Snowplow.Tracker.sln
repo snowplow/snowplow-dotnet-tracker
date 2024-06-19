@@ -9,6 +9,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Snowplow.Tracker", "Snowplo
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Snowplow.Tracker.Tests", "Snowplow.Tracker.Tests\Snowplow.Tracker.Tests.csproj", "{43FFD47A-0B44-4A73-9F95-3223FF236799}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Snowplow.Demo.Console", "Snowplow.Demo.Console\Snowplow.Demo.Console.csproj", "{C0BE3EC0-C2D6-422E-8E97-B41DCA08B27C}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -23,6 +25,10 @@ Global
 		{43FFD47A-0B44-4A73-9F95-3223FF236799}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{43FFD47A-0B44-4A73-9F95-3223FF236799}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{43FFD47A-0B44-4A73-9F95-3223FF236799}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C0BE3EC0-C2D6-422E-8E97-B41DCA08B27C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C0BE3EC0-C2D6-422E-8E97-B41DCA08B27C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C0BE3EC0-C2D6-422E-8E97-B41DCA08B27C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C0BE3EC0-C2D6-422E-8E97-B41DCA08B27C}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
