@@ -15,6 +15,7 @@ using System;
 
 namespace Snowplow.Tracker.Models.Events
 {
+    [Obsolete("Use the MobileScreenView instead", false)]
     public class ScreenView : AbstractEvent<ScreenView>
     {
         

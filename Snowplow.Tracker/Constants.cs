@@ -20,6 +20,7 @@ namespace Snowplow.Tracker
         public readonly static string SCHEMA_CONTEXTS = "iglu:com.snowplowanalytics.snowplow/contexts/jsonschema/1-0-1";
         public readonly static string SCHEMA_UNSTRUCT_EVENT = "iglu:com.snowplowanalytics.snowplow/unstruct_event/jsonschema/1-0-0";
         public readonly static string SCHEMA_SCREEN_VIEW = "iglu:com.snowplowanalytics.snowplow/screen_view/jsonschema/1-0-0";
+        public readonly static string SCHEMA_MOBILE_SCREEN_VIEW = "iglu:com.snowplowanalytics.mobile/screen_view/jsonschema/1-0-0";
         public readonly static string SCHEMA_USER_TIMINGS = "iglu:com.snowplowanalytics.snowplow/timing/jsonschema/1-0-0";
         public readonly static string SCHEMA_SESSION = "iglu:com.snowplowanalytics.snowplow/client_session/jsonschema/1-0-1";
         public readonly static string SCHEMA_DESKTOP = "iglu:com.snowplowanalytics.snowplow/desktop_context/jsonschema/1-0-0";
@@ -142,6 +143,11 @@ namespace Snowplow.Tracker
         // Screen View
         public readonly static string SV_ID = "id";
         public readonly static string SV_NAME = "name";
+        public readonly static string SV_TYPE = "type";
+        public readonly static string SV_PREVIOUS_NAME = "previousName";
+        public readonly static string SV_PREVIOUS_ID = "previousId";
+        public readonly static string SV_PREVIOUS_TYPE = "previousType";
+        public readonly static string SV_TRANSITION_TYPE = "transitionType";
 
         // User Timing
         public readonly static string UT_CATEGORY = "category";
