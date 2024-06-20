@@ -20,6 +20,8 @@ using static Snowplow.Tracker.Endpoints.SnowplowHttpCollectorEndpoint;
 using System;
 using System.Threading.Tasks;
 
+using SnowplowHttpMethod = Snowplow.Tracker.Endpoints.HttpMethod;
+
 namespace Snowplow.Tracker.Tests.Endpoints
 {
     [TestClass]
@@ -228,7 +230,7 @@ namespace Snowplow.Tracker.Tests.Endpoints
         public void testPostHttpGood()
         {
             var postReq = new MockPost();
-            var endpoint = new SnowplowHttpCollectorEndpoint("somewhere.com", HttpProtocol.HTTPS, method: HttpMethod.POST, postMethod: new PostDelegate(postReq.HttpPost));
+            var endpoint = new SnowplowHttpCollectorEndpoint("somewhere.com", HttpProtocol.HTTPS, method: SnowplowHttpMethod.POST, postMethod: new PostDelegate(postReq.HttpPost));
             var payload = new Payload();
             payload.Add("foo", "bar");
 
@@ -250,7 +252,7 @@ namespace Snowplow.Tracker.Tests.Endpoints
         public void testPostHttpNoResponse()
         {
             var postReq = new MockPost() { StatusCode = 404 };
-            var endpoint = new SnowplowHttpCollectorEndpoint("somewhere.com", HttpProtocol.HTTPS, method: HttpMethod.POST, postMethod: new PostDelegate(postReq.HttpPost));
+            var endpoint = new SnowplowHttpCollectorEndpoint("somewhere.com", HttpProtocol.HTTPS, method: SnowplowHttpMethod.POST, postMethod: new PostDelegate(postReq.HttpPost));
             var payload = new Payload();
 
             payload.Add("foo", "bar");
@@ -268,7 +270,7 @@ namespace Snowplow.Tracker.Tests.Endpoints
         public void testPostHttpNon200Response()
         {
             var postReq = new MockPost() { StatusCode = 404 };
-            var endpoint = new SnowplowHttpCollectorEndpoint("somewhere.com", HttpProtocol.HTTPS, method: HttpMethod.POST, postMethod: new PostDelegate(postReq.HttpPost));
+            var endpoint = new SnowplowHttpCollectorEndpoint("somewhere.com", HttpProtocol.HTTPS, method: SnowplowHttpMethod.POST, postMethod: new PostDelegate(postReq.HttpPost));
             var payload = new Payload();
             payload.Add("foo", "bar");
 

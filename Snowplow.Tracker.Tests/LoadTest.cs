@@ -21,6 +21,8 @@ using Snowplow.Tracker.Models.Adapters;
 using Snowplow.Tracker.Endpoints;
 using Snowplow.Tracker.Emitters;
 
+using SnowplowHttpMethod = Snowplow.Tracker.Endpoints.HttpMethod;
+
 namespace Snowplow.Tracker.Tests
 {
     [TestClass]
@@ -47,7 +49,7 @@ namespace Snowplow.Tracker.Tests
             Assert.AreEqual(0, storage.TotalItems);
 
             var queue = new PersistentBlockingQueue(storage, new PayloadToJsonString());
-            var endpoint = new SnowplowHttpCollectorEndpoint(host: _collectorHostUri, port: 8080, protocol: HttpProtocol.HTTP, method: HttpMethod.POST, byteLimitPost: 100000);
+            var endpoint = new SnowplowHttpCollectorEndpoint(host: _collectorHostUri, port: 8080, protocol: HttpProtocol.HTTP, method: SnowplowHttpMethod.POST, byteLimitPost: 100000);
             var emitter = new AsyncEmitter(endpoint: endpoint, queue: queue, sendLimit: 1000);
 
             var clientSession = new ClientSession(_testClientSessionFilename);
@@ -82,7 +84,7 @@ namespace Snowplow.Tracker.Tests
             Assert.AreEqual(0, storage.TotalItems);
 
             var queue = new PersistentBlockingQueue(storage, new PayloadToJsonString());
-            var endpoint = new SnowplowHttpCollectorEndpoint(host: _collectorHostUri, port: 8080, protocol: HttpProtocol.HTTP, method: HttpMethod.GET, byteLimitGet: 50000);
+            var endpoint = new SnowplowHttpCollectorEndpoint(host: _collectorHostUri, port: 8080, protocol: HttpProtocol.HTTP, method: SnowplowHttpMethod.GET, byteLimitGet: 50000);
             var emitter = new AsyncEmitter(endpoint: endpoint, queue: queue, sendLimit: 25);
 
             var clientSession = new ClientSession(_testClientSessionFilename);

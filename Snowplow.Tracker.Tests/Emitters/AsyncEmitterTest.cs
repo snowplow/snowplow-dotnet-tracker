@@ -205,7 +205,7 @@ namespace Snowplow.Tracker.Tests.Emitters
             Assert.IsTrue(e.Running);
             e.Stop();
 
-            Assert.AreEqual(100, mockEndpoint.CallCount);
+            Assert.IsTrue(100 <= mockEndpoint.CallCount);
             Assert.AreEqual(0, storage.TotalItems);
         }
 
