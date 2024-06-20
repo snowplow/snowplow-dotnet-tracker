@@ -143,10 +143,10 @@
       <Private>True</Private>
     </Reference>
     <Reference Include="LiteDB">
-      <HintPath>..\..\packages\LiteDB.5.0.15\lib\net45\LiteDB.dll</HintPath>
+      <HintPath>..\..\packages\LiteDB.5.0.20\lib\net45\LiteDB.dll</HintPath>
     </Reference>
     <Reference Include="Newtonsoft.Json">
-      <HintPath>..\..\packages\Newtonsoft.Json.13.0.2\lib\net45\Newtonsoft.Json.dll</HintPath>
+      <HintPath>..\..\packages\Newtonsoft.Json.13.0.3\lib\net45\Newtonsoft.Json.dll</HintPath>
     </Reference>
     <Reference Include="System.Memory">
       <HintPath>..\..\packages\System.Memory.4.5.5\lib\net461\System.Memory.dll</HintPath>
@@ -156,7 +156,7 @@
       <HintPath>..\..\packages\System.Runtime.CompilerServices.Unsafe.6.0.0\lib\net461\System.Runtime.CompilerServices.Unsafe.dll</HintPath>
     </Reference>
     <Reference Include="System.Diagnostics.DiagnosticSource">
-      <HintPath>..\..\packages\System.Diagnostics.DiagnosticSource.7.0.1\lib\netstandard2.0\System.Diagnostics.DiagnosticSource.dll</HintPath>
+      <HintPath>..\..\packages\System.Diagnostics.DiagnosticSource.8.0.1\lib\netstandard2.0\System.Diagnostics.DiagnosticSource.dll</HintPath>
     </Reference>
   </ItemGroup>
   <ItemGroup>
