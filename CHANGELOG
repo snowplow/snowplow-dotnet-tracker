@@ -1,3 +1,11 @@
+Version 1.3.0 (2024-06-20)
+--------------------------
+Add an event class for mobile screen view and make the older screen view obsolete
+Add CustomGetPath and CustomPostPath methods (#129) thanks to @jfjalburquerque
+Update dependencies and .NET version for the tests and console demo projects (#135)
+Fix incorrectly formatted value in the structured event for some locales (#134)
+Fix error on sending the same payload twice when using in memory event queue (#133)
+
 Version 1.2.2 (2023-03-21)
 --------------------------
 Fix upgrading storage database from previous versions of LiteDB (#131)
