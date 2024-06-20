@@ -276,7 +276,7 @@ namespace Snowplow.Tracker.Endpoints
             var newPayloadList = new List<Dictionary<string, object>>();
             foreach(var payload in payloadList)
             {
-                payload.Add(Constants.SENT_TIMESTAMP, timestamp);
+                payload[Constants.SENT_TIMESTAMP] = timestamp;
                 newPayloadList.Add(payload);
             }
             return newPayloadList;

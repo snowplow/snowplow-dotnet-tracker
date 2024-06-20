@@ -284,6 +284,26 @@ namespace Snowplow.Tracker.Tests.Endpoints
         }
 
         [TestMethod]
+        public void testPostSamePayloadTwiceWithNon200Response()
+        {
+            var postReq = new MockPost() { StatusCode = 404 };
+            var endpoint = new SnowplowHttpCollectorEndpoint("somewhere.com", HttpProtocol.HTTPS, method: SnowplowHttpMethod.POST, postMethod: new PostDelegate(postReq.HttpPost));
+            var payload = new Payload();
+            payload.Add("foo", "bar");
+
+            var sendList = new List<Tuple<string, Payload>>
+            {
+                Tuple.Create("0", payload)
+            };
+
+            var sendResult1 = endpoint.Send(sendList);
+            var sendResult2 = endpoint.Send(sendList);
+
+            Assert.IsTrue(sendResult1.FailureIds.Count == 1);
+            Assert.IsTrue(sendResult2.FailureIds.Count == 1);
+        }
+
+        [TestMethod]
         [Ignore]
         public void testHttpPostPingSever()
         {
