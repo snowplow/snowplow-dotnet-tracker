@@ -14,6 +14,7 @@
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Snowplow.Tracker.Models.Events;
 using System;
+using System.Globalization;
 
 namespace Snowplow.Tracker.Tests.Models.Events
 {
@@ -60,6 +61,21 @@ namespace Snowplow.Tracker.Tests.Models.Events
             Assert.IsTrue(s.GetPayload().Payload.ContainsKey(Constants.EID));
             Assert.IsTrue(s.GetPayload().Payload.ContainsKey(Constants.TIMESTAMP));
             Assert.IsTrue(s.GetPayload().Payload.ContainsKey(Constants.TRUE_TIMESTAMP));
+        }
+
+        [TestMethod]
+        public void testValueIgnoresCurrentLocale()
+        {
+            Thread.CurrentThread.CurrentCulture = new CultureInfo("sk-SK");
+            var s = new Structured()
+                .SetCategory("category")
+                .SetAction("action")
+                .SetLabel("label")
+                .SetProperty("property")
+                .SetValue(1.2)
+                .Build();
+
+            Assert.AreEqual("1.2", s.GetPayload().Payload[Constants.SE_VALUE]);
         }
     }
 }

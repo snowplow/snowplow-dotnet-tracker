@@ -418,7 +418,7 @@ namespace Snowplow.Tracker
                 selfDescribing.SetBase64Encode(_encodeBase64);
                 CompleteAndTrackPayload((Payload)selfDescribing.GetPayload(), contexts, eventId, eventSubject);
             }
-            else if (eType == typeof(ScreenView) || eType == typeof(Timing))
+            else if (eType == typeof(ScreenView) || eType == typeof(MobileScreenView) || eType == typeof(Timing))
             {
                 ProcessEvent(new SelfDescribing()
                            .SetEventData((SelfDescribingJson)newEvent.GetPayload())

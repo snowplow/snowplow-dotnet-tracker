@@ -20,6 +20,8 @@ using static Snowplow.Tracker.Endpoints.SnowplowHttpCollectorEndpoint;
 using System;
 using System.Threading.Tasks;
 
+using SnowplowHttpMethod = Snowplow.Tracker.Endpoints.HttpMethod;
+
 namespace Snowplow.Tracker.Tests.Endpoints
 {
     [TestClass]
@@ -106,7 +108,7 @@ namespace Snowplow.Tracker.Tests.Endpoints
 
             var sendList = new List<Tuple<string, Payload>>();
             sendList.Add(Tuple.Create("0", payload));
-            
+
             var sendResult = endpoint.Send(sendList);
 
             Assert.IsTrue(sendResult.SuccessIds.Count == 1);
@@ -114,6 +116,30 @@ namespace Snowplow.Tracker.Tests.Endpoints
 
             var actual = getReq.Queries[0];
             var expectedRegex = new Regex("https://somewhere\\.com/i\\?hello=world&ts=123&stm=[0-9]{13}");
+            Assert.IsTrue(expectedRegex.Match(actual).Success, String.Format("{0} doesn't match {1}", actual, expectedRegex.ToString()));
+        }
+
+        [TestMethod]
+        public void testSendGetRequestCustomGetSuffix()
+        {
+            var getReq = new MockGet();
+            var endpoint = new SnowplowHttpCollectorEndpoint("somewhere.com", HttpProtocol.HTTPS, getMethod: new GetDelegate(getReq.HttpGet));
+            var customPath = "custom/path";
+            endpoint.CustomGetPath(customPath);
+            var payload = new Payload();
+            payload.Add("hello", "world");
+            payload.Add("ts", "123");
+
+            var sendList = new List<Tuple<string, Payload>>();
+            sendList.Add(Tuple.Create("0", payload));
+
+            var sendResult = endpoint.Send(sendList);
+
+            Assert.IsTrue(sendResult.SuccessIds.Count == 1);
+            Assert.IsTrue(getReq.Queries.Count == 1);
+
+            var actual = getReq.Queries[0];
+            var expectedRegex = new Regex("https://somewhere\\.com/custom/path\\?hello=world&ts=123&stm=[0-9]{13}");
             Assert.IsTrue(expectedRegex.Match(actual).Success, String.Format("{0} doesn't match {1}", actual, expectedRegex.ToString()));
         }
 
@@ -228,7 +254,7 @@ namespace Snowplow.Tracker.Tests.Endpoints
         public void testPostHttpGood()
         {
             var postReq = new MockPost();
-            var endpoint = new SnowplowHttpCollectorEndpoint("somewhere.com", HttpProtocol.HTTPS, method: HttpMethod.POST, postMethod: new PostDelegate(postReq.HttpPost));
+            var endpoint = new SnowplowHttpCollectorEndpoint("somewhere.com", HttpProtocol.HTTPS, method: SnowplowHttpMethod.POST, postMethod: new PostDelegate(postReq.HttpPost));
             var payload = new Payload();
             payload.Add("foo", "bar");
 
@@ -247,10 +273,34 @@ namespace Snowplow.Tracker.Tests.Endpoints
         }
 
         [TestMethod]
+        public void testPostHttpCustomPath()
+        {
+            var postReq = new MockPost();
+            var endpoint = new SnowplowHttpCollectorEndpoint("somewhere.com", HttpProtocol.HTTPS, method: SnowplowHttpMethod.POST, postMethod: new PostDelegate(postReq.HttpPost));
+            var customPath = "custom/path";
+            endpoint.CustomPostPath(customPath);
+            var payload = new Payload();
+            payload.Add("foo", "bar");
+
+            var sendList = new List<Tuple<string, Payload>>();
+            sendList.Add(Tuple.Create("0", payload));
+
+            var sendResult = endpoint.Send(sendList);
+
+            Assert.IsTrue(sendResult.SuccessIds.Count == 1);
+            Assert.IsTrue(postReq.Queries.Count == 1);
+            Assert.AreEqual(@"https://somewhere.com/custom/path", postReq.Queries[0].Uri);
+
+            var actual = postReq.Queries[0].PostData;
+            var expectedRegex = new Regex("{\\\"schema\\\":\\\"iglu:com\\.snowplowanalytics\\.snowplow/payload_data/jsonschema/1-0-4\\\",\\\"data\\\":\\[{\\\"foo\\\":\\\"bar\\\",\\\"stm\\\":\\\"[0-9]{13}\\\"}\\]}");
+            Assert.IsTrue(expectedRegex.Match(actual).Success, String.Format("{0} doesn't match {1}", actual, expectedRegex.ToString()));
+        }
+
+        [TestMethod]
         public void testPostHttpNoResponse()
         {
             var postReq = new MockPost() { StatusCode = 404 };
-            var endpoint = new SnowplowHttpCollectorEndpoint("somewhere.com", HttpProtocol.HTTPS, method: HttpMethod.POST, postMethod: new PostDelegate(postReq.HttpPost));
+            var endpoint = new SnowplowHttpCollectorEndpoint("somewhere.com", HttpProtocol.HTTPS, method: SnowplowHttpMethod.POST, postMethod: new PostDelegate(postReq.HttpPost));
             var payload = new Payload();
 
             payload.Add("foo", "bar");
@@ -268,7 +318,7 @@ namespace Snowplow.Tracker.Tests.Endpoints
         public void testPostHttpNon200Response()
         {
             var postReq = new MockPost() { StatusCode = 404 };
-            var endpoint = new SnowplowHttpCollectorEndpoint("somewhere.com", HttpProtocol.HTTPS, method: HttpMethod.POST, postMethod: new PostDelegate(postReq.HttpPost));
+            var endpoint = new SnowplowHttpCollectorEndpoint("somewhere.com", HttpProtocol.HTTPS, method: SnowplowHttpMethod.POST, postMethod: new PostDelegate(postReq.HttpPost));
             var payload = new Payload();
             payload.Add("foo", "bar");
 
@@ -279,6 +329,26 @@ namespace Snowplow.Tracker.Tests.Endpoints
 
             Assert.IsTrue(sendResult.FailureIds.Count == 1);
             Assert.IsTrue(postReq.Queries.Count == 1);
+        }
+
+        [TestMethod]
+        public void testPostSamePayloadTwiceWithNon200Response()
+        {
+            var postReq = new MockPost() { StatusCode = 404 };
+            var endpoint = new SnowplowHttpCollectorEndpoint("somewhere.com", HttpProtocol.HTTPS, method: SnowplowHttpMethod.POST, postMethod: new PostDelegate(postReq.HttpPost));
+            var payload = new Payload();
+            payload.Add("foo", "bar");
+
+            var sendList = new List<Tuple<string, Payload>>
+            {
+                Tuple.Create("0", payload)
+            };
+
+            var sendResult1 = endpoint.Send(sendList);
+            var sendResult2 = endpoint.Send(sendList);
+
+            Assert.IsTrue(sendResult1.FailureIds.Count == 1);
+            Assert.IsTrue(sendResult2.FailureIds.Count == 1);
         }
 
         [TestMethod]

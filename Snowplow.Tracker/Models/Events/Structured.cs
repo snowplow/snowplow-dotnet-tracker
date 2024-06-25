@@ -11,6 +11,8 @@
  * language governing permissions and limitations there under.
  */
 
+using System.Globalization;
+
 namespace Snowplow.Tracker.Models.Events
 {
     public class Structured : AbstractEvent<Structured>
@@ -98,7 +100,7 @@ namespace Snowplow.Tracker.Models.Events
             payload.Add (Constants.SE_ACTION, this.action);
             payload.Add (Constants.SE_LABEL, this.label);
             payload.Add (Constants.SE_PROPERTY, this.property);
-            payload.Add (Constants.SE_VALUE, valueSet ? value.ToString() : null);
+            payload.Add (Constants.SE_VALUE, valueSet ? value.ToString(CultureInfo.InvariantCulture) : null);
             return AddDefaultPairs (payload);
         }
     }
