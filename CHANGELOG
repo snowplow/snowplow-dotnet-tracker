@@ -1,3 +1,8 @@
+Version 1.3.1 (2025-02-28)
+--------------------------
+Bump Ubuntu Version in GH Actions (#140)
+
+
 Version 1.3.0 (2024-06-20)
 --------------------------
 Add an event class for mobile screen view and make the older screen view obsolete
